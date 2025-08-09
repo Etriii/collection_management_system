@@ -18,23 +18,21 @@ const props = defineProps<Props>();
 const isProfileMenuOpen = ref(false);
 
 const toggleProfileMenu = () => {
-    isProfileMenuOpen.value = !isProfileMenuOpen.value;    
+    isProfileMenuOpen.value = !isProfileMenuOpen.value;
 }
 </script>
 
 <template>
-    <div 
-        class="flex justify-between shadow px-4 py-2 transition-all duration-300 bg-white"
-        :class="[props.isSidebarOpen ? props.contentMargin : 'ml-0']"
-    >
+    <div class="flex justify-between shadow px-4 py-2 transition-all duration-300 bg-white"
+        :class="[props.isSidebarOpen ? props.contentMargin : 'ml-0']">
         <div class="flex items-center gap-4">
             <button @click="props.toggleSidebar" class="cursor-pointer">
-                <Menu />
-            </button>    
+                <Menu></Menu>
+            </button>
 
             <p>{{ props.pageTitle }}</p>
         </div>
-        
+
         <div class="flex items-center gap-6">
             <!-- notif -->
             <a href="" class="relative p-1">
@@ -47,9 +45,10 @@ const toggleProfileMenu = () => {
 
             <!-- profile -->
             <div class="relative w-10 cursor-pointer" @click="toggleProfileMenu">
-                <img :src="props.profilePicPath" alt="logo" class="hover:outline-3 hover:outline-gray-400 rounded-full">
+                <img :src="props.profilePicPath" alt="logo" class="hover:outline-3 hover:outline-gray-300 rounded-full">
 
-                <ChevronDown :size="15" class="absolute right-0 -bottom-1 bg-gray-200 rounded-full" />
+                <ChevronDown :size="15" class="absolute right-0 -bottom-1 bg-gray-200 rounded-full transition-all duration-100 border-2 border-white"
+                    :class="[isProfileMenuOpen ? 'rotate-180' : '']" />
 
                 <!-- profile menu -->
                 <ProfileMenu v-if="isProfileMenuOpen" />

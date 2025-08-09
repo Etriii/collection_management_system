@@ -27,12 +27,12 @@ const props = defineProps<Props>();
         <div class="space-y-2 px-2 py-2">
             <SidebarLink :icon="LayoutDashboard" label="Dashboard" to="/"/>
             <SidebarLink :icon="UsersRound" label="Students" to="/students" />
-            <SidebarLink :icon="ArrowLeftRight" label="Transaction" to="/s" />
-            <SidebarLink :icon="ArrowLeftRight" label="GCash Payments" to="/d" />
-            <SidebarLink :icon="LayoutGrid" label="Collections" to="/a" />
-            <SidebarLink :icon="FileText" label="Reports" to="/c" />
-            <SidebarLink :icon="UserRoundCog" label="Users" to="/v" />
-            <SidebarLink :icon="History" label="Activity" to="/t" />
+            <SidebarLink :icon="ArrowLeftRight" label="Transaction" to="/transactions" />
+            <SidebarLink :icon="ArrowLeftRight" label="GCash Payments" to="/gcash-payments" />
+            <SidebarLink :icon="LayoutGrid" label="Collections" to="/collections" />
+            <SidebarLink :icon="FileText" label="Reports" to="/reports" />
+            <SidebarLink :icon="UserRoundCog" label="Users" to="/users" />
+            <SidebarLink :icon="History" label="Activity" to="/activities" />
         </div>
     </aside>
 </template>
