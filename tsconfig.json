@@ -2,6 +2,17 @@
   "files": [],
   "references": [
     { "path": "./tsconfig.app.json" },
-    { "path": "./tsconfig.node.json" }
-  ]
+    { "path": "./tsconfig.node.json" },
+  ],
+
+  // /* Recognizing @ for absolute importing */
+  // "compilerOptions": {
+  //   "types": ["node"],
+  //   "baseUrl": ".",
+  //   "paths": {
+  //     "@/*": ["src/*"],
+  //     "@components/*": ["src/components/*"]
+  //   },
+  // },
+  // "exclude": ["node_modules"]
 }
