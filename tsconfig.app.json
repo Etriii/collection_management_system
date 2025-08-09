@@ -3,6 +3,16 @@
   "compilerOptions": {
     "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo",
 
+    /* Alias Fix */
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src"],
+      "@assets/*": ["src/assets/*"],
+      "@components/*": ["src/components/*"],
+      "@layouts/*": ["src/layouts/*"],
+      "@pages/*": ["src/pages/*"],
+    },
+
     /* Linting */
     "strict": true,
     "noUnusedLocals": true,
