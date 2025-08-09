@@ -37,7 +37,7 @@ const toggleProfileMenu = () => {
             <!-- notif -->
             <a href="" class="relative p-1">
                 <Bell />
-                <span class="absolute -top-1 -right-2 bg-red-300 text-white text-xs p-1 rounded-full">99</span>
+                <span class="absolute -top-1 -right-2 bg-red-500 text-white text-xs p-1 rounded-full">99</span>
             </a>
 
             <!-- user name -->

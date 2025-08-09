@@ -1,0 +1,1 @@
+export {default as StudentRoutes} from './students.routes.ts'

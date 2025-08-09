@@ -1,6 +1,9 @@
-import { createRouter, createWebHistory } from "vue-router";//createWebHashHistory, 
+import { createRouter, createWebHistory} from "vue-router";//createWebHashHistory, 
+import type { RouteRecordRaw } from 'vue-router'
 
-import { Dashboard, StudentsPage, Transactions, GCashPayments, Collections, Reports, Users, Activities, MyAccount, AdminManager } from '@pages/index.ts';
+import { Dashboard, Transactions, GCashPayments, Collections, Reports, Users, Activities, MyAccount, AdminManager } from '@pages/index.ts';
+
+import { StudentRoutes } from './index';
 
 /* search the difference between 
 createWebHistory and createWebHashHistory
@@ -8,19 +11,14 @@ createWebHistory and createWebHashHistory
 
 // meta - to be used in the Navbar pagTitle
 
-const routes = [
+const routes: RouteRecordRaw[] = [
     {
         path: '/',
         name: 'dashboard',
         component: Dashboard,
         meta: { pageTitle: 'Dashboard' }
     },
-    {
-        path: '/students',
-        name: 'students',
-        component: StudentsPage,
-        meta: { pageTitle: 'Students' }
-    },
+    ...StudentRoutes,
     {
         path: '/transactions',
         name: 'transactions',
@@ -57,13 +55,13 @@ const routes = [
         component: Activities,
         meta: { pageTitle: 'activities' },
     },
-        {
+    {
         path: '/my-account',
         name: 'My account',
         component: MyAccount,
         meta: { pageTitle: 'My account' },
     },
-        {
+    {
         path: '/admin-manager',
         name: 'Admin Manager',
         component: AdminManager,
