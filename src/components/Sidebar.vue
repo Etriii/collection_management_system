@@ -25,7 +25,7 @@ const props = defineProps<Props>();
         </div>
         
         <div class="space-y-2 px-2 py-2">
-            <SidebarLink :icon="LayoutDashboard" label="Dashboard" to="/"/>
+            <SidebarLink :icon="LayoutDashboard" label="Dashboard" to="/" exact/>
             <SidebarLink :icon="UsersRound" label="Students" to="/students" />
             <SidebarLink :icon="ArrowLeftRight" label="Transaction" to="/transactions" />
             <SidebarLink :icon="ArrowLeftRight" label="GCash Payments" to="/gcash-payments" />

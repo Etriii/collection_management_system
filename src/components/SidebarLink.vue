@@ -8,6 +8,7 @@ interface Props {
     icon: any
     label: string
     to: string
+    exact?: boolean
 }
 
 const props = defineProps<Props>();
@@ -18,15 +19,12 @@ const props = defineProps<Props>();
 </script>
 
 <template>
-    <RouterLink :to="to" custom v-slot="{ isActive, href, navigate }">
-        <a
-            :href="href"
-            @click="navigate"
+    <RouterLink :to="to" custom v-slot="{ isActive, isExactActive, href, navigate }" exact>
+        <a :href="href" @click="navigate"
             class="flex items-center gap-2 text-sm px-3 py-1 rounded-sm hover:bg-ic-primary hover:text-white"
-            :class="[isActive ? 'bg-ic-primary text-white' : 'text-gray-500' ]"
-        >
+            :class="[(exact ? isExactActive : isActive) ? 'bg-ic-primary text-white' : 'text-gray-500']">
             <component :is="props.icon" class="hover:bg-ic-primary" />
-            <span :class="[isActive ? 'font-medium' : '']" >{{ props.label }}</span>
+            <span :class="[(exact ? isExactActive : isActive) ? 'font-medium' : '']">{{ props.label }}</span>
         </a>
     </RouterLink>
 </template>

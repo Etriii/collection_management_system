@@ -1,0 +1,3 @@
+<template>
+    Account Recovery
+</template>

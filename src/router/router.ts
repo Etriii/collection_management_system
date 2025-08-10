@@ -3,9 +3,10 @@ import type { RouteRecordRaw } from 'vue-router'
 
 import AuthenticatedLayout from "@layouts/AuthenticatedLayout.vue";
 
-import { Dashboard, Transactions, GCashPayments, Collections, Reports, Users, Activities, MyAccount, AdminManager } from '@pages/index.ts';
+import { Dashboard, Transactions, GCashPayments, Collections, Reports, Users, Activities, MyAccount, AdminManager, Login, AccountRecovery, PageNotFound } from '@pages/index.ts';
 
 import { StudentRoutes } from './index';
+import LogInSignupLayout from "@layouts/LogInSignupLayout.vue";
 
 /* search the difference between 
 createWebHistory and createWebHashHistory
@@ -19,7 +20,7 @@ const routes: RouteRecordRaw[] = [
         component: AuthenticatedLayout,
         children: [
             {
-                path: '/',
+                path: '',
                 name: 'dashboard',
                 component: Dashboard,
                 meta: { pageTitle: 'Dashboard' }
@@ -41,34 +42,34 @@ const routes: RouteRecordRaw[] = [
                 path: 'collections',
                 name: 'collections',
                 component: Collections,
-                meta: { pageTitle: 'collections' },
+                meta: { pageTitle: 'Collections' },
             },
             {
                 path: 'users',
                 name: 'users',
                 component: Users,
-                meta: { pageTitle: 'users' },
+                meta: { pageTitle: 'Users' },
             },
             {
                 path: 'reports',
                 name: 'reports',
                 component: Reports,
-                meta: { pageTitle: 'reports' },
+                meta: { pageTitle: 'Reports' },
             },
             {
-                path: '/activities',
+                path: 'activities',
                 name: 'activities',
                 component: Activities,
-                meta: { pageTitle: 'activities' },
+                meta: { pageTitle: 'Activities' },
             },
             {
-                path: '/my-account',
+                path: 'my-account',
                 name: 'My account',
                 component: MyAccount,
                 meta: { pageTitle: 'My account' },
             },
             {
-                path: '/admin-manager',
+                path: 'admin-manager',
                 name: 'Admin Manager',
                 component: AdminManager,
                 meta: { pageTitle: 'Admin manager' },
@@ -77,23 +78,27 @@ const routes: RouteRecordRaw[] = [
     },
     {
         path: '/',
-        component: AuthenticatedLayout,
+        component: LogInSignupLayout,
         children: [
             {
                 path: 'login',
                 name: 'Log In | CMS',
-                component: Dashboard,
+                component: Login,
                 meta: { pageTitle: 'Dashboard' }
             },
             {
-                path: '/transactions',
-                name: 'transactions',
-                component: Transactions,
-                meta: { pageTitle: 'Transactions' }
+                path: 'account-recovery',
+                name: 'Account Recovery',
+                component: AccountRecovery,
+                meta: { pageTitle: 'AccountRecovery' }
             }
         ]
     },
-
+    {
+        path: '/:pathMatch(.*)*',
+        name: 'NotFound',
+        component: PageNotFound
+    }
 ]
 
 const router = createRouter({

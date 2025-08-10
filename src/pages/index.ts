@@ -9,3 +9,7 @@ export { default as Activities } from './activities/Activities.vue';
 
 export { default as MyAccount } from './my-account/MyAccount.vue';
 export { default as AdminManager } from './admin-manager/AdminManager.vue';
+export { default as Login } from './auth/Login.vue';
+export { default as AccountRecovery } from './auth/AccountRecovery.vue';
+
+export { default as PageNotFound } from './PageNotFound.vue'
