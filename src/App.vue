@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import AuthenticatedLayout from '@layouts/AuthenticatedLayout.vue';
+
+import { RouterView } from 'vue-router';
 
 /*
 to add a page:
@@ -7,7 +8,7 @@ to add a page:
 - add a route in the router/router.ts (see vue-router for the docs)
 
 components:
-- AuthenticatedLayout component serves as the container 
+- AuthenticatedLayout component serves as the container
 for main pages (Dashboard, StudentLists, Transactions, etc.)
 
 tailwind custom styles:
@@ -21,9 +22,5 @@ tailwind custom styles:
 <template>
   <!-- this will be modified in the future
     as there is no authentication for the moment -->
-  <AuthenticatedLayout class="font-poppins">
-    Burstfade parin ba to ya?
-  </AuthenticatedLayout>
+  <RouterView />
 </template>
-
-
