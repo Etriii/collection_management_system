@@ -7,7 +7,7 @@ const appName = import.meta.env.VITE_APP_NAME
 </script>
 
 <template>
-    <div class="flex h-lvh bg-[url('/public/images/bg.png')] bg-cover bg-center">
+    <div class="flex h-lvh bg-[url('/images/bg.png')] bg-cover bg-center">
         <div
             class="relative hidden w-1/2 min-h-[300px] flex-col items-center justify-center p-4 before:absolute before:inset-0 before:bg-black/50 before:content-[''] lg:flex lg:min-h-screen">
             <img :src=logoImage alt="ICSA Logo" class="z-10 mb-4 size-32">
@@ -17,7 +17,7 @@ const appName = import.meta.env.VITE_APP_NAME
         </div>
 
         <div
-            class="flex w-full lg:w-1/2 flex-col items-center justify-center bg-[url('/public/images/bg.png')] bg-cover bg-center p-4 lg:bg-[#ededed] lg:bg-[url('')]">
+            class="flex w-full lg:w-1/2 flex-col items-center justify-center bg-[url('/images/bg.png')] bg-cover bg-center p-4 lg:bg-[#ededed] lg:bg-[url('')]">
             <img :src=logoImage alt="ICSA Logo" class="z-10 mb-4 h-24 w-24 lg:hidden" style="ba">
             <h2 class="z-10 mb-5 max-w-xl text-center text-xl font-bold text-white lg:hidden lg:text-2xl xl:text-3xl">
                 ICSACMS: Institute of Computing Student Association Collection Management System

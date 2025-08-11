@@ -3,7 +3,7 @@ import type { RouteRecordRaw } from 'vue-router'
 
 import AuthenticatedLayout from "@layouts/AuthenticatedLayout.vue";
 
-import { Dashboard, Transactions, GCashPayments, Collections, Reports, Users, Activities, MyAccount, AdminManager, Login, AccountRecovery, PageNotFound } from '@pages/index.ts';
+import { Dashboard, Transactions, GCashPayments, Collections, Reports, Users, Activities, MyAccount, AdminManager, Login, AccountRecovery, PageNotFound, AccountRecoveryConfirmaion } from '@pages/index.ts';
 
 import { StudentRoutes } from './index';
 import LogInSignupLayout from "@layouts/LogInSignupLayout.vue";
@@ -91,6 +91,11 @@ const routes: RouteRecordRaw[] = [
                 name: 'Account Recovery',
                 component: AccountRecovery,
                 meta: { pageTitle: 'AccountRecovery' }
+            },
+            {
+                path: 'account-recovery/confirmation',
+                name: 'Account Recovery Confirmation',
+                component: AccountRecoveryConfirmaion,
             }
         ]
     },

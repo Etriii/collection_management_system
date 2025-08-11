@@ -2,10 +2,17 @@
 
 import Input from "@components/forms/Input.vue";
 import { ref } from "vue";
+
+import { useRouter } from 'vue-router';
+
 import { Mail, LockKeyhole, EyeOff, Eye } from "lucide-vue-next";
+
+import Button from "@components/button/Button.vue";
+
 
 const username = ref("");
 const password = ref("");
+
 
 const PasswordIconToggled = ref(false)
 
@@ -13,6 +20,32 @@ const PasswordIconToggled = ref(false)
 function handleClick() {
     PasswordIconToggled.value = !PasswordIconToggled.value;
 }
+
+const router = useRouter();
+
+const isLoading = ref(false);
+const isDisabled = ref(false);
+
+const handleLoginButtonClick = () => {
+    isLoading.value = true;
+
+    const timeout = setTimeout(() => {
+        isLoading.value = false;
+        console.log('Login attempt timed out.');
+    }, 10000);
+
+    setTimeout(() => {
+        clearTimeout(timeout); 
+        router.push('/'); 
+        isLoading.value = false;
+
+        
+    }, 2000); 
+};
+
+const handleDelete = () => {
+    alert("Delete action triggered!");
+};
 
 </script>
 
@@ -23,8 +56,6 @@ function handleClick() {
             <h1 class="text-center text-md font-semibold text-purple-800">
                 Administrator
             </h1>
-
-            <hr class="border border-violet-300 my-2">
             <div class="text-center  text-sm text-gray-600">
                 Welcome back! Please sign-in to continue
             </div>
@@ -46,27 +77,22 @@ function handleClick() {
                             Remember me
                         </label>
                     </div>
-                    <a href=""
-                        class="text-sm font-medium text-purple-500 hover:text-purple-800">
+                    <RouterLink to="/account-recovery" class="text-sm font-medium text-purple-500 hover:text-purple-800">
                         Forgot password?
-                    </a>
+                    </RouterLink>
                 </div>
 
-                <button type="submit"
-                    class="submitBtn p-2 rounded relative w-full bg-gradient-to-r from-purple-600 to-indigo-600 text-white transition hover:from-purple-700 cursor-pointer hover:to-indigo-700 focus:ring-2  disabled:cursor-not-allowed disabled:opacity-70"
-                    id="submitBtn">
-                    <span class="buttonText">Sign in</span>
-                    <svg class="buttonLoader ml-2 hidden h-5 w-5 animate-spin" xmlns="http://www.w3.org/2000/svg"
-                        fill="none" viewBox="0 0 24 24">
-                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4">
-                        </circle>
-                        <path class="opacity-75" fill="currentColor"
-                            d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z">
-                        </path>
-                    </svg>
-                </button>
+                <Button variant="primary" size="md" @click="handleLoginButtonClick" :loading="isLoading"
+                    loadingText="Loggin In..." :disabled="isLoading"
+                    className="w-full bg-gradient-to-r from-purple-600 to-indigo-600 text-white transition hover:from-purple-700 hover:to-indigo-700 focus:ring-2 focus:ring-purple-500 focus:ring-offset-2">
+                    Log In
+                </Button>
+
             </div>
         </div>
 
     </div>
 </template>
+
+
+<style scoped></style>

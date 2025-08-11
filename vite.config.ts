@@ -13,6 +13,7 @@ export default defineConfig({
       '@components': resolve(__dirname, 'src/components'),
       '@layouts': resolve(__dirname, 'src/layouts'),
       '@pages': resolve(__dirname, 'src/pages'),
+      '@utils': resolve(__dirname, 'src/utils'),
     }
   }
 })

@@ -1,5 +1,5 @@
 <template>
-    <div class="flex flex-col w-full space-y-1">
+    <div class="flex flex-col w-full">
         <label v-if="label" class="mb-1 text-sm text-gray-500">
             {{ label }}
         </label>
@@ -13,11 +13,11 @@
                 @click="onRightIconClick" />
         </div>
 
-        <p v-if="error && inputValue" class="mt-1 text-sm text-red-600">
+        <p v-if="error && inputValue" class="mt-1 text-xs text-red-600">
             {{ error }}
         </p>
     </div>
-</template>
+</template> 
 
 <script setup lang="ts">
 import { ref, watch } from "vue";
