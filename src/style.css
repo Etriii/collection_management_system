@@ -5,8 +5,10 @@
 
 @theme {
     --font-poppins: 'Poppins', sans-serif;
-    /* --font-ic */
-    --color-ic-primary: #9810fa; 
+    --color-ic-primary: #640D5F
+    /* --color-ic-primary: #9810fa;  */
+    /* --color-ic-primary: #921276;  */
+
     /* C562AF pa balik lang ko. medjo lasaw man gud tung isa */
 }
 

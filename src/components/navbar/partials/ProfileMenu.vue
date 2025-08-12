@@ -9,7 +9,7 @@ const router = useRouter()
 
 <template>
     <div
-        class="absolute right-0 top-13 bg-white shadow border border-gray-300 w-[180px] flex flex-col rounded-md overflow-hidden">
+        class="z-40 absolute right-0 top-13 bg-white shadow border border-gray-300 w-[180px] flex flex-col rounded-md overflow-hidden">
         <RouterLink to="/my-account" v-slot="{ isActive }">
             <div :class="[isActive ? 'bg-ic-primary text-white' : 'text-gray-500']"
                 class="flex items-center gap-2 px-3 py-2 text-sm hover:bg-ic-primary hover:text-white border-b border-white">
