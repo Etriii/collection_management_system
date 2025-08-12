@@ -5,7 +5,7 @@ import { resolve } from 'path'
 
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [vue(),tailwindcss()],
+  plugins: [vue(), tailwindcss()],
   resolve: {
     alias: {
       '@': resolve(__dirname, 'src'),
@@ -14,6 +14,7 @@ export default defineConfig({
       '@layouts': resolve(__dirname, 'src/layouts'),
       '@pages': resolve(__dirname, 'src/pages'),
       '@utils': resolve(__dirname, 'src/utils'),
+      '@store': resolve(__dirname, 'src/store'),
     }
   }
 })
