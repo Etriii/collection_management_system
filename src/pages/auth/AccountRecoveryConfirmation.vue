@@ -6,7 +6,7 @@
                 here to
                 verify. CODE: 123456</p>
 
-            <div class="text-red-400 mb-3">Expire in: {{ countdown }}</div>
+            <div v-if="!verification.Successfull" class="text-red-400 mb-3">Expire in: {{ countdown }}</div>
 
             <form @submit.prevent="handleVerifyCode">
 

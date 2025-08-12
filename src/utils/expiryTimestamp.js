@@ -29,6 +29,6 @@ export default function startCountdown(expiryDate, countdownElement) {
   setInterval(updateCountdown, 1000);
 
   onUnmounted(() => {
-    clearInterval(interval);
+    clearInterval(updateCountdown);
   });
 }
