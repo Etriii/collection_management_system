@@ -3,10 +3,11 @@ import Container from '@components/common/Container.vue';
 import DataTable from '@components/tables/DataTable.vue';
 
 const columns = [
+    {name: 'id', title: '#'},
     {name: 'student_id', title: 'Student ID'},
-    {name: 'name', title: 'Fullname'},
-    {name: 'name', title: 'Program/Year/Set'},
-    {name: 'name', title: 'Status'},
+    {name: 'fullname', title: 'Fullname'},
+    {name: 'set', title: 'Program/Year/Set'},
+    {name: 'status', title: 'Status'},
 ]
 
 const testData = [
