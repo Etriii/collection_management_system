@@ -7,7 +7,7 @@
         <div class="flex items-center border border-gray-300 rounded-lg px-3 py-2 focus-within:ring-1 
                     focus-within:ring-violet-500">
             <component v-if="leftIcon" :is="leftIcon" class="w-5 h-5 text-gray-500 mr-2" />
-            <input v-bind="$attrs" :type="type" v-model="inputValue"
+            <input v-bind="$attrs" :type="type" v-model="inputValue" ref="input"
                 class="flex-1 outline-none bg-transparent text-sm" />
             <component v-if="rightIcon" :is="rightIcon" class="w-5 h-5 text-gray-500 ml-2 cursor-pointer"
                 @click="onRightIconClick" />
@@ -17,10 +17,16 @@
             {{ error }}
         </p>
     </div>
-</template> 
+</template>
 
 <script setup lang="ts">
-import { ref, watch } from "vue";
+import { ref, watch, defineExpose } from "vue";
+
+const input = ref(null);
+
+defineExpose({
+    input
+});
 
 interface Props {
     label?: string;

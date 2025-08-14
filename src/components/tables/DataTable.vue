@@ -2,7 +2,6 @@
 import { Eye, SquarePen, Trash } from 'lucide-vue-next';
 import PaginationControls from '@components/tables/PaginationControls.vue';
 import SearchFilterToolbar from '@components/tables/SearchFilterToolbar.vue';
-
 /*  
 Props:
 
@@ -28,9 +27,9 @@ const filteredData = () => {
     // console.log("Starting: ", (props.perPage * props.currentPage) - props.perPage - 1);
     // console.log("Last", props.perPage * props.currentPage);
 
-    return props.data.filter((item: any, index: any) => 
+    return props.data.filter((_item: any, index: any) =>
         index > (props.perPage * props.currentPage) - props.perPage - 1
-        && 
+        &&
         index < props.perPage * props.currentPage
     );
 }
@@ -45,8 +44,8 @@ const handleShowPerPageUpdate = (perPageValue: number) => {
 <template>
     <div class="space-y-4">
         <SearchFilterToolbar @showPerPageUpdated="handleShowPerPageUpdate" />
-
-        <div className="overflow-x-auto rounded-sm border border-base-content/5 bg-base-100">
+        <!-- overflow-x-auto  -->
+        <div className="rounded-sm border border-base-content/5 bg-base-100">
             <table className="table table-zebra">
                 <thead class="text-sm bg-ic-primary text-white">
                     <tr>
@@ -55,28 +54,46 @@ const handleShowPerPageUpdate = (perPageValue: number) => {
                     </tr>
                 </thead>
                 <tbody>
-                    <tr v-for="item in filteredData()" :key="item.id">
-                        <td v-for="header) in props.headers"
-                            :key="header.name"
-                        >
+                    <tr v-for="(item, index) in filteredData()" :key="item.id">
+                        <td v-for="header in props.headers" :key="header.name">
                             {{ item[header.name] }}
                         </td>
 
-                        <td class="flex items-center justify-evenly">
-                            <button class="text-blue-500 cursor-pointer"><Eye /></button>
-                            <button class="text-yellow-500 cursor-pointer"><SquarePen /></button>
-                            <button class="text-red-500 cursor-pointer"><Trash /></button>
+                        <td>
+                            <div :class="{
+                                'dropdown dropdown-end': true,
+                                'dropdown-bottom': index !== filteredData().length - 1,
+                                'dropdown-top': index === filteredData().length - 1
+                            }">
+                                <div tabindex="0" role="button" class="btn m-1"> Action</div>
+                                <div tabindex="0"
+                                    class="dropdown-content menu bg-base-100 w-36 rounded-box z-1 shadow-lg border border-gray-200">
+                                    <button
+                                        class="text-blue-500 cursor-pointer flex items-center space-x-1 p-1 hover:bg-gray-100 rounded">
+                                        <div>
+                                            <Eye class="size-6" />
+                                        </div>
+                                        <span>View</span>
+                                    </button>
+                                    <button
+                                        class="text-yellow-500 cursor-pointer flex items-center space-x-1 p-1 hover:bg-gray-100 rounded">
+                                        <SquarePen class="size-6" />
+                                        <span>Edit</span>
+                                    </button>
+                                    <button
+                                        class="text-red-500 cursor-pointer flex items-center space-x-1 p-1 hover:bg-gray-100 rounded">
+                                        <Trash class="size-6" />
+                                        <span>Delete</span>
+                                    </button>
+                                </div>
+                            </div>
                         </td>
                     </tr>
                 </tbody>
             </table>
         </div>
-    
-        <PaginationControls 
-            :totalEntries="props.data.length" 
-            :currentPage="props.currentPage"
-            :perPage="props.perPage"
-            @pageChange="emit('pageChange', $event)"
-        />
+
+        <PaginationControls :totalEntries="props.data.length" :currentPage="props.currentPage" :perPage="props.perPage"
+            @pageChange="emit('pageChange', $event)" />
     </div>
 </template>

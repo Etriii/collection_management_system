@@ -13,7 +13,7 @@
 
             <form @submit.prevent="handleLoginButtonClick" class="space-y-2">
                 <Input type="email" label="Username" v-model="loginForm.username" :leftIcon="Mail"
-                    placeholder="Enter your username or email" required />
+                    placeholder="Enter your username or email" required ref="inputElement" />
                 <Input :type="loginForm.passwordIconToggled ? 'text' : 'password'" label="Password"
                     v-model="loginForm.password" :leftIcon="LockKeyhole"
                     :right-icon="loginForm.passwordIconToggled ? Eye : EyeOff"
@@ -46,15 +46,23 @@
 </template>
 
 <script setup>
-
 import Input from "@components/forms/Input.vue";
-import { ref } from "vue";
+import { ref, onMounted } from "vue";
 
 import { useRouter } from 'vue-router';
 
 import { Mail, LockKeyhole, EyeOff, Eye } from "lucide-vue-next";
 
 import Button from "@components/button/Button.vue";
+
+const inputElement = ref("")
+
+onMounted(() => {
+    if (inputElement.value && inputElement.value.input) {
+        inputElement.value.input.focus();
+    }
+});
+
 
 const router = useRouter();
 

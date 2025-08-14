@@ -14,9 +14,9 @@ const headers = [
 
 const dummyURL = 'localhost:8000//api/students/'
 
-const fetchStudents = () => {
-    // fetch students data
-}
+// const fetchStudents = () => {
+//     // fetch students data
+// }
 
 /*
 the fields and methods below are needed it's because,
