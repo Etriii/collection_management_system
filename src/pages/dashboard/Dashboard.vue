@@ -66,7 +66,6 @@ const upcomingDeadlines = [
     <main class="container mx-auto px-4 py-2">
       <div class="flex items-center justify-between mb-8">
         <div>
-          <h1 class="text-3xl font-bold text-gray-900">Dashboard</h1>
           <p class="text-gray-600 mt-1">Welcome back! Here's what's happening with your collections.</p>
         </div>
         <RouterLink to="/transactions/new" class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg">
@@ -124,11 +123,8 @@ const upcomingDeadlines = [
           <p class="text-sm text-gray-500 mb-4">Latest payment activities</p>
 
           <div class="space-y-4">
-            <div
-              v-for="t in recentTransactions"
-              :key="t.id"
-              class="flex items-center justify-between p-4 border rounded-lg"
-            >
+            <div v-for="t in recentTransactions" :key="t.id"
+              class="flex items-center justify-between p-4 border rounded-lg">
               <div class="flex items-center space-x-4">
                 <div :class="['p-2 rounded-full', t.status === 'completed' ? 'bg-green-100' : 'bg-yellow-100']">
                   <CheckCircle v-if="t.status === 'completed'" class="h-4 w-4 text-green-600" />
@@ -142,10 +138,8 @@ const upcomingDeadlines = [
               <div class="text-right">
                 <p class="font-semibold">₱{{ t.amount.toLocaleString() }}</p>
                 <div class="flex items-center space-x-2 justify-end">
-                  <span
-                    class="px-2 py-1 text-xs rounded-full"
-                    :class="t.method === 'GCash' ? 'bg-blue-100 text-blue-600' : 'bg-gray-200 text-gray-600'"
-                  >
+                  <span class="px-2 py-1 text-xs rounded-full"
+                    :class="t.method === 'GCash' ? 'bg-blue-100 text-blue-600' : 'bg-gray-200 text-gray-600'">
                     <Smartphone v-if="t.method === 'GCash'" class="inline mr-1 h-3 w-3" />
                     {{ t.method }}
                   </span>
@@ -157,7 +151,8 @@ const upcomingDeadlines = [
 
           <div class="flex justify-between mt-4 border-t pt-4">
             <RouterLink to="/transactions" class="px-4 py-2 border rounded-lg">View All Transactions</RouterLink>
-            <RouterLink to="/transactions/new" class="px-4 py-2 bg-blue-600 text-white rounded-lg">Record New Payment</RouterLink>
+            <RouterLink to="/transactions/new" class="px-4 py-2 bg-blue-600 text-white rounded-lg">Record New Payment
+            </RouterLink>
           </div>
         </div>
 
@@ -176,7 +171,8 @@ const upcomingDeadlines = [
               <span class="px-2 py-1 text-xs bg-gray-200 rounded">Pending</span>
             </div>
 
-            <RouterLink to="/gcash-approvals" class="w-full block text-center px-4 py-2 bg-blue-600 text-white rounded-lg">
+            <RouterLink to="/gcash-approvals"
+              class="w-full block text-center px-4 py-2 bg-blue-600 text-white rounded-lg">
               Review Payments
             </RouterLink>
           </div>

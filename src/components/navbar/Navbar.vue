@@ -23,7 +23,7 @@ const toggleProfileMenu = () => {
 </script>
 
 <template>
-    <div class="flex justify-between shadow px-4 py-2 transition-all duration-300 bg-white"
+    <div class="flex justify-between shadow-lg px-4 py-2 transition-all duration-300 bg-white z-2"
         :class="[props.isSidebarOpen ? props.contentMargin : 'ml-0']">
         <div class="flex items-center gap-4">
             <button @click="props.toggleSidebar" class="cursor-pointer">
@@ -47,7 +47,8 @@ const toggleProfileMenu = () => {
             <div class="relative w-10 cursor-pointer" @click="toggleProfileMenu">
                 <img :src="props.profilePicPath" alt="logo" class="hover:outline-3 hover:outline-gray-300 rounded-full">
 
-                <ChevronDown :size="15" class="absolute right-0 -bottom-1 bg-gray-200 rounded-full transition-all duration-100 border-2 border-white"
+                <ChevronDown :size="15"
+                    class="absolute right-0 -bottom-1 bg-gray-200 rounded-full transition-all duration-100 border-2 border-white"
                     :class="[isProfileMenuOpen ? 'rotate-180' : '']" />
 
                 <!-- profile menu -->
