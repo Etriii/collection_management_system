@@ -64,10 +64,14 @@ const upcomingDeadlines = [
   <div class="min-h-screen bg-gray-50/50">
 
     <main class="container mx-auto px-4 py-2">
-      <div class="flex items-center justify-between mb-8">
-        <div>
+
+      <header class="mb-8">
+        <h1 class="text-3xl font-bold text-gray-900 leading-tight">Dashboard</h1>
+         <div>
           <p class="text-gray-600 mt-1">Welcome back! Here's what's happening with your collections.</p>
         </div>
+      </header>
+      <div class="flex items-center justify-end mb-8">
         <RouterLink to="/transactions/new" class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg">
           <CreditCard class="mr-2 h-4 w-4" />
           Record Payment

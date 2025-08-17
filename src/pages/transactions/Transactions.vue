@@ -141,6 +141,12 @@ function handleDelete(id: string) {
 <template>
   <div class="min-h-screen bg-gray-50">
     <div class="container mx-auto px-4 py-8">
+
+      <header class="mb-8">
+        <h1 class="text-3xl font-bold text-gray-900 leading-tight">Transactions</h1>
+        <p class="text-sm text-gray-500 mt-1">View and manage all financial transactions</p>
+      </header>
+
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3 gap-6 mb-8">
 
         <!-- stats grid -->
@@ -174,11 +180,7 @@ function handleDelete(id: string) {
 
       <!-- main -->
       <div class="bg-white rounded-xl shadow p-6">
-        <div class="flex items-center justify-between mb-4">
-          <div>
-            <h2 class="text-3xl font-bold text-gray-900 leading-tight">Transactions</h2>
-            <p class="text-sm text-gray-500 mt-1">View and manage all financial transactions</p>
-          </div>
+        <div class="flex items-center justify-end mb-6">
           <button
             class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
             @click="isCreateTransactionDialogOpen = true">
