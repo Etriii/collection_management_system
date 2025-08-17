@@ -131,7 +131,7 @@ function handleCreate() {
     name: newCollection.value.name,
     description: newCollection.value.description,
     amount: newCollection.value.amount,
-    collected: 0, 
+    collected: 0,
     dueDate: newCollection.value.dueDate,
     category: newCollection.value.category,
     status: newCollection.value.status,
@@ -160,13 +160,19 @@ function handleDelete(id: string) {
 <template>
   <div class="min-h-screen bg-gray-50">
     <div class="container mx-auto px-4 py-8">
+
+      <header class="mb-8">
+        <h1 class="text-3xl font-bold text-gray-900 leading-tight">Fee Collections</h1>
+        <p class="text-sm text-gray-500 mt-1">Manage fee types and collection settings</p>
+      </header>
+
       <!-- Stats -->
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-8">
         <div class="p-6 bg-white rounded-xl shadow flex items-center justify-between">
           <div>
             <div class="text-3xl font-bold">{{ collections.length }}</div>
             <p class="text-sm text-gray-500">Total Collections</p>
-                  <p class="text-xs text-gray-400">Number of Total Collection</p>
+            <p class="text-xs text-gray-400">Number of Total Collection</p>
           </div>
           <LayoutGrid class="h-8 w-8 text-blue-500" />
         </div>
@@ -174,7 +180,7 @@ function handleDelete(id: string) {
           <div>
             <div class="text-3xl font-bold text-green-600">{{ stats.activeCount }}</div>
             <p class="text-sm text-gray-500">Active</p>
-                  <p class="text-xs text-gray-400">Number of Active Collections</p>
+            <p class="text-xs text-gray-400">Number of Active Collections</p>
           </div>
           <CheckCircle class="h-8 w-8 text-green-500" />
         </div>
@@ -182,7 +188,7 @@ function handleDelete(id: string) {
           <div>
             <div class="text-3xl font-bold text-blue-600">{{ stats.completedCount }}</div>
             <p class="text-sm text-gray-500">Completed</p>
-                  <p class="text-xs text-gray-400">All Completed Collections</p>
+            <p class="text-xs text-gray-400">All Completed Collections</p>
           </div>
           <CalendarCheck class="h-8 w-8 text-blue-500" />
         </div>
@@ -199,12 +205,9 @@ function handleDelete(id: string) {
       <!-- main -->
       <div class="bg-white rounded-xl shadow p-6">
 
-        <div class="flex items-center justify-between mb-4">
-          <div>
-            <h2 class="text-3xl font-bold text-gray-900 leading-tight">Fee Collections</h2>
-            <p class="text-sm text-gray-500 mt-1">Manage fee types and collection settings</p>
-          </div>
-          <button class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+        <div class="flex justify-end mb-6">
+          <button
+            class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
             @click="isDialogOpen = true">
             <Plus class="mr-2 h-4 w-4" />
             New Collection
@@ -255,7 +258,7 @@ function handleDelete(id: string) {
                   </div>
                 </div>
               </div>
-              
+
               <div class="mt-4 space-y-2 text-sm">
                 <div class="flex justify-between">
                   <span class="text-gray-600">Amount per student</span>
@@ -290,8 +293,8 @@ function handleDelete(id: string) {
                 @click="console.log('Edit', c.id)">
                 Edit
               </button>
-              <button class="px-3 py-2 rounded-md border text-red-600 hover:bg-red-50 transition-colors" @click="handleDelete(c.id)"
-                aria-label="Delete" title="Delete">
+              <button class="px-3 py-2 rounded-md border text-red-600 hover:bg-red-50 transition-colors"
+                @click="handleDelete(c.id)" aria-label="Delete" title="Delete">
                 <Trash2 class="h-4 w-4" />
               </button>
             </div>
