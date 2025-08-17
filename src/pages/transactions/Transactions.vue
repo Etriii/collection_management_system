@@ -7,7 +7,8 @@ import {
   Clock,
   Send,
   XCircle,
-  CreditCard
+  CreditCard,
+  Eye,
 } from "lucide-vue-next"
 
 
@@ -51,7 +52,8 @@ const transactions = ref<Transaction[]>([
 const searchQuery = ref("")
 const activeFilter = ref<"all" | TransactionStatus>("all")
 const isCreateTransactionDialogOpen = ref(false)
-
+const isViewTransactionDialogOpen = ref(false)
+const selectedTransaction = ref<Transaction | null>(null)
 const newTransaction = ref<NewTransaction>({
   transactionNumber: "",
   studentId: "",
@@ -119,6 +121,20 @@ function handleCreateTransaction() {
     amount: 0,
     dueDate: ""
   }
+}
+
+const showDialog = (transaction: Transaction) => {
+  selectedTransaction.value = transaction;
+  isViewTransactionDialogOpen.value = true;
+};
+
+const hideDialog = () => {
+  isViewTransactionDialogOpen.value = false;
+  selectedTransaction.value = null;
+};
+
+function handleDelete(id: string) {
+  transactions.value = transactions.value.filter((t) => t.id !== id);
 }
 </script>
 
@@ -214,7 +230,10 @@ function handleCreateTransaction() {
                   Due Date</th>
                 <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                   Status</th>
+                <th scope="col" class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                  Actions</th>
               </tr>
+
             </thead>
             <tbody class="bg-white divide-y divide-gray-200">
 
@@ -251,6 +270,15 @@ function handleCreateTransaction() {
                     }}
                   </span>
                 </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                  <div class="px-3.5">
+                    <button @click="showDialog(transaction)" class="text-gray-600 hover:text-gray-900"
+                      title="View Details">
+                      <Eye class="h-5 w-5" />
+                    </button>
+
+                  </div>
+                </td>
               </tr>
             </tbody>
           </table>
@@ -273,7 +301,12 @@ function handleCreateTransaction() {
               class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               placeholder="TRN-2025-001" required />
           </div>
-
+          <div>
+            <label for="studentName" class="block mb-1 text-sm font-medium text-gray-700">Student ID</label>
+            <input id="studentName" v-model="newTransaction.studentId"
+              class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              placeholder="2023-00000" required />
+          </div>
           <div>
             <label for="studentName" class="block mb-1 text-sm font-medium text-gray-700">Student Name</label>
             <input id="studentName" v-model="newTransaction.student"
@@ -318,6 +351,80 @@ function handleCreateTransaction() {
             </button>
           </div>
         </form>
+      </div>
+    </div>
+
+    <!-- modal for viewing transaction -->
+    <div v-if="isViewTransactionDialogOpen" class="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
+      <div class="bg-white rounded-xl shadow-lg p-8 w-full max-w-lg">
+        <div class="flex justify-between items-center mb-4">
+          <h2 class="text-2xl font-bold text-gray-800">Transaction Details</h2>
+          <button @click="hideDialog" class="text-gray-400 hover:text-gray-600 transition-colors">
+            <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        </div>
+        <div v-if="selectedTransaction" class="space-y-4">
+          <div class="border-b border-gray-200 pb-4">
+            <p class="text-sm text-gray-500">Transaction Number</p>
+            <p class="text-lg font-medium text-gray-900">{{ selectedTransaction.transactionNumber }}</p>
+          </div>
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <p class="text-sm text-gray-500">Student Name</p>
+              <p class="font-medium">{{ selectedTransaction.student }}</p>
+            </div>
+            <div>
+              <p class="text-sm text-gray-500">Student ID</p>
+              <p class="font-medium">{{ selectedTransaction.studentId }}</p>
+            </div>
+          </div>
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <p class="text-sm text-gray-500">Amount</p>
+              <p class="font-medium">₱{{ selectedTransaction.amount.toLocaleString() }}</p>
+            </div>
+            <div>
+              <p class="text-sm text-gray-500">Due Date</p>
+              <p class="font-medium">{{ new Date(selectedTransaction.dueDate).toLocaleDateString() }}</p>
+            </div>
+          </div>
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <p class="text-sm text-gray-500">Category</p>
+              <p class="font-medium">{{ (selectedTransaction.category as string).charAt(0).toUpperCase() +
+                (selectedTransaction.category as string).slice(1) }}</p>
+            </div>
+            <div>
+              <p class="text-sm text-gray-500">Gcash</p>
+              <p class="font-medium">Yes/No</p>
+            </div>
+          </div>
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <p class="text-sm text-gray-500">Status</p>
+              <span class="px-2 py-1 text-xs font-semibold rounded-full" :class="{
+                'bg-blue-100 text-blue-800': selectedTransaction.status === 'sent',
+                'bg-green-100 text-green-800': selectedTransaction.status === 'paid',
+                'bg-red-100 text-red-800': selectedTransaction.status === 'overdue'
+              }">
+                {{ (selectedTransaction.status as string).charAt(0).toUpperCase() + (selectedTransaction.status as
+                  string).slice(1) }}
+              </span>
+            </div>
+            <div>
+              <p class="text-sm text-gray-500">Received by</p>
+              <p class="font-medium text-purple-900 ">Logged in Account</p>
+            </div>
+          </div>
+        </div>
+        <div class="flex justify-end mt-8">
+          <button @click="hideDialog"
+            class="px-5 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors">
+            Close
+          </button>
+        </div>
       </div>
     </div>
   </div>
