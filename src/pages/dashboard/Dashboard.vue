@@ -24,33 +24,9 @@ const dashboardStats = {
 }
 
 const recentTransactions = [
-  {
-    id: '1',
-    studentName: 'Maria Santos',
-    amount: 1250,
-    type: 'Tuition Fee',
-    status: 'completed',
-    method: 'GCash',
-    time: '2 mins ago'
-  },
-  {
-    id: '2',
-    studentName: 'Juan Dela Cruz',
-    amount: 850,
-    type: 'Locker Rental',
-    status: 'completed',
-    method: 'Cash',
-    time: '5 mins ago'
-  },
-  {
-    id: '3',
-    studentName: 'Ana Rodriguez',
-    amount: 2150,
-    type: 'Laboratory Fee',
-    status: 'pending',
-    method: 'GCash',
-    time: '15 mins ago'
-  }
+  { id: '1', studentName: 'Maria Santos', amount: 1250, type: 'Tuition Fee', status: 'completed', method: 'GCash', time: '2 mins ago' },
+  { id: '2', studentName: 'Juan Dela Cruz', amount: 850, type: 'Locker Rental', status: 'completed', method: 'Cash', time: '5 mins ago' },
+  { id: '3', studentName: 'Ana Rodriguez', amount: 2150, type: 'Laboratory Fee', status: 'pending', method: 'GCash', time: '15 mins ago' }
 ]
 
 const upcomingDeadlines = [
@@ -64,22 +40,19 @@ const upcomingDeadlines = [
   <div class="min-h-screen bg-gray-50/50">
 
     <main class="container mx-auto px-4 py-2">
-
-      <header class="mb-8">
-        <h1 class="text-3xl font-bold text-gray-900 leading-tight">Dashboard</h1>
-         <div>
-          <p class="text-gray-600 mt-1">Welcome back! Here's what's happening with your collections.</p>
+      <div class="flex justify-between items-center grow mb-3">
+        <p class="text-gray-600 ">Welcome back! Here's what's happening with your collections.</p>
+        <div class="flex items-center justify-end">
+          <RouterLink to="/transactions/new"
+            class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg">
+            <CreditCard class="mr-2 h-4 w-4" />
+            Record Payment
+          </RouterLink>
         </div>
-      </header>
-      <div class="flex items-center justify-end mb-8">
-        <RouterLink to="/transactions/new" class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg">
-          <CreditCard class="mr-2 h-4 w-4" />
-          Record Payment
-        </RouterLink>
       </div>
 
       <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <div class="p-4 bg-white rounded-xl shadow">
+        <div class="p-4 bg-white rounded-xl shadow-lg">
           <div class="flex items-center justify-between">
             <p class="text-sm font-medium">Total Students</p>
             <Users class="h-4 w-4 text-gray-400" />
@@ -88,7 +61,7 @@ const upcomingDeadlines = [
           <p class="text-xs text-gray-500">+12 from last month</p>
         </div>
 
-        <div class="p-4 bg-white rounded-xl shadow">
+        <div class="p-4 bg-white rounded-xl shadow-lg">
           <div class="flex items-center justify-between">
             <p class="text-sm font-medium">Total Collected</p>
             <DollarSign class="h-4 w-4 text-gray-400" />
@@ -97,7 +70,7 @@ const upcomingDeadlines = [
           <p class="text-xs text-gray-500">+15% from last month</p>
         </div>
 
-        <div class="p-4 bg-white rounded-xl shadow">
+        <div class="p-4 bg-white rounded-xl shadow-lg">
           <div class="flex items-center justify-between">
             <p class="text-sm font-medium">Pending Payments</p>
             <Clock class="h-4 w-4 text-gray-400" />
@@ -106,7 +79,7 @@ const upcomingDeadlines = [
           <p class="text-xs text-gray-500">{{ dashboardStats.overduePayments }} overdue</p>
         </div>
 
-        <div class="p-4 bg-white rounded-xl shadow">
+        <div class="p-4 bg-white rounded-xl shadow-lg">
           <div class="flex items-center justify-between">
             <p class="text-sm font-medium">Collection Rate</p>
             <TrendingUp class="h-4 w-4 text-gray-400" />

@@ -1,12 +1,12 @@
 <script setup lang="ts">
-import { ref, computed, type Component } from "vue"
+import { ref, computed} from "vue" //, type Component 
 import {
   Search,
   CheckCircle,
   Clock,
-  LayoutGrid,
+//   LayoutGrid,
   Wallet,
-  Users,
+//   Users,
   CreditCard,
   XCircle,
   Image,

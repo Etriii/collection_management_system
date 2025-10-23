@@ -6,6 +6,8 @@ export const logout = (router: Router) => {
     console.error('Router is not available.');
     return;
   }
+
+  localStorage.clear();
   
   router.push('/login');
 };

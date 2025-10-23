@@ -19,6 +19,10 @@ const toggleSidebar = () => {
 // adjust the width if needed
 const sidebarWidth = 'w-60';
 const contentMargin = ref('ml-60');
+
+const user = localStorage.getItem("userData");
+const username = user ? JSON.parse(user)?.username : "Dev Admin";
+
 </script>
 
 <template>
@@ -27,7 +31,7 @@ const contentMargin = ref('ml-60');
         <Sidebar :sidebarWidth="sidebarWidth" :isSidebarOpen="isSidebarOpen" />
 
         <div class="flex flex-col grow ">
-            <Navbar :isSidebarOpen="isSidebarOpen" :contentMargin="contentMargin" :toggleSidebar="toggleSidebar" :pageTitle="pageTitle" username="IC Admin" :profilePicPath="temp_image" />
+            <Navbar :isSidebarOpen="isSidebarOpen" :contentMargin="contentMargin" :toggleSidebar="toggleSidebar" :pageTitle="pageTitle" :username="username" :profilePicPath="temp_image" />
 
              <!-- content -->
             <div 
