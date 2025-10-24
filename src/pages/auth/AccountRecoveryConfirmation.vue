@@ -66,7 +66,6 @@ const router = useRouter()
 
 const emailStored = useTempStore().get('email')
 const otpExpiry = useTempStore().get('otp-expiry')
-!emailStored || !otpExpiry ? router.push('/account-recovery') : ''
 
 import { ref, onMounted } from 'vue';
 import Input from '@components/forms/Input.vue';
@@ -100,7 +99,7 @@ const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
 const handleVerifyCode = async () => {
     verification.value.loading = true;
     verification.value.Error = "";
-    // NOTE NGA DELE PANI ANG FINAL. THIS SHOULD BE HANDLE SA API. INLCUDING ANG THROTTLING :>
+    // NOTE NGA DELE PANI ANG FINAL. THIS SHOULD BE HANDLED SA API. INLCUDING ANG THROTTLING :>
     await delay(2000);
     if (verification.value.CodeInput === "123456") {
         verification.value.Successfull = true;

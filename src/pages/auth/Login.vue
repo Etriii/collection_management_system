@@ -11,12 +11,12 @@
             <br>
 
             <form @submit.prevent="handleLoginButtonClick" class="space-y-2">
-                <Input type="email" label="Username" v-model="loginForm.username" :leftIcon="Mail"
-                    placeholder="Enter your username or email" required ref="inputElement" />
+                <Input type="text" label="Username" v-model="loginForm.username" :leftIcon="CircleUser"
+                    :error="loginForm.username_error" placeholder="Enter your username" required ref="inputElement" />
                 <Input :type="loginForm.passwordIconToggled ? 'text' : 'password'" label="Password"
                     v-model="loginForm.password" :leftIcon="LockKeyhole"
-                    :right-icon="loginForm.passwordIconToggled ? Eye : EyeOff"
-                    placeholder="Enter your username or email" :onRightIconClick="handlePasswordIconClick" required />
+                    :right-icon="loginForm.passwordIconToggled ? Eye : EyeOff" placeholder="Enter your password"
+                    :onRightIconClick="handlePasswordIconClick" required :error="loginForm.password_error" />
 
                 <div class="flex items-center justify-between">
                     <div class="flex items-center">
@@ -55,7 +55,7 @@
 import Input from "@components/forms/Input.vue";
 import { ref, onMounted } from "vue";
 import { useRouter } from 'vue-router';
-import { Mail, LockKeyhole, EyeOff, Eye } from "lucide-vue-next";
+import { CircleUser, LockKeyhole, EyeOff, Eye } from "lucide-vue-next";
 import Button from "@components/button/Button.vue";
 
 const inputElement = ref("")
@@ -81,6 +81,8 @@ onMounted(() => {
         })
     }
 });
+
+
 
 async function handleCredentialResponse(response) {
     try {
@@ -115,7 +117,7 @@ async function handleCredentialResponse(response) {
 
         const yes = await userData.json()
 
-        if (yes.status_code == 200) { 
+        if (yes.status_code == 200) {
             localStorage.setItem("userData", JSON.stringify(yes.data))
         }
 
@@ -133,7 +135,9 @@ const router = useRouter();
 
 const loginForm = ref({
     username: "",
+    username_error: "",
     password: "",
+    password_error: "",
     loading: false,
     passwordIconToggled: false
 })
@@ -142,21 +146,54 @@ function handlePasswordIconClick() {
     loginForm.value.passwordIconToggled = !loginForm.value.passwordIconToggled;
 }
 
-const handleLoginButtonClick = () => {
-    loginForm.value.loading = true;
-
-    alert("logged in")
+const handleLoginButtonClick = async () => {
 
     const timeout = setTimeout(() => {
         loginForm.value.loading = false;
-        console.log('Login attempt timed out.');
+        alert('Login attempt timed out.');
     }, 10000);
 
-    setTimeout(() => {
-        clearTimeout(timeout);
-        router.push('/');
+    try {
+        loginForm.value.loading = true;
+
+        const loggedInResult = await fetch(import.meta.env.VITE_API_BASE_URL + "api/v1/login/", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ username: loginForm.value.username, password: loginForm.value.password })
+        });
+
+        if (!loggedInResult.ok) {
+            loginForm.value.username_error = "Username or password is not correct"
+            throw new Error(`Failed to log in: ${loggedInResult.statusText}`);
+        }
+
+        const jwtData = await loggedInResult.json();
+
+        // HI GUBOT PANI AKO RANING E REFACTOR AFTER EXPIRMENT
+        localStorage.setItem("refresh", jwtData.data.refresh);
+        localStorage.setItem("access", jwtData.data.access);
+
+        const userData = await fetch(import.meta.env.VITE_API_BASE_URL + "api/v1/profile/", {
+            method: "GET",
+            headers: { "Content-Type": "application/json", "Authorization": `Bearer ${jwtData.data.access}` },
+        });
+
+        const yes = await userData.json()
+
+        if (yes.status_code == 200) {
+            localStorage.setItem("userData", JSON.stringify(yes.data))
+        }
+
+        setTimeout(() => {
+            router.push('/');
+            loginForm.value.loading = false;
+        }, 1000);
+    } catch (e) {
         loginForm.value.loading = false;
-    }, 1000);
+        clearTimeout(timeout);
+        console.error('Error:', e);
+        alert("login failed.");
+    }
 
 };
 </script>
