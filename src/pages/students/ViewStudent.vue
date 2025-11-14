@@ -546,6 +546,8 @@ const paginatedSubmissions = computed(() => paginate(filteredSubmissions.value))
                                 <thead class="bg-gray-50">
                                     <tr>
                                         <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase">
+                                            ID</th>
+                                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase">
                                             Description</th>
                                         <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase">
                                             Amount</th>
@@ -557,6 +559,8 @@ const paginatedSubmissions = computed(() => paginate(filteredSubmissions.value))
                                 </thead>
                                 <tbody class="bg-white divide-y divide-gray-200">
                                     <tr v-for="fee in paginatedFees" :key="fee.id" class="hover:bg-gray-50">
+                                        <td class="px-6 py-4 text-sm font-medium text-gray-900">{{ fee.id }}
+                                        </td>
                                         <td class="px-6 py-4 text-sm font-medium text-gray-900">{{ fee.description }}
                                         </td>
                                         <td class="px-6 py-4 text-sm text-gray-600">{{ formatCurrency(fee.amount) }}
@@ -619,6 +623,8 @@ const paginatedSubmissions = computed(() => paginate(filteredSubmissions.value))
                                 <thead class="bg-gray-50">
                                     <tr>
                                         <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase">
+                                            ID</th>
+                                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase">
                                             Date</th>
                                         <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase">
                                             Amount</th>
@@ -634,6 +640,7 @@ const paginatedSubmissions = computed(() => paginate(filteredSubmissions.value))
                                 </thead>
                                 <tbody class="bg-white divide-y divide-gray-200">
                                     <tr v-for="payment in paginatedPayments" :key="payment.id" class="hover:bg-gray-50">
+                                          <td class="px-6 py-4 text-sm text-gray-600">{{ payment.id }}</td>
                                         <td class="px-6 py-4 text-sm text-gray-600">{{ payment.payment_date }}</td>
                                         <td class="px-6 py-4 text-sm font-semibold text-emerald-600">{{
                                             formatCurrency(payment.amount) }}</td>
@@ -692,6 +699,7 @@ const paginatedSubmissions = computed(() => paginate(filteredSubmissions.value))
                                 class="border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow">
                                 <div class="flex items-start justify-between mb-4">
                                     <div class="flex-grow">
+                                           <p class="text-sm text-gray-600 mb-1">ID: {{ submission.id }}</p>
                                         <div class="flex items-center gap-3 mb-2">
                                             <h3 class="text-lg font-semibold text-gray-900">{{
                                                 formatCurrency(submission.amount) }}</h3>
