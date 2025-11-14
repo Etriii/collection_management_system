@@ -15,7 +15,7 @@ import {
 } from "lucide-vue-next"
 
 const currentPage = ref(1);
-const perPage = ref(3);
+const perPage = ref(5);
 
 const handlePageChange = (page: number) => {
   currentPage.value = page;
