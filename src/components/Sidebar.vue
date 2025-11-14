@@ -31,7 +31,7 @@ const props = defineProps<Props>();
             <SidebarLink :icon="ArrowLeftRight" label="GCash Payments" to="/gcash-payments" />
             <SidebarLink :icon="LayoutGrid" label="Collections" to="/collections" />
             <SidebarLink :icon="FileText" label="Reports" to="/reports" />
-            <SidebarLink :icon="UserRoundCog" label="Users" to="/users" />
+            <!-- <SidebarLink :icon="UserRoundCog" label="Users" to="/users" /> -->
             <SidebarLink :icon="History" label="Activity" to="/activities" />
         </div>
     </aside>
