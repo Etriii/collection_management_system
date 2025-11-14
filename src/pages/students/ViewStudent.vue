@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, watch } from 'vue';
 import {
     ArrowLeft,
     Mail,
@@ -46,6 +46,14 @@ const fees = ref([
     { id: 2, description: 'Laboratory Fee', amount: 5000, status: 'paid' as const, due_date: 'September 1, 2024' },
     { id: 3, description: 'Library Fee', amount: 1500, status: 'pending' as const, due_date: 'November 30, 2024' },
     { id: 4, description: 'Miscellaneous Fee', amount: 3000, status: 'overdue' as const, due_date: 'October 15, 2024' },
+    { id: 5, description: 'Tuition Fee', amount: 25000, status: 'paid' as const, due_date: 'September 1, 2024' },
+    { id: 6, description: 'Laboratory Fee', amount: 5000, status: 'paid' as const, due_date: 'September 1, 2024' },
+    { id: 7, description: 'Library Fee', amount: 1500, status: 'pending' as const, due_date: 'November 30, 2024' },
+    { id: 8, description: 'Miscellaneous Fee', amount: 3000, status: 'overdue' as const, due_date: 'October 15, 2024' },
+    { id: 9, description: 'Tuition Fee', amount: 25000, status: 'paid' as const, due_date: 'September 1, 2024' },
+    { id: 10, description: 'Laboratory Fee', amount: 5000, status: 'paid' as const, due_date: 'September 1, 2024' },
+    { id: 11, description: 'Library Fee', amount: 1500, status: 'pending' as const, due_date: 'November 30, 2024' },
+    { id: 12, description: 'Miscellaneous Fee', amount: 3000, status: 'overdue' as const, due_date: 'October 15, 2024' },
 ]);
 
 const payments = ref([
@@ -69,6 +77,77 @@ const payments = ref([
     },
     {
         id: 3,
+        amount: 5000,
+        payment_date: 'September 15, 2024',
+        method: 'Cash',
+        reference: 'CASH-2024-000568',
+        status: 'completed' as const,
+        applied_to: 'Laboratory Fee',
+    },
+    {
+        id: 4,
+        amount: 15000,
+        payment_date: 'August 25, 2024',
+        method: 'Bank Transfer',
+        reference: 'BT-2024-001234',
+        status: 'completed' as const,
+        applied_to: 'Tuition Fee (Partial)',
+    },
+    {
+        id: 5,
+        amount: 10000,
+        payment_date: 'September 15, 2024',
+        method: 'Cash',
+        reference: 'CASH-2024-000567',
+        status: 'completed' as const,
+        applied_to: 'Tuition Fee (Balance)',
+    },
+    {
+        id: 6,
+        amount: 5000,
+        payment_date: 'September 15, 2024',
+        method: 'Cash',
+        reference: 'CASH-2024-000568',
+        status: 'completed' as const,
+        applied_to: 'Laboratory Fee',
+    },
+    {
+        id: 7,
+        amount: 5000,
+        payment_date: 'September 15, 2024',
+        method: 'Cash',
+        reference: 'CASH-2024-000568',
+        status: 'completed' as const,
+        applied_to: 'Laboratory Fee',
+    },
+    {
+        id: 8,
+        amount: 5000,
+        payment_date: 'September 15, 2024',
+        method: 'Cash',
+        reference: 'CASH-2024-000568',
+        status: 'completed' as const,
+        applied_to: 'Laboratory Fee',
+    },
+    {
+        id: 9,
+        amount: 5000,
+        payment_date: 'September 15, 2024',
+        method: 'Cash',
+        reference: 'CASH-2024-000568',
+        status: 'completed' as const,
+        applied_to: 'Laboratory Fee',
+    },
+    {
+        id: 10,
+        amount: 5000,
+        payment_date: 'September 15, 2024',
+        method: 'Cash',
+        reference: 'CASH-2024-000568',
+        status: 'completed' as const,
+        applied_to: 'Laboratory Fee',
+    }, {
+        id: 11,
         amount: 5000,
         payment_date: 'September 15, 2024',
         method: 'Cash',
@@ -109,6 +188,96 @@ const submissions = ref([
         proof_url: '#',
         notes: 'Library Fee payment',
     },
+    {
+        id: 4,
+        amount: 3000,
+        submission_date: 'November 10, 2024',
+        method: 'GCash',
+        reference: 'GC-2024-789012',
+        status: 'pending' as const,
+        proof_url: '#',
+        notes: 'Payment for Miscellaneous Fee',
+    },
+    {
+        id: 5,
+        amount: 1500,
+        submission_date: 'November 12, 2024',
+        method: 'Bank Transfer',
+        reference: 'BT-2024-345678',
+        status: 'verified' as const,
+        proof_url: '#',
+        notes: 'Library Fee payment',
+    },
+    {
+        id: 6,
+        amount: 1600,
+        submission_date: 'November 12, 2025',
+        method: 'Bank Transfer',
+        reference: 'BT-2024-845672',
+        status: 'rejected' as const,
+        proof_url: '#',
+        notes: 'Library Fee payment',
+    },
+    {
+        id: 7,
+        amount: 3000,
+        submission_date: 'November 10, 2024',
+        method: 'GCash',
+        reference: 'GC-2024-789012',
+        status: 'pending' as const,
+        proof_url: '#',
+        notes: 'Payment for Miscellaneous Fee',
+    },
+    {
+        id: 8,
+        amount: 1500,
+        submission_date: 'November 12, 2024',
+        method: 'Bank Transfer',
+        reference: 'BT-2024-345678',
+        status: 'verified' as const,
+        proof_url: '#',
+        notes: 'Library Fee payment',
+    },
+    {
+        id: 9,
+        amount: 1600,
+        submission_date: 'November 12, 2025',
+        method: 'Bank Transfer',
+        reference: 'BT-2024-845672',
+        status: 'rejected' as const,
+        proof_url: '#',
+        notes: 'Library Fee payment',
+    },
+    {
+        id: 10,
+        amount: 3000,
+        submission_date: 'November 10, 2024',
+        method: 'GCash',
+        reference: 'GC-2024-789012',
+        status: 'pending' as const,
+        proof_url: '#',
+        notes: 'Payment for Miscellaneous Fee',
+    },
+    {
+        id: 11,
+        amount: 1500,
+        submission_date: 'November 12, 2024',
+        method: 'Bank Transfer',
+        reference: 'BT-2024-345678',
+        status: 'verified' as const,
+        proof_url: '#',
+        notes: 'Library Fee payment',
+    },
+    {
+        id: 12,
+        amount: 1600,
+        submission_date: 'November 12, 2025',
+        method: 'Bank Transfer',
+        reference: 'BT-2024-845672',
+        status: 'rejected' as const,
+        proof_url: '#',
+        notes: 'Library Fee payment',
+    },
 ]);
 
 const pendingSubmissions = computed(() => submissions.value.filter(s => s.status === 'pending').length);
@@ -133,6 +302,82 @@ function formatCurrency(amount: number) {
         currency: 'PHP',
     }).format(amount);
 }
+
+const searchQuery = ref("");
+const statusFilter = ref("all");
+
+const itemsPerPage = 5;
+const currentPage = ref(1);
+
+function paginate(list: any[]) {
+    const start = (currentPage.value - 1) * itemsPerPage;
+    return list.slice(start, start + itemsPerPage);
+}
+
+const totalPages = computed(() => (listLength: number) =>
+    Math.ceil(listLength / itemsPerPage)
+);
+
+watch([searchQuery, statusFilter], () => (currentPage.value = 1));
+
+
+const filteredFees = computed(() => {
+    const q = searchQuery.value.toLowerCase();
+
+    return fees.value.filter(f =>
+        (
+            f.description.toLowerCase().includes(q) ||
+            f.amount.toString().includes(q) ||
+            f.status.toLowerCase().includes(q) ||
+            f.due_date.toLowerCase().includes(q)
+        ) &&
+        (statusFilter.value === "all" || f.status === statusFilter.value)
+    );
+});
+
+const paginatedFees = computed(() => paginate(filteredFees.value));
+
+const filteredPayments = computed(() => {
+    const q = searchQuery.value.toLowerCase();
+
+    return payments.value.filter(p =>
+        (
+            p.method.toLowerCase().includes(q) ||
+            p.reference.toLowerCase().includes(q) ||
+            p.amount.toString().includes(q) ||
+            p.payment_date.toLowerCase().includes(q) ||
+            p.status.toLowerCase().includes(q) ||
+            p.applied_to.toLowerCase().includes(q)
+        ) &&
+        (statusFilter.value === "all" || p.status === statusFilter.value)
+    );
+});
+      
+const paginatedPayments = computed(() => paginate(filteredPayments.value));
+
+const filteredSubmissions = computed(() => {
+    const q = searchQuery.value.toLowerCase();
+
+    return submissions.value
+        .filter(s =>
+            (
+                s.method.toLowerCase().includes(q) ||
+                s.reference.toLowerCase().includes(q) ||
+                s.status.toLowerCase().includes(q) ||
+                s.submission_date.toLowerCase().includes(q) ||
+                s.notes.toLowerCase().includes(q) ||
+                s.amount.toString().includes(q)
+            ) &&
+            (statusFilter.value === "all" || s.status === statusFilter.value)
+        )
+        .sort((a, b) => {
+            if (a.status === "pending" && b.status !== "pending") return -1;
+            if (a.status !== "pending" && b.status === "pending") return 1;
+            return 0;
+        });
+});
+
+const paginatedSubmissions = computed(() => paginate(filteredSubmissions.value));
 </script>
 
 <template>
@@ -193,10 +438,10 @@ function formatCurrency(amount: number) {
                         <div class="flex gap-2 justify-end">
                             <button @click="emit('edit', student)"
                                 class="px-4 py-2  text-gray-600 rounded-lg hover:bg-gray-200 hover:text-gray-600 transition-colors flex font-bold">
-                                 <Pencil class="h-5 w-5 mr-3 text-gray-600" />
+                                <Pencil class="h-5 w-5 mr-3 text-gray-600" />
                                 Edit
                             </button>
-                         
+
                         </div>
                     </div>
                 </div>
@@ -241,7 +486,7 @@ function formatCurrency(amount: number) {
                 </div>
             </div>
 
-            <!-- Tabs -->
+            <!-- Tabs Container -->
             <div class="bg-white rounded-2xl shadow-lg overflow-hidden mb-6">
                 <div class="border-b border-gray-200">
                     <nav class="flex -mb-px">
@@ -280,6 +525,22 @@ function formatCurrency(amount: number) {
                 <div class="p-6">
                     <!-- Fees Tab -->
                     <div v-if="activeTab === 'fees'">
+                        <div v-if="fees.length != 0" class="flex items-center justify-between mb-4">
+                            <!-- Search -->
+                            <input v-model="searchQuery" type="text" placeholder="Search..."
+                                class="px-4 py-2 border border-gray-300 rounded-lg w-1/2" />
+
+                            <!-- Filter -->
+                            <select v-model="statusFilter" class="px-4 py-2 border border-gray-300 rounded-lg">
+                                <option value="all">All</option>
+                                <option value="paid">Paid</option>
+                                <option value="pending">Pending</option>
+                                <option value="overdue">Overdue</option>
+                                <option value="completed">Completed</option>
+                                <option value="verified">Verified</option>
+                                <option value="rejected">Rejected</option>
+                            </select>
+                        </div>
                         <div class="overflow-x-auto">
                             <table class="min-w-full divide-y divide-gray-200">
                                 <thead class="bg-gray-50">
@@ -295,7 +556,7 @@ function formatCurrency(amount: number) {
                                     </tr>
                                 </thead>
                                 <tbody class="bg-white divide-y divide-gray-200">
-                                    <tr v-for="fee in fees" :key="fee.id" class="hover:bg-gray-50">
+                                    <tr v-for="fee in paginatedFees" :key="fee.id" class="hover:bg-gray-50">
                                         <td class="px-6 py-4 text-sm font-medium text-gray-900">{{ fee.description }}
                                         </td>
                                         <td class="px-6 py-4 text-sm text-gray-600">{{ formatCurrency(fee.amount) }}
@@ -313,11 +574,46 @@ function formatCurrency(amount: number) {
                                     </tr>
                                 </tbody>
                             </table>
+                             <div v-if="fees.length === 0" class="text-center py-12">
+                                <FileText class="mx-auto h-16 w-16 text-gray-300 mb-4" />
+                                <p class="text-xl font-medium text-gray-700 mb-2">No Fees</p>
+                                <p class="text-sm text-gray-500">Fees will appear here when students have transactions.</p>
+                            </div>
+                            <div v-if="fees.length != 0" class="flex justify-end mt-4 space-x-2">
+                                <button @click="currentPage--" :disabled="currentPage === 1"
+                                    class="px-3 py-1 bg-gray-200 rounded disabled:opacity-50">
+                                    Previous
+                                </button>
+
+                                <button @click="currentPage++"
+                                    :disabled="currentPage === totalPages(filteredFees.length)"
+                                    class="px-3 py-1 bg-gray-200 rounded disabled:opacity-50">
+                                    Next
+                                </button>
+                            </div>
                         </div>
+
                     </div>
+
 
                     <!-- Payments Tab -->
                     <div v-if="activeTab === 'payments'">
+                        <div v-if="payments.length != 0" class="flex items-center justify-between mb-4">
+                            <!-- Search -->
+                            <input v-model="searchQuery" type="text" placeholder="Search..."
+                                class="px-4 py-2 border border-gray-300 rounded-lg w-1/2" />
+
+                            <!-- Filter -->
+                            <select v-model="statusFilter" class="px-4 py-2 border border-gray-300 rounded-lg">
+                                <option value="all">All</option>
+                                <option value="paid">Paid</option>
+                                <option value="pending">Pending</option>
+                                <option value="overdue">Overdue</option>
+                                <option value="completed">Completed</option>
+                                <option value="verified">Verified</option>
+                                <option value="rejected">Rejected</option>
+                            </select>
+                        </div>
                         <div class="overflow-x-auto">
                             <table class="min-w-full divide-y divide-gray-200">
                                 <thead class="bg-gray-50">
@@ -337,7 +633,7 @@ function formatCurrency(amount: number) {
                                     </tr>
                                 </thead>
                                 <tbody class="bg-white divide-y divide-gray-200">
-                                    <tr v-for="payment in payments" :key="payment.id" class="hover:bg-gray-50">
+                                    <tr v-for="payment in paginatedPayments" :key="payment.id" class="hover:bg-gray-50">
                                         <td class="px-6 py-4 text-sm text-gray-600">{{ payment.payment_date }}</td>
                                         <td class="px-6 py-4 text-sm font-semibold text-emerald-600">{{
                                             formatCurrency(payment.amount) }}</td>
@@ -354,13 +650,45 @@ function formatCurrency(amount: number) {
                                     </tr>
                                 </tbody>
                             </table>
+                               <div v-if="payments.length === 0" class="text-center py-12">
+                                <FileText class="mx-auto h-16 w-16 text-gray-300 mb-4" />
+                                <p class="text-xl font-medium text-gray-700 mb-2">No payments</p>
+                                <p class="text-sm text-gray-500">Payments will appear here when students have transactions.</p>
+                            </div>
+                        </div>
+                        <div v-if="payments.length != 0" class="flex justify-end mt-4 space-x-2">
+                            <button @click="currentPage--" :disabled="currentPage === 1"
+                                class="px-3 py-1 bg-gray-200 rounded disabled:opacity-50">
+                                Previous
+                            </button>
+
+                            <button @click="currentPage++" :disabled="currentPage === totalPages(filteredFees.length)"
+                                class="px-3 py-1 bg-gray-200 rounded disabled:opacity-50">
+                                Next
+                            </button>
                         </div>
                     </div>
 
                     <!-- Submissions Tab -->
                     <div v-if="activeTab === 'submissions'">
+                        <div v-if="submissions.length != 0" class="flex items-center justify-between mb-4">
+                            <!-- Search -->
+                            <input v-model="searchQuery" type="text" placeholder="Search..."
+                                class="px-4 py-2 border border-gray-300 rounded-lg w-1/2" />
+
+                            <!-- Filter -->
+                            <select v-model="statusFilter" class="px-4 py-2 border border-gray-300 rounded-lg">
+                                <option value="all">All</option>
+                                <option value="paid">Paid</option>
+                                <option value="pending">Pending</option>
+                                <option value="overdue">Overdue</option>
+                                <option value="completed">Completed</option>
+                                <option value="verified">Verified</option>
+                                <option value="rejected">Rejected</option>
+                            </select>
+                        </div>
                         <div class="space-y-4">
-                            <div v-for="submission in submissions" :key="submission.id"
+                            <div v-for="submission in paginatedSubmissions" :key="submission.id"
                                 class="border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow">
                                 <div class="flex items-start justify-between mb-4">
                                     <div class="flex-grow">
@@ -410,27 +738,42 @@ function formatCurrency(amount: number) {
                                     upload proof of payment.</p>
                             </div>
                         </div>
+
+                        <div v-if="submissions.length != 0" class="flex justify-end mt-4 space-x-2">
+                            <button @click="currentPage--" :disabled="currentPage === 1"
+                                class="px-3 py-1 bg-gray-200 rounded disabled:opacity-50">
+                                Previous
+                            </button>
+
+                            <button @click="currentPage++" :disabled="currentPage === totalPages(filteredFees.length)"
+                                class="px-3 py-1 bg-gray-200 rounded disabled:opacity-50">
+                                Next
+                            </button>
+
+                        </div>
                     </div>
+
                 </div>
+
             </div>
 
 
-             <div class="bg-white rounded-xl shadow-md p-6">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <p class="text-sm text-gray-600 mb-3">Account Settings</p>
-                            <div class="flex">
-                                  <TriangleAlert class="h-7 w-7 mr-2 text-red-600" />
-                                   <p class="text-2xl font-bold text-red-600">DANGER</p>
-                            </div>
-                           
+            <div class="bg-white rounded-xl shadow-md p-6">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm text-gray-600 mb-3">Account Settings</p>
+                        <div class="flex">
+                            <TriangleAlert class="h-7 w-7 mr-2 text-red-600" />
+                            <p class="text-2xl font-bold text-red-600">DANGER</p>
                         </div>
-                           <button @click="emit('delete', student)"
-                                class="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">
-                                Delete
-                            </button>
+
                     </div>
+                    <button @click="emit('delete', student)"
+                        class="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">
+                        Delete
+                    </button>
                 </div>
+            </div>
         </div>
     </div>
 </template>
