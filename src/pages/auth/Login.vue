@@ -184,10 +184,11 @@ const handleLoginButtonClick = async () => {
             localStorage.setItem("userData", JSON.stringify(yes.data))
         }
 
-        setTimeout(() => {
-            router.push('/');
-            loginForm.value.loading = false;
-        }, 1000);
+        // setTimeout(() => {
+        clearTimeout(timeout);
+        router.push('/');
+        loginForm.value.loading = false;
+        // }, 1000);
     } catch (e) {
         loginForm.value.loading = false;
         clearTimeout(timeout);
