@@ -7,6 +7,7 @@ import { Dashboard, Transactions, GCashPayments, Collections, Reports, Users, Ac
 
 import { StudentRoutes } from './index';
 import LogInSignupLayout from "@layouts/LogInSignupLayout.vue";
+import { useAuthStore } from "@pages/auth/presentation/stores/useAuthStore";
 
 /* search the difference between 
 createWebHistory and createWebHashHistory
@@ -18,6 +19,7 @@ const routes: RouteRecordRaw[] = [
     {
         path: '/',
         component: AuthenticatedLayout,
+        meta: { requiresAuth: true },
         children: [
             {
                 path: '',
@@ -77,7 +79,7 @@ const routes: RouteRecordRaw[] = [
         ]
     },
     {
-        path: '/',
+        path: '/auth',
         component: LogInSignupLayout,
         children: [
             {
@@ -110,5 +112,27 @@ const router = createRouter({
     history: createWebHistory(),
     routes: routes
 });
+
+router.beforeEach(async (to, _from, next) => {
+    const authStore = useAuthStore();
+
+    if (!authStore.initialized) {
+        await authStore.initialize();
+    }
+
+    const isLoggedIn = !!authStore.user;
+
+    if (to.meta.requiresAuth && !isLoggedIn) {
+        return next("/auth/login");
+    }
+
+    if (to.path.startsWith("/auth") && isLoggedIn) {
+        return next("/");
+    }
+
+    next();
+});
+
+
 
 export default router;

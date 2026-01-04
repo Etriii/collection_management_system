@@ -138,22 +138,44 @@ const stats = computed(() => {
   }
 })
 
+// const filteredPayments = computed(() => {
+//   currentPage.value = 1;
+//   return payments.value.filter((p) => {
+//     const q = searchQuery.value.toLowerCase()
+//     const matchesSearch =
+//       p.name.toLowerCase().includes(q) ||
+//       p.studentId.toLowerCase().includes(q) ||
+//       p.gcashReference.toLowerCase().includes(q) ||
+//       p.feeType.toLowerCase().includes(q)
+    
+//     const matchesFilter =
+//       activeFilter.value === "all" || p.priority === activeFilter.value
+    
+//     return matchesSearch && matchesFilter
+//   })
+// })
+
 const filteredPayments = computed(() => {
-  currentPage.value = 1;
-  return payments.value.filter((p) => {
-    const q = searchQuery.value.toLowerCase()
-    const matchesSearch =
-      p.name.toLowerCase().includes(q) ||
-      p.studentId.toLowerCase().includes(q) ||
-      p.gcashReference.toLowerCase().includes(q) ||
-      p.feeType.toLowerCase().includes(q)
-    
-    const matchesFilter =
-      activeFilter.value === "all" || p.priority === activeFilter.value
-    
-    return matchesSearch && matchesFilter
-  })
-})
+    const q = searchQuery.value.toLowerCase();
+
+    return payments.value
+        .filter(p =>
+            (
+                p.name.toLowerCase().includes(q) ||
+                p.studentId.toLowerCase().includes(q) ||
+                p.gcashReference.toLowerCase().includes(q) ||
+                p.feeType.toLowerCase().includes(q) 
+            ) &&
+            (activeFilter.value === "all" || p.priority === activeFilter.value)
+        )
+        .sort((a, b) => {
+            if (a.priority === "high" && b.priority !== "high") return -1;
+            if (a.priority !== "high" && b.priority === "high") return 1;
+            return 0;
+            
+        });      
+        
+});
 
 const totalPages = computed(() => {
   return Math.ceil(filteredPayments.value.length / perPage.value);

@@ -1,10 +1,8 @@
 <script setup lang="ts">
-import { LogOut, UserRound, ShieldUser } from 'lucide-vue-next';
-import { logout } from '@utils/logout.ts';
+import { useAuth } from '@pages/auth/presentation/composables/useAuth';
 
-import { useRouter } from 'vue-router';
 
-const router = useRouter()
+const { logout } = useAuth();
 </script>
 
 <template>
@@ -25,7 +23,7 @@ const router = useRouter()
             </div>
         </RouterLink>
         <hr class=" text-red-200">
-        <div class="flex items-center gap-2 px-3 py-2 text-sm hover:bg-red-200" @click="logout(router)">
+        <div class="flex items-center gap-2 px-3 py-2 text-sm hover:bg-red-200" @click="logout">
             <LogOut class="text-red-400" />
             <span class=" text-red-400 font-medium">Logout</span>
         </div>

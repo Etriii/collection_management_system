@@ -43,7 +43,7 @@ const upcomingDeadlines = [
       <div class="flex justify-between items-center grow mb-3">
         <p class="text-gray-600 ">Welcome back! Here's what's happening with your collections.</p>
         <div class="flex items-center justify-end">
-          <RouterLink to="/transactions/new"
+          <RouterLink to="/transactions"
             class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg">
             <CreditCard class="mr-2 h-4 w-4" />
             Record Payment

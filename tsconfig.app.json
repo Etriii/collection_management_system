@@ -1,6 +1,7 @@
 {
   "extends": "@vue/tsconfig/tsconfig.dom.json",
   "compilerOptions": {
+    "allowJs": true,
     "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo",
 
     /* Alias Fix */
@@ -13,6 +14,8 @@
       "@pages/*": ["src/pages/*"],
       "@utils/*": ["src/utils/*"],
       "@store/*":["src/stores/*"],
+      "@services/*":["src/services/*"],
+      "@core/*": ["src/core/*"],
     },
 
     /* Linting */
@@ -23,5 +26,5 @@
     "noFallthroughCasesInSwitch": true,
     "noUncheckedSideEffectImports": true
   },
-  "include": ["src/**/*.ts", "src/**/*.tsx", "src/**/*.vue", "src/utils/expiryTimestamp.js"]
+  "include": ["src/**/*.ts", "src/**/*.tsx", "src/**/*.vue", "src/utils/expiryTimestamp.js", "src/services/apiService.ts"]
 }

@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.1.11",
+    "axios": "^1.13.2",
     "daisyui": "^5.0.50",
     "lucide-vue-next": "^0.537.0",
     "pinia": "^3.0.3",
