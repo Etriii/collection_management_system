@@ -12,3 +12,6 @@ export interface PaginatedApiResnpose<T> {
   total_items: number
   data: T[];
 }
+
+
+// STUDENT TYPES 

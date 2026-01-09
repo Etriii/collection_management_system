@@ -3,7 +3,7 @@ import type { RouteRecordRaw } from 'vue-router'
 
 import AuthenticatedLayout from "@layouts/AuthenticatedLayout.vue";
 
-import { Dashboard, Transactions, GCashPayments, Collections, Reports, Users, Activities, MyAccount, AdminManager, Login, AccountRecovery, PageNotFound, AccountRecoveryConfirmaion } from '@pages/index.ts';
+import { Dashboard, Transactions, GCashPayments, Collections, Reports, Users, Activities, MyAccount, AdminManager, Login, AccountRecovery, PageNotFound, AccountRecoveryConfirmaion, Fees } from '@pages/index.ts';
 
 import { StudentRoutes } from './index';
 import LogInSignupLayout from "@layouts/LogInSignupLayout.vue";
@@ -29,6 +29,12 @@ const routes: RouteRecordRaw[] = [
             },
             ...StudentRoutes,
             {
+                path: 'fees',
+                name: 'fees',
+                component: Fees,
+                meta: { pageTitle: 'Fees' }
+            },
+            {
                 path: 'transactions',
                 name: 'transactions',
                 component: Transactions,
@@ -38,7 +44,7 @@ const routes: RouteRecordRaw[] = [
                 path: 'gcash-payments',
                 name: 'gcash-payments',
                 component: GCashPayments,
-                meta: { pageTitle: 'Transactions' },
+                meta: { pageTitle: 'Gcash Payments' },
             },
             {
                 path: 'collections',

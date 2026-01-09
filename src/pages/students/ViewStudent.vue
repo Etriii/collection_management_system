@@ -16,8 +16,8 @@ import {
     TriangleAlert,
     Pencil,
 } from 'lucide-vue-next';
+import type { StudentStatus } from '@core/constants';
 
-type StudentStatus = "enrolled" | "inactive" | "pending";
 
 interface Student {
     id: number;
@@ -404,8 +404,8 @@ const paginatedSubmissions = computed(() => paginate(filteredSubmissions.value))
                             <div class="flex gap-2">
                                 <span class="px-4 py-2 inline-flex text-sm leading-5 font-bold rounded-full" :class="{
                                     'bg-emerald-100 text-emerald-800': student.status === 'enrolled',
-                                    'bg-red-100 text-red-800': student.status === 'inactive',
-                                    'bg-amber-100 text-amber-800': student.status === 'pending',
+                                    'bg-red-100 text-red-800': student.status === 'dropped',
+                                    'bg-amber-100 text-amber-800': student.status === 'graduated',
                                 }">
                                     {{ student.status.charAt(0).toUpperCase() + student.status.slice(1) }}
                                 </span>

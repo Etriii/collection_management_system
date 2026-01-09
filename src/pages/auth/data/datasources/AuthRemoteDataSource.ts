@@ -1,12 +1,12 @@
 import { loginApi, googleLoginApi, fetchProfile } from "../api/auth_api";
 import { type ApiResponse } from "../../../../core/types";
 import { type TokenResponse } from "@pages/auth/data/api/auth_api";
-import { UserProfileModel } from "../model/userProfileModel";
+import { UserModel } from "../model/userProfileModel";
 
 export interface AuthRemoteDataSource {
   login(username: string, password: string): Promise<ApiResponse<TokenResponse>>;
   googleLogin(token: string): Promise<ApiResponse<TokenResponse>>;
-  fetchProfile(): Promise<ApiResponse<UserProfileModel>>;
+  fetchProfile(): Promise<ApiResponse<UserModel>>;
 }
 
 export class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
@@ -20,7 +20,7 @@ export class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
 
   async fetchProfile() {
     const res = await fetchProfile();
-    const model = UserProfileModel.fromJson(res.data);
+    const model = UserModel.fromJson(res.data);
     return {
       ...res,
       data: model,

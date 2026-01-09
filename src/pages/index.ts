@@ -12,5 +12,6 @@ export { default as AdminManager } from './admin-manager/AdminManager.vue';
 export { default as Login } from './auth/Login.vue';
 export { default as AccountRecovery } from './auth/AccountRecovery.vue';
 export { default as AccountRecoveryConfirmaion } from './auth/AccountRecoveryConfirmation.vue';
+export {default as Fees} from '@pages/fees/Fees.vue'
 
 export { default as PageNotFound } from './PageNotFound.vue'

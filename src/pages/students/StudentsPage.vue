@@ -4,7 +4,7 @@ import { Plus, Search, Users } from 'lucide-vue-next';
 import ViewStudent from './ViewStudent.vue';
 import StudentModals from '/src/components/modals/StudentModals.vue';
 
-type StudentStatus = "enrolled" | "inactive" | "pending";
+import { STUDENT_STATUSES, type StudentStatus } from '@core/constants';
 
 interface Student {
     id: number;
@@ -32,8 +32,8 @@ const handlePageChange = (page: number) => {
 const testData = ref<Student[]>([
     { id: 1, student_id: '2001-00012', fullname: 'Ricardo Marimar', set: 'BSIT 4A', status: 'enrolled' },
     { id: 2, student_id: '2001-00013', fullname: 'Maria Santos', set: 'BSIT 3B', status: 'enrolled' },
-    { id: 3, student_id: '2001-00014', fullname: 'Juan Dela Cruz', set: 'BSCS 2A', status: 'pending' },
-    { id: 4, student_id: '2001-00015', fullname: 'Ana Reyes', set: 'BSIT 4A', status: 'inactive' },
+    { id: 3, student_id: '2001-00014', fullname: 'Juan Dela Cruz', set: 'BSCS 2A', status: 'graduated' },
+    { id: 4, student_id: '2001-00015', fullname: 'Ana Reyes', set: 'BSIT 4A', status: 'dropped' },
     { id: 5, student_id: '2001-00016', fullname: 'Pedro Garcia', set: 'BSIT 4A', status: 'enrolled' },
 ]);
 
@@ -49,7 +49,7 @@ const editStudentData = ref<NewStudent>({
     student_id: "",
     fullname: "",
     set: "",
-    status: "pending",
+    status: "enrolled",
 });
 
 const filteredStudents = computed(() =>
@@ -140,7 +140,8 @@ function handleDeleteClick(student: Student) {
                 <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-6">
                     <header class="mb-8">
                         <h1 class="text-3xl font-bold text-gray-900 leading-tight">Student Records</h1>
-                        <p class="text-sm text-gray-500 mt-1">Manage all student information and enrollment statuses.</p>
+                        <p class="text-sm text-gray-500 mt-1">Manage all student information and enrollment statuses.
+                        </p>
                     </header>
                     <button
                         class="mt-4 sm:mt-0 inline-flex items-center justify-center px-6 py-3 bg-blue-600 text-white rounded-lg shadow-md hover:bg-blue-700 transition-all duration-200 ease-in-out transform hover:scale-105 active:scale-100"
@@ -166,7 +167,8 @@ function handleDeleteClick(student: Student) {
                             <option value="inactive">Inactive</option>
                             <option value="pending">Pending</option>
                         </select>
-                        <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
+                        <div
+                            class="pointer-events-none absolute inset-y-0 right-0 flex items-center px-2 text-gray-700">
                             <svg class="fill-current h-4 w-4" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20">
                                 <path d="M9.293 12.95l.707.707L15.657 8l-1.414-1.414L10 10.828 5.757 6.586 4.343 8z" />
                             </svg>
@@ -179,11 +181,21 @@ function handleDeleteClick(student: Student) {
                     <table class="min-w-full divide-y divide-gray-200">
                         <thead class="bg-gray-50 sticky top-0">
                             <tr>
-                                <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">#</th>
-                                <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Student ID</th>
-                                <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Full Name</th>
-                                <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Program/Year/Set</th>
-                                <th class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">Status</th>
+                                <th
+                                    class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                                    #</th>
+                                <th
+                                    class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                                    Student ID</th>
+                                <th
+                                    class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                                    Full Name</th>
+                                <th
+                                    class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                                    Program/Year/Set</th>
+                                <th
+                                    class="px-6 py-4 text-left text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                                    Status</th>
                             </tr>
                         </thead>
                         <tbody class="bg-white divide-y divide-gray-200">
@@ -191,20 +203,24 @@ function handleDeleteClick(student: Student) {
                                 <td colspan="5" class="px-6 py-16 text-center text-gray-500">
                                     <Users class="mx-auto h-16 w-16 text-gray-300 mb-4" />
                                     <p class="text-xl font-medium text-gray-700 mb-2">No students found</p>
-                                    <p class="text-sm text-gray-500">Adjust your search or create a new student record.</p>
+                                    <p class="text-sm text-gray-500">Adjust your search or create a new student record.
+                                    </p>
                                 </td>
                             </tr>
                             <tr v-for="student in paginatedStudents" :key="student.id" @click="handleRowClick(student)"
                                 class="hover:bg-blue-50 transition-colors duration-150 cursor-pointer">
-                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ student.id }}</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{{ student.student_id }}</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{{ student.fullname }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ student.id
+                                    }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{{ student.student_id }}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{{ student.fullname }}
+                                </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{{ student.set }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <span class="px-3 py-1 inline-flex text-xs leading-5 font-bold rounded-full" :class="{
                                         'bg-emerald-100 text-emerald-800': student.status === 'enrolled',
-                                        'bg-red-100 text-red-800': student.status === 'inactive',
-                                        'bg-amber-100 text-amber-800': student.status === 'pending',
+                                        'bg-red-100 text-red-800': student.status === 'dropped',
+                                        'bg-amber-100 text-amber-800': student.status === 'graduated',
                                     }">
                                         {{ student.status.charAt(0).toUpperCase() + student.status.slice(1) }}
                                     </span>
@@ -217,7 +233,7 @@ function handleDeleteClick(student: Student) {
                 <!-- Pagination -->
                 <div class="flex items-center justify-between mt-6 pt-4 border-t border-gray-200 flex-shrink-0">
                     <div class="text-sm text-gray-600">
-                        Showing <span class="font-medium">{{ (currentPage - 1) * perPage + 1 }}</span> to 
+                        Showing <span class="font-medium">{{ (currentPage - 1) * perPage + 1 }}</span> to
                         <span class="font-medium">{{ Math.min(currentPage * perPage, filteredStudents.length) }}</span>
                         of <span class="font-medium">{{ filteredStudents.length }}</span> entries
                     </div>
@@ -226,7 +242,8 @@ function handleDeleteClick(student: Student) {
                             class="px-4 py-2 text-sm font-medium border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-200 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed">
                             Previous
                         </button>
-                        <span class="text-sm font-medium text-gray-700">Page {{ currentPage }} of {{ totalPages }}</span>
+                        <span class="text-sm font-medium text-gray-700">Page {{ currentPage }} of {{ totalPages
+                            }}</span>
                         <button @click="handlePageChange(currentPage + 1)" :disabled="currentPage === totalPages"
                             class="px-4 py-2 text-sm font-medium border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-200 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed">
                             Next
@@ -238,22 +255,11 @@ function handleDeleteClick(student: Student) {
     </div>
 
     <!-- View Student -->
-    <ViewStudent 
-        v-else-if="selectedStudent"
-        :student="selectedStudent"
-        @back="handleBackFromView"
-        @edit="handleEditStudent"
-        @delete="handleDeleteClick"
-    />
+    <ViewStudent v-else-if="selectedStudent" :student="selectedStudent" @back="handleBackFromView"
+        @edit="handleEditStudent" @delete="handleDeleteClick" />
 
     <!-- Modals -->
-    <StudentModals
-        v-model:isCreateOpen="isCreateStudentDialogOpen"
-        v-model:isEditOpen="isEditStudentDialogOpen"
-        v-model:isDeleteOpen="isDeleteConfirmOpen"
-        :editData="editStudentData"
-        @create="handleCreateStudent"
-        @update="handleUpdateStudent"
-        @delete="handleDeleteStudent"
-    />
+    <StudentModals v-model:isCreateOpen="isCreateStudentDialogOpen" v-model:isEditOpen="isEditStudentDialogOpen"
+        v-model:isDeleteOpen="isDeleteConfirmOpen" :editData="editStudentData" @create="handleCreateStudent"
+        @update="handleUpdateStudent" @delete="handleDeleteStudent" />
 </template>

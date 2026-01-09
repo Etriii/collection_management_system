@@ -27,7 +27,7 @@
                                 Remember me
                             </label>
                     </div>
-                    <RouterLink to="/account-recovery"
+                    <RouterLink to="/auth/account-recovery"
                         class="text-sm font-medium text-purple-500 hover:text-purple-800">
                         Forgot password?
                     </RouterLink>

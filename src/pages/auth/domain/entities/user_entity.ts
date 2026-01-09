@@ -1,17 +1,13 @@
+import type { InstituteModel } from "@pages/auth/data/model/userProfileModel";
 
 export interface UserEntity {
-    id: number;
-    name: string;
-    email: string;
-}
-
-export interface UserProfileEntity {
     id: number | null;
     username: string;
+    first_name: string;
+    last_name: string;
     email: string;
     exp: number | null;
     groups: string[];
-    institute: { id: number; name: string } | null;
-    school: { id: number; name: string } | null;
+    institute: InstituteModel | null;
     systems: string[];
 }

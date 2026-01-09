@@ -51,7 +51,7 @@
                 Password Changed Successfully!
             </div>
             <Button class="bg-purple-600 w-full text-white py-2 px-6 rounded-lg hover:bg-purple-700 text-sm"
-                @click="() => { router.push('/login') }">
+                @click="() => { router.push('/auth/login') }">
                 Log In
             </Button>
         </div>
@@ -91,7 +91,7 @@ const password = ref({
 const goBack = () => {
     verification.value = {}
     useTempStore().remove('email')
-    router.push('/account-recovery')
+    router.push('/auth/account-recovery')
 }
 
 const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));

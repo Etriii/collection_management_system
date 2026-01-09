@@ -41,7 +41,7 @@ const isDisabled = ref(false);
 const cancel = () => {
   email.value = '';
   emit('close');
-  router.push('/login');
+  router.push('/auth/login');
 };
 
 const confirm = () => {
@@ -60,7 +60,7 @@ const confirm = () => {
     useTempStore().set('email', email, 10, true)
     useTempStore().set('otp-expiry', (Date.now() + (10 * 60000)), 10, true)
 
-    router.push('/account-recovery/confirmation');
+    router.push('/auth/account-recovery/confirmation');
     isLoading.value = false;
   }, 2000);
 };
