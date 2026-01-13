@@ -1,137 +1,89 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue';
-import { Plus, Search, Users } from 'lucide-vue-next';
-import ViewStudent from './ViewStudent.vue';
-import StudentModals from '/src/components/modals/StudentModals.vue';
+import { ref, computed, watch, onMounted } from "vue"
+import { Plus, Search, Users } from "lucide-vue-next"
 
-import { STUDENT_STATUSES, type StudentStatus } from '@core/constants';
+import ViewStudent from "./ViewStudent.vue"
+import StudentModals from "/src/components/modals/StudentModals.vue"
 
-interface Student {
-    id: number;
-    student_id: string;
-    fullname: string;
-    set: string;
-    status: StudentStatus;
-}
+import { STUDENT_STATUSES, type StudentStatus } from "@core/constants"
+import { useStudentsStore } from "@pages/students/presentation/store/useStudentStores"
+import type { StudentEntity } from "@pages/students/domain/entities/StudentEntities"
 
-interface NewStudent {
-    student_id: string;
-    fullname: string;
-    set: string;
-    status: StudentStatus;
-}
+const studentsStore = useStudentsStore()
 
-const currentPage = ref(1);
-const perPage = ref(10);
+const searchQuery = ref("")
+const activeFilter = ref<"all" | StudentStatus>("all")
 
-const handlePageChange = (page: number) => {
-    currentPage.value = page;
-}
+const isCreateStudentDialogOpen = ref(false)
+const isEditStudentDialogOpen = ref(false)
+const isDeleteConfirmOpen = ref(false)
+const showViewStudent = ref(false)
 
-// Test data
-const testData = ref<Student[]>([
-    { id: 1, student_id: '2001-00012', fullname: 'Ricardo Marimar', set: 'BSIT 4A', status: 'enrolled' },
-    { id: 2, student_id: '2001-00013', fullname: 'Maria Santos', set: 'BSIT 3B', status: 'enrolled' },
-    { id: 3, student_id: '2001-00014', fullname: 'Juan Dela Cruz', set: 'BSCS 2A', status: 'graduated' },
-    { id: 4, student_id: '2001-00015', fullname: 'Ana Reyes', set: 'BSIT 4A', status: 'dropped' },
-    { id: 5, student_id: '2001-00016', fullname: 'Pedro Garcia', set: 'BSIT 4A', status: 'enrolled' },
-]);
+const currentPage = computed({
+    get: () => studentsStore.currentPage,
+    set: (v) => studentsStore.setPage(v),
+})
 
-const searchQuery = ref("");
-const activeFilter = ref<"all" | StudentStatus>("all");
-const isCreateStudentDialogOpen = ref(false);
-const selectedStudent = ref<Student | null>(null);
-const showViewStudent = ref(false);
-const isEditStudentDialogOpen = ref(false);
-const isDeleteConfirmOpen = ref(false);
+const perPage = computed(() => studentsStore.perPage)
 
-const editStudentData = ref<NewStudent>({
-    student_id: "",
-    fullname: "",
-    set: "",
-    status: "enrolled",
-});
+const students = computed(
+    () => studentsStore.studentsResponse?.data ?? []
+)
 
-const filteredStudents = computed(() =>
-    testData.value.filter((student) => {
-        const q = searchQuery.value.toLowerCase();
-        const matchesSearch =
-            student.student_id.toLowerCase().includes(q) ||
-            student.fullname.toLowerCase().includes(q) ||
-            student.set.toLowerCase().includes(q);
-        const matchesFilter =
-            activeFilter.value === "all" || student.status === activeFilter.value;
-        return matchesSearch && matchesFilter;
+const loadingList = computed(() => studentsStore.loadingList)
+
+const totalPages = computed(
+    () => studentsStore.studentsResponse?.total_pages ?? 1
+)
+
+const totalItems = computed(
+    () => studentsStore.studentsResponse?.total_items ?? 0
+)
+
+const selectedStudent = computed({
+    get: () => studentsStore.selectedStudent,
+    set: (v) => (studentsStore.selectedStudent = v),
+})
+
+watch(searchQuery, (q) => {
+    studentsStore.setSearch(q)
+})
+
+watch(activeFilter, (status) => {
+    studentsStore.setFilters({
+        s_status: status === "all" ? undefined : status,
     })
-);
+})
 
-const totalPages = computed(() => {
-    return Math.ceil(filteredStudents.value.length / perPage.value);
-});
+onMounted(() => {
+    studentsStore.fetchStudents()
+})
 
-const paginatedStudents = computed(() => {
-    const start = (currentPage.value - 1) * perPage.value;
-    const end = start + perPage.value;
-    return filteredStudents.value.slice(start, end);
-});
-
-function handleCreateStudent(student: NewStudent) {
-    const newId = testData.value.length > 0 ? Math.max(...testData.value.map(s => s.id)) + 1 : 1;
-    const newStudentRecord: Student = {
-        id: newId,
-        ...student
-    };
-    testData.value.push(newStudentRecord);
-    isCreateStudentDialogOpen.value = false;
-}
-
-function handleEditStudent(student: Student) {
-    editStudentData.value = {
-        student_id: student.student_id,
-        fullname: student.fullname,
-        set: student.set,
-        status: student.status,
-    };
-    isEditStudentDialogOpen.value = true;
-}
-
-function handleUpdateStudent(updatedData: NewStudent) {
-    if (!selectedStudent.value) return;
-
-    const index = testData.value.findIndex(s => s.id === selectedStudent.value!.id);
-    if (index !== -1) {
-        testData.value[index] = {
-            ...testData.value[index],
-            ...updatedData
-        };
-        selectedStudent.value = testData.value[index];
-    }
-    isEditStudentDialogOpen.value = false;
-}
-
-function handleDeleteStudent() {
-    if (!selectedStudent.value) return;
-
-    testData.value = testData.value.filter(s => s.id !== selectedStudent.value!.id);
-    showViewStudent.value = false;
-    selectedStudent.value = null;
-    isDeleteConfirmOpen.value = false;
-}
-
-function handleRowClick(student: Student) {
-    selectedStudent.value = student;
-    showViewStudent.value = true;
+function handleRowClick(student: StudentEntity) {
+    studentsStore.fetchStudent(student.id)
+    showViewStudent.value = true
 }
 
 function handleBackFromView() {
-    showViewStudent.value = false;
-    selectedStudent.value = null;
+    showViewStudent.value = false
+    studentsStore.clearSelectedStudent()
 }
 
-function handleDeleteClick(student: Student) {
-    isDeleteConfirmOpen.value = true;
+function handlePageChange(page: number) {
+    if (page < 1 || page > totalPages.value) return
+    studentsStore.setPage(page)
+}
+
+function handleEditStudent(student: StudentEntity) {
+    studentsStore.selectedStudent = student
+    isEditStudentDialogOpen.value = true
+}
+
+function handleDeleteClick() {
+    isDeleteConfirmOpen.value = true
 }
 </script>
+
 
 <template>
     <div v-if="!showViewStudent" class="min-h-screen bg-gray-50">
@@ -199,7 +151,15 @@ function handleDeleteClick(student: Student) {
                             </tr>
                         </thead>
                         <tbody class="bg-white divide-y divide-gray-200">
-                            <tr v-if="paginatedStudents.length === 0">
+
+                            <tr v-if="loadingList">
+                                <td colspan="5" class=" h-20">
+                                    <div class=" animate-spin [animation-duration:3s] text-center">
+                                        Ga loading pa
+                                    </div>
+                                </td>
+                            </tr>
+                            <tr v-if="students.length === 0 && !loadingList">
                                 <td colspan="5" class="px-6 py-16 text-center text-gray-500">
                                     <Users class="mx-auto h-16 w-16 text-gray-300 mb-4" />
                                     <p class="text-xl font-medium text-gray-700 mb-2">No students found</p>
@@ -207,22 +167,27 @@ function handleDeleteClick(student: Student) {
                                     </p>
                                 </td>
                             </tr>
-                            <tr v-for="student in paginatedStudents" :key="student.id" @click="handleRowClick(student)"
+
+                            <tr v-if="!loadingList" v-for="student in students" :key="student.id"
+                                @click="handleRowClick(student)"
                                 class="hover:bg-blue-50 transition-colors duration-150 cursor-pointer">
                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ student.id
                                     }}</td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{{ student.student_id }}
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{{ student.id }}
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{{ student.fullname }}
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{{ student.s_fname + " " +
+                                    student.s_mname + " " + student.s_lname }}
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">{{ student.set }}</td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                                    {{ student.program.name + "-" + student.s_lvl + "" +
+                                        student.s_set }}</td>
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <span class="px-3 py-1 inline-flex text-xs leading-5 font-bold rounded-full" :class="{
-                                        'bg-emerald-100 text-emerald-800': student.status === 'enrolled',
-                                        'bg-red-100 text-red-800': student.status === 'dropped',
-                                        'bg-amber-100 text-amber-800': student.status === 'graduated',
+                                        'bg-emerald-100 text-emerald-800': student.s_status === 'enrolled',
+                                        'bg-red-100 text-red-800': student.s_status === 'dropped',
+                                        'bg-amber-100 text-amber-800': student.s_status === 'graduated',
                                     }">
-                                        {{ student.status.charAt(0).toUpperCase() + student.status.slice(1) }}
+                                        {{ student.s_status.charAt(0).toUpperCase() + student.s_status.slice(1) }}
                                     </span>
                                 </td>
                             </tr>
@@ -234,8 +199,8 @@ function handleDeleteClick(student: Student) {
                 <div class="flex items-center justify-between mt-6 pt-4 border-t border-gray-200 flex-shrink-0">
                     <div class="text-sm text-gray-600">
                         Showing <span class="font-medium">{{ (currentPage - 1) * perPage + 1 }}</span> to
-                        <span class="font-medium">{{ Math.min(currentPage * perPage, filteredStudents.length) }}</span>
-                        of <span class="font-medium">{{ filteredStudents.length }}</span> entries
+                        <span class="font-medium">{{ Math.min(currentPage * perPage, students.length) }}</span>
+                        of <span class="font-medium">{{ students.length }}</span> entries
                     </div>
                     <div class="flex items-center space-x-2">
                         <button @click="handlePageChange(currentPage - 1)" :disabled="currentPage === 1"
@@ -260,6 +225,8 @@ function handleDeleteClick(student: Student) {
 
     <!-- Modals -->
     <StudentModals v-model:isCreateOpen="isCreateStudentDialogOpen" v-model:isEditOpen="isEditStudentDialogOpen"
-        v-model:isDeleteOpen="isDeleteConfirmOpen" :editData="editStudentData" @create="handleCreateStudent"
-        @update="handleUpdateStudent" @delete="handleDeleteStudent" />
+        v-model:isDeleteOpen="isDeleteConfirmOpen" />
+
+    <!-- :editData="editStudentData" @create="handleCreateStudent"
+        @update="handleUpdateStudent" @delete="handleDeleteStudent"  -->
 </template>

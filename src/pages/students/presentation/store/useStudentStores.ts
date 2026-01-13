@@ -1,122 +1,148 @@
-// // stores/students/students.store.ts
-// import { defineStore } from "pinia"
+// stores/students.ts
 
-// // import { fetchStudentsApi, fetchStudentApi } from "@/api/students.api"
-// import { type PaginatedApiResnpose } from "@core/types"
-// import type { StudentFilters } from "@pages/students/student_filters"
-// import type { StudentEntity } from "@pages/students/domain/entities/StudentEntities"
+import { defineStore } from "pinia"
+import { type FeeEntity, type PaymentEntity, type PaymentSubmissionEntity, type StudentEntity, type StudentFilters } from "@pages/students/domain/entities/StudentEntities"
+import { type PaginatedApiResnpose } from "@core/types"
+import { getStudentsApi, getStudentApi, getStudentFeesApi, getStudentPaymentsApi, getStudentSubmissionsApi } from "@pages/students/data/api/students_api"
 
-// export const useStudentsStore = defineStore("students", {
-//   state: () => ({
-//     // Paginated response 
-//     studentsResponse: null as PaginatedApiResnpose<StudentEntity> | null,
-//     loadingList: false,
-//     // Pagination
-//     currentPage: 1,
-//     perPage: 10,
-//     search: "",
-//     filters: {} as StudentFilters,
-//     ordering: "id",
+export const useStudentsStore = defineStore("students", {
+  state: () => ({
+    // Paginated response
+    studentsResponse: null as PaginatedApiResnpose<StudentEntity> | null,
+    loadingList: false,
+
+    // Pagination
+    currentPage: 1,
+    perPage: 10,
+    search: "",
+    filters: {} as StudentFilters,
+    ordering: "s_lname",
+
+    // Selected student
+    studentsById: {} as Record<number, StudentEntity>,
+    selectedStudent: null as StudentEntity | null,
+    loadingStudent: false,
+    selectedStudentId: null as number | null,
 
 
-//     // Selected student
-//     selectedStudent: null as StudentEntity | null,
-//     loadingStudent: false,
-//   }),
 
-//   getters: {
-//     // Just the student list
-//     students(state) {
-//       return state.studentsResponse?.data ?? []
-//     },
+    //  per-student financial data cache
+    studentFinancials: {} as Record<number, {
+      fees: FeeEntity[];
+      payments: PaymentEntity[];
+      submissions: PaymentSubmissionEntity[];
+    }>,
+    loadingFinancials: false,
+  }),
 
-//     totalPages(state) {
-//       return state.studentsResponse?.total_pages ?? 0
-//     },
+  // get sa mga stats :>
+  getters: {
+    selectedStudent: (state) => {
+      if (!state.selectedStudentId) return null
+      return state.studentsById[state.selectedStudentId] ?? null
+    },
+    totalFeeAmount: (state) => {
+      return Object.values(state.studentFinancials)
+        .flatMap(financial => financial.fees)
+        .reduce((total, fee) => total + Number(fee.total_amount), 0)
+    },
+    totalFeePaid: (state) => {
+      return Object.values(state.studentFinancials).flatMap(financial => financial.fees).reduce((total, fee) => total + (Number(fee.total_amount ?? 0) - Number(fee.balance ?? 0)), 0)
+    },
+    totalFeeBalance: (state) => {
+      return Object.values(state.studentFinancials).flatMap(financial => financial.fees).reduce((total, fee) => total + (Number(fee.balance ?? 0)), 0)
+    }, pendingFees: (state) => {
+      return Object.values(state.studentFinancials)
+        .flatMap(financial => financial.fees)
+        .filter(fee => fee.status === "pending")
+    }
+  },
 
-//     totalItems(state) {
-//       return state.studentsResponse?.total_items ?? 0
-//     },
+  actions: {
+    async fetchStudents() {
+      this.loadingList = true
+      try {
+        this.studentsResponse = await getStudentsApi({
+          page: this.currentPage,
+          per_page: this.perPage,
+          search: this.search || undefined,
+          ordering: this.ordering,
+          filters: this.filters,
+        })
+      } finally {
+        this.loadingList = false
+      }
+    },
 
-//     hasStudents(state) {
-//       return (state.studentsResponse?.data.length ?? 0) > 0
-//     },
-//   },
+    // async fetchStudent(id: number) {
+    //   this.loadingStudent = true
+    //   try {
+    //     const res = await getStudentApi(id)
+    //     this.selectedStudent = res.data
+    //   } finally {
+    //     this.loadingStudent = false
+    //   }
+    // },
+    async fetchStudent(id: number) {
+      if (this.studentsById[id]) {
+        this.selectedStudentId = id
+        return
+      }
 
-//   actions: {
-//     /* ------------------------------
-//      * LIST STUDENTS
-//      * ------------------------------ */
-//     async fetchStudents() {
-//       this.loadingList = true
-//       try {
-//         const params = {
-//           current_page: this.currentPage,
-//           per_page: this.perPage,
-//           search: this.search || undefined,
-//           ordering: this.ordering,
-//           ...this.filters,
-//         }
+      this.loadingStudent = true
+      try {
+        const res = await getStudentApi(id)
+        this.studentsById[id] = res.data
+        this.selectedStudentId = id
+      } finally {
+        this.loadingStudent = false
+      }
+    },
+    async fetchStudentFinancials(studentId: number) {
+      if (this.studentFinancials[studentId]) return
 
-//         const res = await fetchStudentsApi(params)
-//         this.studentsResponse = res.data
-//       } finally {
-//         this.loadingList = false
-//       }
-//     },
+      this.loadingFinancials = true
+      try {
+        const [feesRes, paymentsRes, submissionsRes] = await Promise.all([
+          getStudentFeesApi(studentId),
+          getStudentPaymentsApi(studentId),
+          getStudentSubmissionsApi(studentId),
+        ])
 
-//     /* ------------------------------
-//      * SINGLE STUDENT
-//      * ------------------------------ */
-//     async fetchStudent(id: number) {
-//       this.loadingStudent = true
-//       try {
-//         const res = await fetchStudentApi(id)
-//         this.selectedStudent = res.data
-//       } finally {
-//         this.loadingStudent = false
-//       }
-//     },
+        this.studentFinancials[studentId] = {
+          fees: feesRes.data,
+          payments: paymentsRes.data,
+          submissions: submissionsRes.data,
+        }
+      } finally {
+        this.loadingFinancials = false
+      }
+    },
 
-//     setSelectedStudent(student: Student | null) {
-//       this.selectedStudent = student
-//     },
+    getSelectedStudentFinancials() {
+      if (!this.selectedStudent) return null
+      return this.studentFinancials[this.selectedStudent.id] ?? null
+    },
 
-//     setPage(page: number) {
-//       this.currentPage = page
-//       this.fetchStudents()
-//     },
+    setPage(page: number) {
+      this.currentPage = page
+      this.fetchStudents()
+    },
 
-//     setPerPage(perPage: number) {
-//       this.perPage = perPage
-//       this.currentPage = 1
-//       this.fetchStudents()
-//     },
-//     setSearch(search: string) {
-//       this.search = search
-//       this.currentPage = 1
-//       this.fetchStudents()
-//     },
+    setSearch(search: string) {
+      this.search = search
+      this.currentPage = 1
+      this.fetchStudents()
+    },
 
-//     setFilters(filters: StudentFilters) {
-//       this.filters = filters
-//       this.currentPage = 1
-//       this.fetchStudents()
-//     },
+    setFilters(filters: StudentFilters) {
+      this.filters = filters
+      this.currentPage = 1
+      this.fetchStudents()
+    },
 
-//     clearFilters() {
-//       this.filters = {}
-//       this.currentPage = 1
-//       this.fetchStudents()
-//     },
-
-//     resetStore() {
-//       this.studentsResponse = null
-//       this.selectedStudent = null
-//       this.search = ""
-//       this.filters = {}
-//       this.currentPage = 1
-//       this.perPage = 10
-//     },
-//   },
-// })
+    clearSelectedStudent() {
+      this.selectedStudent = null
+    },
+  },
+})
