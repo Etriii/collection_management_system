@@ -71,7 +71,7 @@ export interface Fee {
 }
 
 export interface FeeDropdownOption {
-id: number,
+  id: number;
   value: number;
   label: string;
   studentId: string;
@@ -86,39 +86,27 @@ id: number,
   balance: number;
 }
 
-export interface CreateTransactionDto {
+export interface CreatePaymentDto {
   fee: number;
   amount_paid: string;
   payment_method: "cash" | "gcash" | "bank" | "online" | "other";
   payment_submission?: number | null;
 }
 
+export interface BulkPaymentsDto {
+  payments: CreatePaymentDto[];
+}
+
 export interface PaymentApiResponse {
   id: number;
   fee: {
-    student: {
-      id?: number;
-      s_studentID?: string;
-      s_fname: string;
-      s_mname: string;
-      s_lvl: number;
-      s_lname: string;
-      s_suffix: string;
-      s_email: string;
-      s_set: string;
-    };
-    category?: {
-      id: number;
-      category_name: string;
-    };
+    id: number;
+    student: Student;
+    category_name: string;
     total_amount: string;
     balance: string;
     status: string;
     due_date: string;
-    issued_by: number;
-    remarks: string;
-    academic_year: string;
-    semester: string;
   };
   received_by: {
     id: number;
@@ -126,20 +114,16 @@ export interface PaymentApiResponse {
     email: string;
     first_name: string;
     last_name: string;
-    institute: {
-      id: number;
-      institute_name: string;
-      school_id: number;
-      school_name: string;
-      school_short_name: string;
-    };
   };
   created_at: string;
   updated_at: string;
   amount_paid: string;
   payment_method: string;
-  updated_by: number | null;
   payment_submission: number | null;
+}
+
+export interface BulkPaymentResponse {
+  payments: PaymentApiResponse[];
 }
 
 export interface PaymentSubmissionResponse {
@@ -160,189 +144,107 @@ export interface PaymentSubmissionResponse {
 }
 
 export interface PaginatedResponse<T> {
-  current_page: number;
-  per_page: number;
-  total_pages: number;
-  total_items: number;
-  data: T[];
+  count: number;
+  next: string | null;
+  previous: string | null;
+  results: T[];
 }
 
-let allCategoriesCache: Map<number, string> | null = null;
-
-async function fetchStudentDetails(studentId: number): Promise<any | null> {
-  try {
-    const response = await apiService.get<ApiResponse<any>>(
-      `api/v1/students/${studentId}/`
-    );
-    return response.data || null;
-  } catch (error) {
-    console.error(`Error fetching student details ${studentId}:`, error);
-    return null;
+const cache = {
+  categories: new Map<number, string>(),
+  feeDetails: new Map<number, Fee>(),
+  studentDetails: new Map<number, any>(),
+  
+  getCategory(id: number): string | undefined {
+    return this.categories.get(id);
+  },
+  
+  setCategory(id: number, name: string): void {
+    this.categories.set(id, name);
+  },
+  
+  getFee(id: number): Fee | undefined {
+    return this.feeDetails.get(id);
+  },
+  
+  setFee(id: number, fee: Fee): void {
+    this.feeDetails.set(id, fee);
+  },
+  
+  getStudent(id: number): any | undefined {
+    return this.studentDetails.get(id);
+  },
+  
+  setStudent(id: number, student: any): void {
+    this.studentDetails.set(id, student);
+  },
+  
+  clear(): void {
+    this.categories.clear();
+    this.feeDetails.clear();
+    this.studentDetails.clear();
   }
+};
+
+async function fetchWithRetry<T>(
+  fetcher: () => Promise<T>,
+  maxRetries: number = 3,
+  delay: number = 1000
+): Promise<T> {
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      return await fetcher();
+    } catch (error) {
+      if (attempt === maxRetries) throw error;
+      console.warn(`Attempt ${attempt} failed, retrying in ${delay}ms...`);
+      await new Promise(resolve => setTimeout(resolve, delay));
+    }
+  }
+  throw new Error('All retry attempts failed');
 }
+
 
 async function fetchFeeDetails(feeId: number): Promise<Fee | null> {
-  try {
-    if (!feeId || isNaN(feeId)) {
-      console.error("Invalid feeId:", feeId);
-      return null;
-    }
-    
-    const response = await apiService.get<ApiResponse<Fee>>(
-      `api/v1/fees/${feeId}/`
-    );
-    return response.data || null;
-  } catch (error) {
-    console.error(`Error fetching fee details ${feeId}:`, error);
+  if (!feeId || isNaN(feeId)) {
+    console.error("Invalid feeId:", feeId);
     return null;
   }
+  
+  const cached = cache.getFee(feeId);
+  if (cached) return cached;
+  
+  return fetchWithRetry(async () => {
+    const response = await apiService.get<ApiResponse<Fee>>(
+      `/api/v1/fees/${feeId}/`
+    );
+    const fee = response.data;
+    if (fee) {
+      cache.setFee(feeId, fee);
+    }
+    return fee || null;
+  });
 }
 
 async function fetchPaymentSubmission(id: number): Promise<PaymentSubmissionResponse | null> {
-  try {
+  return fetchWithRetry(async () => {
     const response = await apiService.get<ApiResponse<PaymentSubmissionResponse>>(
-      `api/v1/payment_submissions/${id}/`
+      `/api/v1/payment_submissions/${id}/`
     );
     return response.data || null;
-  } catch (error) {
-    console.error(`Error fetching payment submission ${id}:`, error);
-    return null;
-  }
-}
-
-async function mapPaymentToTransaction(payment: PaymentApiResponse): Promise<Transaction> {
-  console.log("Mapping payment to transaction - full object:", payment);
-  
-  const student = payment.fee.student;
-  const fullName = `${student.s_fname} ${student.s_mname} ${student.s_lname} ${student.s_suffix}`.trim();
-  
-  let studentId = "";
-  let category: TransactionCategory = "Others";
-  let feeId: number | undefined = undefined;
-  let paymentSubmissionStatus: PaymentSubmissionStatus | undefined = undefined;
-  
-  if (payment.payment_submission) {
-    console.log("Payment has payment_submission ID:", payment.payment_submission);
-    const paymentSubmission = await fetchPaymentSubmission(payment.payment_submission);
-    
-    if (paymentSubmission) {
-      console.log("Payment submission found:", paymentSubmission);
-      
-      feeId = paymentSubmission.fee;
-      console.log("Got fee ID from payment submission:", feeId);
-      
-      paymentSubmissionStatus = paymentSubmission.status as PaymentSubmissionStatus;
-      console.log("Got payment submission status:", paymentSubmissionStatus);
-      
-      const studentDetails = await fetchStudentDetails(paymentSubmission.student);
-      if (studentDetails) {
-        studentId = studentDetails.s_studentID;
-        console.log("Got student ID from student details:", studentId);
-      } 
-    }
-  }
-  
-  if (feeId && !isNaN(feeId)) {
-    console.log("Fetching fee details for fee ID:", feeId);
-    const feeDetails = await fetchFeeDetails(feeId);
-    
-    if (feeDetails) {
-      if (!studentId) {
-        studentId = feeDetails.student.s_studentID || "";
-        console.log("Got student ID from fee details:", studentId);
-      }
-      
-      const categoryName = feeDetails.category?.category_name || "";
-      console.log("Got category from fee details:", categoryName);
-      
-      if (categoryName.toLowerCase().includes('locker')) {
-        category = "Locker";
-      } else if (categoryName.toLowerCase().includes('shirt') || categoryName.toLowerCase().includes('t-shirt')) {
-        category = "T-Shirt";
-      } else if (categoryName.toLowerCase().includes('attendance')) {
-        category = "Attendance Fees";
-      } else if (categoryName.toLowerCase().includes('others') || categoryName === "Others") {
-        category = "Others";
-      }
-    }
-  }
-  
-  if (!studentId && student.s_studentID) {
-    studentId = student.s_studentID;
-    console.log("Found student ID in payment response:", studentId);
-  }
-  
-  if (!studentId) {
-    studentId = "";
-  }
-  
-  if (category === "Others") {
-    if (payment.fee.category?.category_name) {
-      const categoryName = payment.fee.category.category_name;
-      if (categoryName.toLowerCase().includes('locker')) {
-        category = "Locker";
-      } else if (categoryName.toLowerCase().includes('shirt') || categoryName.toLowerCase().includes('t-shirt')) {
-        category = "T-Shirt";
-      } else if (categoryName.toLowerCase().includes('attendance')) {
-        category = "Attendance Fees";
-      }
-    } else {
-      const remarks = payment.fee.remarks?.toLowerCase() || "";
-      if (remarks.includes('shirt') || remarks.includes('tshirt') || remarks.includes('t-shirt')) {
-        category = "T-Shirt";
-      } else if (remarks.includes('attendance') || remarks.includes('fee')) {
-        category = "Attendance Fees";
-      } else if (remarks.includes('locker')) {
-        category = "Locker";
-      }
-    }
-  }
-  
-  let status: TransactionStatus = "sent";
-  const amountPaid = parseFloat(payment.amount_paid || "0");
-  const totalAmount = parseFloat(payment.fee.total_amount || "0");
-  const balance = parseFloat(payment.fee.balance || "0");
-  
-  if (balance <= 0 || payment.fee.status === "paid") {
-    status = "paid";
-  } else if (new Date(payment.fee.due_date) < new Date() && balance > 0) {
-    status = "overdue";
-  } else if (amountPaid > 0 && amountPaid < totalAmount) {
-    status = "sent";
-  }
-  
-  if (paymentSubmissionStatus === "rejected") {
-    status = "sent"; 
-  }
-  
-  return {
-    id: payment.id.toString(),
-    transactionNumber: `TRN-${payment.id.toString().padStart(8, '0')}`,
-    studentId: studentId,
-    student: fullName,
-    category,
-    amount: amountPaid,
-    dueDate: payment.fee.due_date.split('T')[0],
-    status,
-    paymentSubmissionStatus, 
-    received_by: payment.received_by?.username,
-    payment_method: payment.payment_method,
-    created_at: payment.created_at,
-    fee_id: feeId,
-    payment_submission_id: payment.payment_submission || undefined
-  };
+  });
 }
 
 async function getAllCategories(): Promise<Map<number, string>> {
-  if (allCategoriesCache) {
-    return allCategoriesCache;
+  if (cache.categories.size > 0) {
+    return cache.categories;
   }
   
   try {
     console.log("Fetching all collection categories...");
     
-    const response = await apiService.get<any>('/api/v1/collection-categories/');
-    console.log("Categories API response:", response);
+    const response = await apiService.get<any>('/api/v1/collection-categories/', {
+      params: { per_page: 1000 }
+    });
     
     let categories = [];
     
@@ -355,42 +257,96 @@ async function getAllCategories(): Promise<Map<number, string>> {
     }
     
     console.log(`Loaded ${categories.length} collection categories`);
-    console.log("Categories data:", categories);
     
-    allCategoriesCache = new Map();
     categories.forEach((category: any) => {
-      if (category.id !== undefined && category.name) {
-        allCategoriesCache!.set(category.id, category.name);
-      } else if (category.id !== undefined && category.category_name) {
-        allCategoriesCache!.set(category.id, category.category_name);
+      if (category.id !== undefined) {
+        const name = category.name || category.category_name || 'Others';
+        cache.setCategory(category.id, name);
       }
     });
     
-    console.log("Category map created with", allCategoriesCache.size, "entries");
+    console.log("Category cache created with", cache.categories.size, "entries");
     
-    if (allCategoriesCache.size === 0) {
-      console.warn("No categories loaded. Check API endpoint and response structure.");
-    }
-    
-    return allCategoriesCache;
+    return cache.categories;
     
   } catch (error) {
     console.error("Error fetching collection categories:", error);
-    
-    if (error.response) {
-      console.error("Error response:", error.response.data);
-      console.error("Error status:", error.response.status);
-    }
-    
     return new Map();
   }
 }
-class TransactionsApi {
-  private paymentsEndpoint = "api/v1/payments/";
-  private feesEndpoint = "api/v1/fees/";
-  private paymentSubmissionsEndpoint = "api/v1/payment_submissions/";
-  private studentsEndpoint = "api/v1/students/";
 
+
+async function mapPaymentToTransaction(payment: PaymentApiResponse): Promise<Transaction> {
+  console.log("Mapping payment to transaction:", payment);
+  
+  const student = payment.fee?.student;
+  const studentId = student?.s_studentID || `ID-${student?.id || 'N/A'}`;
+  const studentName = student ? 
+    `${student.s_fname || ''} ${student.s_lname || ''}`.trim() : 
+    'Unknown Student';
+  
+  const categoryName = payment.fee?.category_name || 'General';
+  let category: TransactionCategory = "Others";
+  
+  if (categoryName.toLowerCase().includes('locker')) {
+    category = "Locker";
+  } else if (categoryName.toLowerCase().includes('shirt') || categoryName.toLowerCase().includes('t-shirt')) {
+    category = "T-Shirt";
+  } else if (categoryName.toLowerCase().includes('attendance')) {
+    category = "Attendance Fees";
+  }
+  
+  let paymentSubmissionStatus: PaymentSubmissionStatus | undefined = undefined;
+  if (payment.payment_submission) {
+    paymentSubmissionStatus = "pending";
+  }
+  
+  const amountPaid = parseFloat(payment.amount_paid || "0");
+  
+  let status: TransactionStatus = "sent";
+  const feeStatus = payment.fee?.status?.toLowerCase();
+  if (feeStatus === 'paid') {
+    status = "paid";
+  } else if (feeStatus === 'overdue') {
+    status = "overdue";
+  } else if (feeStatus === 'partial' || feeStatus === 'pending') {
+    status = "sent";
+  }
+  
+  if (paymentSubmissionStatus === "rejected") {
+    status = "sent";
+  }
+  
+  let dueDate = new Date().toISOString().split('T')[0];
+  if (payment.fee?.due_date) {
+    dueDate = payment.fee.due_date.split('T')[0];
+  }
+  
+  const transaction: Transaction = {
+    id: payment.id.toString(),
+    transactionNumber: `TXN-${payment.id}`,
+    studentId: studentId,
+    student: studentName,
+    category: category,
+    amount: amountPaid,
+    dueDate: dueDate,
+    status: status,
+    paymentSubmissionStatus: paymentSubmissionStatus,
+    received_by: payment.received_by?.username,
+    payment_method: payment.payment_method as any,
+    created_at: payment.created_at,
+    fee_id: payment.fee?.id,
+    payment_submission_id: payment.payment_submission || undefined
+  };
+  
+  console.log("Mapped transaction:", transaction);
+  return transaction;
+}
+
+class TransactionsApi {
+  private paymentsEndpoint = "/api/v1/payments/";
+  private feesEndpoint = "/api/v1/fees/";
+  private paymentSubmissionsEndpoint = "/api/v1/payment_submissions/";
 
   async getAll(params: {
     current_page?: number;
@@ -404,35 +360,38 @@ class TransactionsApi {
       console.log("Fetching payments with params:", params);
       
       const backendParams: any = {
-        current_page: params.current_page,
-        per_page: params.per_page,
-        search: params.search,
-        student_id: params.student_id,
-
+        page: params.current_page || 1,
+        per_page: params.per_page || 10,
       };
       
-      const response = await apiService.get<ApiResponse<PaginatedResponse<PaymentApiResponse>>>(
-        this.paymentsEndpoint, 
-        backendParams
-      );
+      if (params.search) backendParams.search = params.search;
+      if (params.student_id) backendParams.student_id = params.student_id;
+      
+      const response = await fetchWithRetry(async () => {
+        return await apiService.get<PaginatedResponse<PaymentApiResponse>>(
+          this.paymentsEndpoint, 
+          { params: backendParams }
+        );
+      });
       
       console.log("Payments API response structure:", response);
       
-      if (!response.data?.data) {
-        console.error("No data in payments response");
+      if (!response.results) {
+        console.error("No results in payments response");
         return {
-          ...response,
+          status_code: 200,
+          message: "Success",
           data: {
-            current_page: 1,
-            per_page: 10,
-            total_pages: 1,
-            total_items: 0,
-            data: []
-          }
+            count: 0,
+            next: null,
+            previous: null,
+            results: []
+          },
+          errors: null
         };
       }
       
-      const transactionsPromises = response.data.data.map(payment => 
+      const transactionsPromises = response.results.map(payment => 
         mapPaymentToTransaction(payment)
       );
       
@@ -442,25 +401,24 @@ class TransactionsApi {
         transactions = transactions.filter(transaction => 
           transaction.paymentSubmissionStatus === params.payment_submission_status
         );
-        console.log(`Filtered to ${transactions.length} transactions with payment submission status: ${params.payment_submission_status}`);
       }
       
       if (params.status && params.status !== "all") {
         transactions = transactions.filter(transaction => 
           transaction.status === params.status
         );
-        console.log(`Filtered to ${transactions.length} transactions with status: ${params.status}`);
       }
       
       return {
-        ...response,
+        status_code: 200,
+        message: "Success",
         data: {
-          current_page: response.data?.current_page || 1,
-          per_page: response.data?.per_page || 10,
-          total_pages: response.data?.total_pages || 1,
-          total_items: transactions.length,
-          data: transactions
-        }
+          count: transactions.length,
+          next: response.next,
+          previous: response.previous,
+          results: transactions
+        },
+        errors: null
       };
     } catch (error) {
       console.error("Error fetching transactions:", error);
@@ -468,385 +426,234 @@ class TransactionsApi {
         status_code: 500,
         message: "Error fetching transactions",
         data: {
-          current_page: 1,
-          per_page: 10,
-          total_pages: 1,
-          total_items: 0,
-          data: []
+          count: 0,
+          next: null,
+          previous: null,
+          results: []
         },
         errors: error instanceof Error ? [error.message] : ["Unknown error"]
       };
     }
   }
 
-
-async getFees(params: {
-  search?: string;
-  student_id?: string;
-//   status?: string;
-  status?: string | string[];
-  per_page?: number;
-  category_id?: number;
-} = {}): Promise<FeeDropdownOption[]> {
-  try {
-    console.log("Fetching fees with params:", params);
-    
-    await new Promise(resolve => setTimeout(resolve, 500));
-    
-    const apiParams: any = {
-      student_id: params.student_id,
-      per_page: params.per_page || 50,
-      status: params.status || 'pending'
-    };
-    
-    if (params.category_id) {
-      apiParams.category_id = params.category_id;
-    }
-    
-    if (params.search) {
-      apiParams.search = params.search;
-    }
-    
-    console.log("Fetching fees with params:", apiParams);
-    
-    const response = await apiService.get<any>(
-      this.feesEndpoint,
-      apiParams
-    );
-    
-    console.log("Fees API RAW response:", JSON.stringify(response, null, 2));
-    
-    let fees = [];
-    
-    if (response.data?.data?.data && Array.isArray(response.data.data.data)) {
-      fees = response.data.data.data;
-      console.log("Found fees in response.data.data.data");
-    } else if (response.data?.data && Array.isArray(response.data.data)) {
-      fees = response.data.data;
-      console.log("Found fees in response.data.data");
-    } else if (Array.isArray(response.data)) {
-      fees = response.data;
-      console.log("Found fees in response.data");
-    } else if (response.data && typeof response.data === 'object') {
-      const keys = Object.keys(response.data);
-      for (const key of keys) {
-        if (Array.isArray(response.data[key])) {
-          fees = response.data[key];
-          console.log(`Found fees in response.data.${key}`);
-          break;
-        }
-      }
-    }
-    
-    console.log(`Found ${fees.length} fee records`);
-    
-    if (fees.length > 0) {
-      console.log("First fee raw structure:", JSON.stringify(fees[0], null, 2));
-    }
-    
-    const processedFees: FeeDropdownOption[] = [];
-    
-    for (let i = 0; i < fees.length; i++) {
-      const fee = fees[i];
-      
-      const feeId = fee.id; 
-      
-      console.log(`Processing fee ${i + 1}: ID = ${feeId}, Type: ${typeof feeId}`);
-      
-      if (!feeId || isNaN(parseInt(feeId))) {
-        console.warn(`Invalid fee ID for fee ${i + 1}:`, feeId, "Full fee:", fee);
-      }
-      
-      let categoryName = 'Others';
-      let categoryId = params.category_id || 1;
-      
-      if (fee.category) {
-        if (typeof fee.category === 'object') {
-          categoryName = fee.category.category_name || fee.category.name || 'Others';
-          categoryId = fee.category.id || fee.category.category_id || categoryId;
-        } else if (typeof fee.category === 'string') {
-          categoryName = fee.category;
-        }
-      }
-      
-      if (categoryName === 'Others') {
-        const categories = await getAllCategories();
-        if (categories.has(categoryId)) {
-          categoryName = categories.get(categoryId)!;
-        }
-      }
-      
-      const totalAmount = parseFloat(fee.total_amount || "0");
-      const amount = Math.abs(totalAmount);
-      const balance = parseFloat(fee.balance || amount.toString());
-      
-      let studentId = "Unknown";
-      let studentName = "Unknown Student";
-      
-      if (fee.student) {
-        const email = fee.student.s_email || "";
-        studentId = email.split('@')[0] || `STU-${i}`;
-        
-        studentName = `${fee.student.s_fname || ''} ${fee.student.s_lname || ''}`.trim();
-        if (fee.student.s_suffix && fee.student.s_suffix.trim()) {
-          studentName += ` ${fee.student.s_suffix}`;
-        }
-      }
-      
-      const label = `${studentId} - ${studentName} - ${categoryName} (₱${amount.toLocaleString()})`;
-      
-      processedFees.push({
-        value: feeId, 
-        label: label,
-        studentId: studentId,
-        studentName: studentName,
-        amount: amount,
-        category: categoryName,
-        category_id: categoryId,
-        category_name: categoryName,
-        dueDate: fee.due_date,
-        status: fee.status || 'pending',
-        balance: balance,
-        feeData: fee,
-        id: feeId, 
-        fee_id: feeId 
-      });
-    }
-    
-    console.log(`Processed ${processedFees.length} fees with IDs:`, 
-      processedFees.map(f => ({ value: f.value, id: f.id, hasFeeData: !!f.feeData }))
-    );
-    
-    return processedFees;
-    
-  } catch (error: any) {
-    console.error("Error fetching fees:", error);
-    return [];
-  }
-}
-
-  async getFeeById(feeId: number): Promise<Fee | null> {
-    try {
-      const response = await apiService.get<ApiResponse<Fee>>(`${this.feesEndpoint}${feeId}/`);
-      return response.data || null;
-    } catch (error) {
-      console.error(`Error fetching fee ${feeId}:`, error);
-      return null;
-    }
-  }
-
-  async getPaymentSubmissionById(id: number): Promise<PaymentSubmissionResponse | null> {
-    try {
-      const response = await apiService.get<ApiResponse<PaymentSubmissionResponse>>(
-        `${this.paymentSubmissionsEndpoint}${id}/`
-      );
-      return response.data || null;
-    } catch (error) {
-      console.error(`Error fetching payment submission ${id}:`, error);
-      return null;
-    }
-  }
-
-
-  async getPaymentSubmissions(params: {
-    status?: PaymentSubmissionStatus;
+  async getFees(params: {
+    search?: string;
     student_id?: string;
+    status?: string | string[];
     per_page?: number;
-  } = {}): Promise<PaymentSubmissionResponse[]> {
+    category_id?: number;
+  } = {}): Promise<FeeDropdownOption[]> {
     try {
-      const response = await apiService.get<ApiResponse<PaginatedResponse<PaymentSubmissionResponse>>>(
-        this.paymentSubmissionsEndpoint,
-        params
+      console.log("Fetching fees with params:", params);
+      
+      const apiParams: any = {
+        student_id: params.student_id,
+        per_page: params.per_page || 50,
+      };
+      
+      if (params.status) {
+        apiParams.status = params.status;
+      }
+      
+      if (params.category_id) {
+        apiParams.category_id = params.category_id;
+      }
+      
+      if (params.search) {
+        apiParams.search = params.search;
+      }
+      
+      console.log("Fetching fees with params:", apiParams);
+      
+      const response = await apiService.get<PaginatedResponse<any>>(
+        this.feesEndpoint,
+        { params: apiParams }
       );
       
-      return response.data?.data || [];
-    } catch (error) {
-      console.error("Error fetching payment submissions:", error);
+      console.log("Fees API response:", response);
+      
+      const fees = response.results || [];
+      console.log(`Found ${fees.length} fee records`);
+      
+      if (fees.length > 0) {
+        console.log("First fee structure:", fees[0]);
+      }
+      
+      const processedFees: FeeDropdownOption[] = [];
+      
+      for (const fee of fees) {
+        const feeId = fee.id;
+        
+        if (!feeId || isNaN(parseInt(feeId.toString()))) {
+          console.warn(`Invalid fee ID:`, feeId, "Full fee:", fee);
+          continue;
+        }
+        
+        const student = fee.student || {};
+        const studentId = student.s_studentID || `ID-${student.id || 'N/A'}`;
+        let studentName = `${student.s_fname || ''} ${student.s_lname || ''}`.trim();
+        if (student.s_suffix && student.s_suffix.trim()) {
+          studentName += ` ${student.s_suffix}`;
+        }
+        
+        const categoryName = fee.category_name || 'Others';
+        const categoryId = fee.category_id || params.category_id || 1;
+        
+        const totalAmount = parseFloat(fee.total_amount || "0");
+        const amount = Math.abs(totalAmount);
+        const balance = parseFloat(fee.balance || amount.toString());
+        
+        const label = `${studentId} - ${studentName} - ${categoryName} (₱${amount.toFixed(2)})`;
+        
+        processedFees.push({
+          value: feeId,
+          label: label,
+          studentId: studentId,
+          studentName: studentName,
+          amount: amount,
+          category: categoryName,
+          category_id: categoryId,
+          category_name: categoryName,
+          dueDate: fee.due_date,
+          status: fee.status || 'pending',
+          balance: balance,
+          feeData: fee,
+          id: feeId,
+        });
+      }
+      
+      console.log(`Processed ${processedFees.length} fees`);
+      
+      return processedFees;
+      
+    } catch (error: any) {
+      console.error("Error fetching fees:", error);
       return [];
     }
   }
 
-  async getStudentById(id: number): Promise<any | null> {
+  async getFeeById(feeId: number): Promise<Fee | null> {
+    return fetchFeeDetails(feeId);
+  }
+
+  async getPaymentSubmissionById(id: number): Promise<PaymentSubmissionResponse | null> {
+    return fetchPaymentSubmission(id);
+  }
+
+  async createSinglePayment(data: CreatePaymentDto): Promise<ApiResponse<Transaction>> {
     try {
-      const response = await apiService.get<ApiResponse<any>>(
-        `${this.studentsEndpoint}${id}/`
+      console.log("Creating single payment:", data);
+      
+      const response = await apiService.post<PaymentApiResponse>(
+        this.paymentsEndpoint, 
+        data
       );
-      return response.data || null;
-    } catch (error) {
-      console.error(`Error fetching student ${id}:`, error);
-      return null;
-    }
-  }
-
-  async searchFees(searchTerm: string): Promise<FeeDropdownOption[]> {
-    return this.getFees({
-      search: searchTerm,
-      per_page: 20
-    });
-  }
-
-async create(data: CreateTransactionDto): Promise<ApiResponse<Transaction>> {
-  try {
-    console.log("Creating payment with data:", data);
-    console.log("API Endpoint:", this.paymentsEndpoint);
-    
-    if (!data.fee || isNaN(data.fee)) {
-      throw new Error(`Invalid fee ID: ${data.fee}`);
-    }
-    
-    const response = await apiService.post<ApiResponse<any>>(
-      this.paymentsEndpoint, 
-      {
-        fee: data.fee,
-        amount_paid: data.amount_paid,
-        payment_method: data.payment_method,
-        payment_submission: data.payment_submission || null
+      
+      if (!response) {
+        throw new Error("No data in response");
       }
-    );
-    
-    console.log("Payment created successfully:", response);
-    
-    if (!response.data) {
-      throw new Error("No data in response");
+      
+      cache.feeDetails.delete(data.fee);
+      
+      const transaction = await mapPaymentToTransaction(response);
+      
+      return {
+        status_code: 201,
+        message: "Payment created successfully",
+        data: transaction,
+        errors: null
+      };
+    } catch (error: any) {
+      console.error("Error creating payment:", error);
+      throw error;
     }
-    
-    let paymentData = response.data;
-    
-    if (response.data.data && typeof response.data.data === 'object') {
-      paymentData = response.data.data;
-    }
-    
-    if (!paymentData.fee || typeof paymentData.fee === 'number') {
-      console.log("Payment response doesn't have full fee details, fetching...");
+  }
+
+  async createBulkPayments(data: BulkPaymentsDto): Promise<ApiResponse<{ payments: PaymentApiResponse[] }>> {
+    try {
+      console.log("Creating bulk payments:", data);
       
-      const feeId = typeof paymentData.fee === 'number' ? paymentData.fee : data.fee;
+      if (!data.payments || data.payments.length === 0) {
+        throw new Error("No payments to create");
+      }
       
-      const fullPaymentResponse = await apiService.get<ApiResponse<PaymentApiResponse>>(
-        `${this.paymentsEndpoint}${paymentData.id || paymentData.fee}/`
-      );
+      const invalidPayments = data.payments.filter(p => !p.fee || isNaN(p.fee));
+      if (invalidPayments.length > 0) {
+        throw new Error(`Invalid fee IDs in payments: ${invalidPayments.map(p => p.fee).join(', ')}`);
+      }
       
-      if (fullPaymentResponse.data) {
-        paymentData = fullPaymentResponse.data;
-      } else {
-        console.log("Creating mock payment object for transaction mapping");
-        
-        const feeDetails = await this.getFeeById(feeId);
-        if (!feeDetails) {
-          throw new Error(`Could not fetch fee details for fee ID: ${feeId}`);
+      const createdPayments: PaymentApiResponse[] = [];
+      
+      for (const payment of data.payments) {
+        try {
+          const response = await apiService.post<PaymentApiResponse>(
+            this.paymentsEndpoint,
+            payment
+          );
+          createdPayments.push(response);
+          
+          cache.feeDetails.delete(payment.fee);
+        } catch (error) {
+          console.error(`Error creating payment for fee ${payment.fee}:`, error);
+          throw error;
         }
-        
-        const mockPayment: PaymentApiResponse = {
-          id: paymentData.id || 0,
-          fee: {
-            student: {
-              s_fname: feeDetails.student?.s_fname || "",
-              s_mname: feeDetails.student?.s_mname || "",
-              s_lname: feeDetails.student?.s_lname || "",
-              s_suffix: feeDetails.student?.s_suffix || "",
-              s_email: feeDetails.student?.s_email || "",
-              s_set: feeDetails.student?.s_set || "",
-              s_lvl: feeDetails.student?.s_lvl || 0,
-              s_studentID: feeDetails.student?.s_studentID || "",
-              id: feeDetails.student?.id || 0
-            },
-            category: feeDetails.category,
-            total_amount: feeDetails.total_amount,
-            balance: feeDetails.balance,
-            status: feeDetails.status,
-            due_date: feeDetails.due_date,
-            issued_by: feeDetails.issued_by,
-            remarks: feeDetails.remarks,
-            academic_year: feeDetails.academic_year,
-            semester: feeDetails.semester
-          },
-          received_by: {
-            id: 0,
-            username: "system",
-            email: "",
-            first_name: "",
-            last_name: "",
-            institute: {
-              id: 0,
-              institute_name: "",
-              school_id: 0,
-              school_name: "",
-              school_short_name: ""
-            }
-          },
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-          amount_paid: data.amount_paid,
-          payment_method: data.payment_method,
-          updated_by: null,
-          payment_submission: data.payment_submission || null
-        };
-        
-        paymentData = mockPayment;
       }
+      
+      return {
+        status_code: 201,
+        message: "Payments created successfully",
+        data: { payments: createdPayments },
+        errors: null
+      };
+    } catch (error: any) {
+      console.error("Error creating bulk payments:", error);
+      throw error;
     }
-    
-    const transaction = await mapPaymentToTransaction(paymentData);
-    
-    return {
-      ...response,
-      data: transaction
-    };
-  } catch (error: any) {
-    console.error("Error creating transaction:", error);
-    
-    if (error.response) {
-      console.error("Response error:", error.response.data);
-      console.error("Response status:", error.response.status);
-      console.error("Response headers:", error.response.headers);
-    }
-    
-    if (error instanceof Error) {
-      throw new Error(`Failed to create transaction: ${error.message}`);
-    }
-    throw error;
   }
-}
+
+  async updatePayment(id: string, data: Partial<CreatePaymentDto>): Promise<ApiResponse<Transaction>> {
+    try {
+      const response = await apiService.patch<PaymentApiResponse>(
+        `${this.paymentsEndpoint}${id}/`, 
+        data
+      );
+      
+      if (data.fee) {
+        cache.feeDetails.delete(data.fee);
+      }
+      
+      const transaction = await mapPaymentToTransaction(response);
+      
+      return {
+        status_code: 200,
+        message: "Payment updated successfully",
+        data: transaction,
+        errors: null
+      };
+    } catch (error) {
+      console.error("Error updating payment:", error);
+      throw error;
+    }
+  }
 
   async getById(id: string): Promise<ApiResponse<Transaction>> {
     try {
-      const response = await apiService.get<ApiResponse<PaymentApiResponse>>(
+      const response = await apiService.get<PaymentApiResponse>(
         `${this.paymentsEndpoint}${id}/`
       );
-      const transaction = await mapPaymentToTransaction(response.data!);
+      const transaction = await mapPaymentToTransaction(response);
       
       return {
-        ...response,
-        data: transaction
+        status_code: 200,
+        message: "Success",
+        data: transaction,
+        errors: null
       };
     } catch (error) {
       console.error("Error fetching transaction:", error);
       throw error;
     }
   }
-
-  async update(id: string, data: Partial<CreateTransactionDto>): Promise<ApiResponse<Transaction>> {
-    try {
-      const response = await apiService.patch<ApiResponse<PaymentApiResponse>>(
-        `${this.paymentsEndpoint}${id}/`, 
-        data
-      );
-      
-      const transaction = await mapPaymentToTransaction(response.data!);
-      
-      return {
-        ...response,
-        data: transaction
-      };
-    } catch (error) {
-      console.error("Error updating transaction:", error);
-      throw error;
-    }
-  }
-
- 
-//   async delete(id: string): Promise<ApiResponse<void>> {
-//     return await apiService.delete<ApiResponse<void>>(`${this.paymentsEndpoint}${id}/`);
-//   }
 
   async getStatistics(): Promise<ApiResponse<{
     sentCount: number;
@@ -858,7 +665,7 @@ async create(data: CreateTransactionDto): Promise<ApiResponse<Transaction>> {
   }>> {
     try {
       const response = await this.getAll({ per_page: 100 });
-      const transactions = response.data.data;
+      const transactions = response.data.results;
       
       const sent = transactions.filter((t) => t.status === "sent");
       const paid = transactions.filter((t) => t.status === "paid");
@@ -899,18 +706,8 @@ async create(data: CreateTransactionDto): Promise<ApiResponse<Transaction>> {
     }
   }
 
-
   async markAsPaid(id: string, paymentMethod: "cash" | "gcash" | "bank" | "online" | "other" = "cash"): Promise<ApiResponse<Transaction>> {
-    try {
-      const current = await this.getById(id);
-      
-      return await this.update(id, {
-        payment_method: paymentMethod,
-      });
-    } catch (error) {
-      console.error("Error marking as paid:", error);
-      throw error;
-    }
+    return this.updatePayment(id, { payment_method: paymentMethod });
   }
 
   async updatePaymentSubmissionStatus(id: number, status: PaymentSubmissionStatus, remarks?: string): Promise<ApiResponse<PaymentSubmissionResponse>> {
@@ -920,29 +717,60 @@ async create(data: CreateTransactionDto): Promise<ApiResponse<Transaction>> {
         updateData.remarks = remarks;
       }
       
-      const response = await apiService.patch<ApiResponse<PaymentSubmissionResponse>>(
+      const response = await apiService.patch<PaymentSubmissionResponse>(
         `${this.paymentSubmissionsEndpoint}${id}/`,
         updateData
       );
       
-      return response;
+      return {
+        status_code: 200,
+        message: "Payment submission updated successfully",
+        data: response,
+        errors: null
+      };
     } catch (error) {
       console.error(`Error updating payment submission ${id} status:`, error);
       throw error;
     }
   }
 
-  async getFeesWithIds(): Promise<FeeDropdownOption[]> {
-    try {
-      const allFees = await this.getFees({ per_page: 100 });
-      
-      return allFees;
-    } catch (error) {
-      console.error("Error getting fees with IDs:", error);
-      return [];
+  async createMultiplePayments(payments: CreatePaymentDto[]): Promise<ApiResponse<{ payments: PaymentApiResponse[] }>> {
+    if (payments.length === 1) {
+      const response = await this.createSinglePayment(payments[0]);
+      return {
+        ...response,
+        data: { payments: [{
+          id: parseInt(response.data?.id || "0"),
+          fee: { id: payments[0].fee } as any,
+          amount_paid: payments[0].amount_paid,
+          payment_method: payments[0].payment_method,
+          payment_submission: payments[0].payment_submission || null,
+          created_at: new Date().toISOString(),
+          received_by: {
+            id: 0,
+            username: "",
+            email: "",
+            first_name: "",
+            last_name: ""
+          },
+          updated_at: ""
+        }] }
+      };
+    } else {
+      return this.createBulkPayments({ payments });
     }
   }
 
+  clearCache(): void {
+    cache.clear();
+  }
+
+  async searchFees(searchTerm: string, page: number = 1, perPage: number = 20): Promise<FeeDropdownOption[]> {
+    return this.getFees({
+      search: searchTerm,
+      per_page: perPage
+    });
+  }
 }
 
 export default new TransactionsApi();
