@@ -1,5 +1,6 @@
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue';
+import { ref, computed, watch, onMounted } from 'vue';
+import { useRouter, useRoute } from 'vue-router';
 import {
     ArrowLeft,
     Mail,
@@ -15,332 +16,178 @@ import {
     Eye,
     TriangleAlert,
     Pencil,
+    Loader2
 } from 'lucide-vue-next';
 import type { StudentStatus } from '@core/constants';
 
+import { gcashpayments_api } from '@/services/api/gcashpayments_api';
 
 interface Student {
     id: number;
-    student_id: string;
-    fullname: string;
-    set: string;
-    status: StudentStatus;
-}
-
-interface Props {
-    student: Student;
-}
-
-const props = defineProps<Props>();
-
-const emit = defineEmits<{
-    back: [];
-    edit: [student: Student];
-    delete: [student: Student];
-}>();
-
-const activeTab = ref<'fees' | 'payments' | 'submissions'>('fees');
-
-const fees = ref([
-    { id: 1, description: 'Tuition Fee', amount: 25000, status: 'paid' as const, due_date: 'September 1, 2024' },
-    { id: 2, description: 'Laboratory Fee', amount: 5000, status: 'paid' as const, due_date: 'September 1, 2024' },
-    { id: 3, description: 'Library Fee', amount: 1500, status: 'pending' as const, due_date: 'November 30, 2024' },
-    { id: 4, description: 'Miscellaneous Fee', amount: 3000, status: 'overdue' as const, due_date: 'October 15, 2024' },
-    { id: 5, description: 'Tuition Fee', amount: 25000, status: 'paid' as const, due_date: 'September 1, 2024' },
-    { id: 6, description: 'Laboratory Fee', amount: 5000, status: 'paid' as const, due_date: 'September 1, 2024' },
-    { id: 7, description: 'Library Fee', amount: 1500, status: 'pending' as const, due_date: 'November 30, 2024' },
-    { id: 8, description: 'Miscellaneous Fee', amount: 3000, status: 'overdue' as const, due_date: 'October 15, 2024' },
-    { id: 9, description: 'Tuition Fee', amount: 25000, status: 'paid' as const, due_date: 'September 1, 2024' },
-    { id: 10, description: 'Laboratory Fee', amount: 5000, status: 'paid' as const, due_date: 'September 1, 2024' },
-    { id: 11, description: 'Library Fee', amount: 1500, status: 'pending' as const, due_date: 'November 30, 2024' },
-    { id: 12, description: 'Miscellaneous Fee', amount: 3000, status: 'overdue' as const, due_date: 'October 15, 2024' },
-]);
-
-const payments = ref([
-    {
-        id: 1,
-        amount: 15000,
-        payment_date: 'August 25, 2024',
-        method: 'Bank Transfer',
-        reference: 'BT-2024-001234',
-        status: 'completed' as const,
-        applied_to: 'Tuition Fee (Partial)',
-    },
-    {
-        id: 2,
-        amount: 10000,
-        payment_date: 'September 15, 2024',
-        method: 'Cash',
-        reference: 'CASH-2024-000567',
-        status: 'completed' as const,
-        applied_to: 'Tuition Fee (Balance)',
-    },
-    {
-        id: 3,
-        amount: 5000,
-        payment_date: 'September 15, 2024',
-        method: 'Cash',
-        reference: 'CASH-2024-000568',
-        status: 'completed' as const,
-        applied_to: 'Laboratory Fee',
-    },
-    {
-        id: 4,
-        amount: 15000,
-        payment_date: 'August 25, 2024',
-        method: 'Bank Transfer',
-        reference: 'BT-2024-001234',
-        status: 'completed' as const,
-        applied_to: 'Tuition Fee (Partial)',
-    },
-    {
-        id: 5,
-        amount: 10000,
-        payment_date: 'September 15, 2024',
-        method: 'Cash',
-        reference: 'CASH-2024-000567',
-        status: 'completed' as const,
-        applied_to: 'Tuition Fee (Balance)',
-    },
-    {
-        id: 6,
-        amount: 5000,
-        payment_date: 'September 15, 2024',
-        method: 'Cash',
-        reference: 'CASH-2024-000568',
-        status: 'completed' as const,
-        applied_to: 'Laboratory Fee',
-    },
-    {
-        id: 7,
-        amount: 5000,
-        payment_date: 'September 15, 2024',
-        method: 'Cash',
-        reference: 'CASH-2024-000568',
-        status: 'completed' as const,
-        applied_to: 'Laboratory Fee',
-    },
-    {
-        id: 8,
-        amount: 5000,
-        payment_date: 'September 15, 2024',
-        method: 'Cash',
-        reference: 'CASH-2024-000568',
-        status: 'completed' as const,
-        applied_to: 'Laboratory Fee',
-    },
-    {
-        id: 9,
-        amount: 5000,
-        payment_date: 'September 15, 2024',
-        method: 'Cash',
-        reference: 'CASH-2024-000568',
-        status: 'completed' as const,
-        applied_to: 'Laboratory Fee',
-    },
-    {
-        id: 10,
-        amount: 5000,
-        payment_date: 'September 15, 2024',
-        method: 'Cash',
-        reference: 'CASH-2024-000568',
-        status: 'completed' as const,
-        applied_to: 'Laboratory Fee',
-    }, {
-        id: 11,
-        amount: 5000,
-        payment_date: 'September 15, 2024',
-        method: 'Cash',
-        reference: 'CASH-2024-000568',
-        status: 'completed' as const,
-        applied_to: 'Laboratory Fee',
-    },
-]);
-
-const submissions = ref([
-    {
-        id: 1,
-        amount: 3000,
-        submission_date: 'November 10, 2024',
-        method: 'GCash',
-        reference: 'GC-2024-789012',
-        status: 'pending' as const,
-        proof_url: '#',
-        notes: 'Payment for Miscellaneous Fee',
-    },
-    {
-        id: 2,
-        amount: 1500,
-        submission_date: 'November 12, 2024',
-        method: 'Bank Transfer',
-        reference: 'BT-2024-345678',
-        status: 'verified' as const,
-        proof_url: '#',
-        notes: 'Library Fee payment',
-    },
-    {
-        id: 3,
-        amount: 1600,
-        submission_date: 'November 12, 2025',
-        method: 'Bank Transfer',
-        reference: 'BT-2024-845672',
-        status: 'rejected' as const,
-        proof_url: '#',
-        notes: 'Library Fee payment',
-    },
-    {
-        id: 4,
-        amount: 3000,
-        submission_date: 'November 10, 2024',
-        method: 'GCash',
-        reference: 'GC-2024-789012',
-        status: 'pending' as const,
-        proof_url: '#',
-        notes: 'Payment for Miscellaneous Fee',
-    },
-    {
-        id: 5,
-        amount: 1500,
-        submission_date: 'November 12, 2024',
-        method: 'Bank Transfer',
-        reference: 'BT-2024-345678',
-        status: 'verified' as const,
-        proof_url: '#',
-        notes: 'Library Fee payment',
-    },
-    {
-        id: 6,
-        amount: 1600,
-        submission_date: 'November 12, 2025',
-        method: 'Bank Transfer',
-        reference: 'BT-2024-845672',
-        status: 'rejected' as const,
-        proof_url: '#',
-        notes: 'Library Fee payment',
-    },
-    {
-        id: 7,
-        amount: 3000,
-        submission_date: 'November 10, 2024',
-        method: 'GCash',
-        reference: 'GC-2024-789012',
-        status: 'pending' as const,
-        proof_url: '#',
-        notes: 'Payment for Miscellaneous Fee',
-    },
-    {
-        id: 8,
-        amount: 1500,
-        submission_date: 'November 12, 2024',
-        method: 'Bank Transfer',
-        reference: 'BT-2024-345678',
-        status: 'verified' as const,
-        proof_url: '#',
-        notes: 'Library Fee payment',
-    },
-    {
-        id: 9,
-        amount: 1600,
-        submission_date: 'November 12, 2025',
-        method: 'Bank Transfer',
-        reference: 'BT-2024-845672',
-        status: 'rejected' as const,
-        proof_url: '#',
-        notes: 'Library Fee payment',
-    },
-    {
-        id: 10,
-        amount: 3000,
-        submission_date: 'November 10, 2024',
-        method: 'GCash',
-        reference: 'GC-2024-789012',
-        status: 'pending' as const,
-        proof_url: '#',
-        notes: 'Payment for Miscellaneous Fee',
-    },
-    {
-        id: 11,
-        amount: 1500,
-        submission_date: 'November 12, 2024',
-        method: 'Bank Transfer',
-        reference: 'BT-2024-345678',
-        status: 'verified' as const,
-        proof_url: '#',
-        notes: 'Library Fee payment',
-    },
-    {
-        id: 12,
-        amount: 1600,
-        submission_date: 'November 12, 2025',
-        method: 'Bank Transfer',
-        reference: 'BT-2024-845672',
-        status: 'rejected' as const,
-        proof_url: '#',
-        notes: 'Library Fee payment',
-    },
-]);
-
-const pendingSubmissions = computed(() => submissions.value.filter(s => s.status === 'pending').length);
-
-function handleApproveSubmission(submissionId: number) {
-    const submission = submissions.value.find(s => s.id === submissionId);
-    if (submission) {
-        submission.status = 'verified';
+    s_studentID: string;
+    s_fname: string;
+    s_mname: string;
+    s_lname: string;
+    s_suffix: string;
+    s_email: string;
+    s_set: string;
+    s_lvl: number;
+    s_status: StudentStatus;
+    program: {
+        id: number;
+        name: string;
+        status: string;
+        institute: {
+            id: number;
+            institute_name: string;
+            school_name: string;
+            school_short_name: string;
+        }
     }
 }
 
-function handleRejectSubmission(submissionId: number) {
-    const index = submissions.value.findIndex(s => s.id === submissionId);
-    if (index !== -1) {
-        submissions.value[index].status = 'rejected';
-    }
+interface Fee {
+    id: number;
+    category: {
+        id: number;
+        category_name: string;
+        collection_fee: string;
+        description: string;
+    };
+    total_amount: string;
+    balance: string;
+    status: 'paid' | 'partial' | 'pending' | 'overdue';
+    due_date: string;
+    academic_year: string;
+    semester: string;
+    remarks: string;
 }
 
-function formatCurrency(amount: number) {
-    return new Intl.NumberFormat('en-PH', {
-        style: 'currency',
-        currency: 'PHP',
-    }).format(amount);
+interface Payment {
+    id: number;
+    amount: number;
+    payment_date: string;
+    method: string;
+    reference: string;
+    status: 'completed' | 'pending' | 'verified' | 'rejected';
+    applied_to: string;
 }
+
+interface PaymentSubmission {
+    id: number;
+    amount: number;
+    submission_date: string;
+    method: string;
+    reference: string;
+    status: 'pending' | 'verified' | 'rejected';
+    proof_url: string;
+    notes: string;
+}
+
+interface FeesSummary {
+    student_id: number;
+    total_amount: number;
+    total_balance: number;
+}
+
+const router = useRouter();
+const route = useRoute();
+
+const studentId = computed(() => {
+    const id = route.params.id;
+    return typeof id === 'string' ? parseInt(id) : (Array.isArray(id) ? parseInt(id[0]) : id);
+});
+
+// State
+const student = ref<Student | null>(null);
+const allFees = ref<Fee[]>([]);
+const allPayments = ref<Payment[]>([]);
+const allSubmissions = ref<PaymentSubmission[]>([]);
+const feesSummary = ref<FeesSummary | null>(null);
+const isLoading = ref(false);
+const error = ref<string | null>(null);
+
+const activeTab = ref<'fees' | 'payments' | 'submissions'>('payments'); 
 
 const searchQuery = ref("");
 const statusFilter = ref("all");
 
-const itemsPerPage = 5;
-const currentPage = ref(1);
+const fullName = computed(() => {
+    if (!student.value) return '';
+    
+    const parts = [
+        student.value.s_fname || '',
+        student.value.s_mname || '',
+        student.value.s_lname || '',
+        (student.value.s_suffix && student.value.s_suffix.trim()) || ''
+    ].filter(part => part.length > 0);
+    
+    return parts.join(' ').trim() || 'Unknown Student';
+});
 
-function paginate(list: any[]) {
-    const start = (currentPage.value - 1) * itemsPerPage;
-    return list.slice(start, start + itemsPerPage);
-}
+const programName = computed(() => {
+    return student.value?.program?.name || 'No Program Assigned';
+});
 
-const totalPages = computed(() => (listLength: number) =>
-    Math.ceil(listLength / itemsPerPage)
-);
+const totalFees = computed(() => {
+    return feesSummary.value?.total_amount || 0;
+});
 
-watch([searchQuery, statusFilter], () => (currentPage.value = 1));
+const totalBalance = computed(() => {
+    return feesSummary.value?.total_balance || 0;
+});
 
+const totalPaid = computed(() => {
+    return totalFees.value - totalBalance.value;
+});
+
+const pendingSubmissions = computed(() => {
+    return allSubmissions.value.filter(s => s.status === 'pending').length;
+});
+
+const latestFees = computed(() => {
+    return [...allFees.value]
+        .sort((a, b) => new Date(b.due_date).getTime() - new Date(a.due_date).getTime())
+        .slice(0, 10);
+});
+
+const latestPayments = computed(() => {
+    return [...allPayments.value]
+        .sort((a, b) => new Date(b.payment_date).getTime() - new Date(a.payment_date).getTime())
+        .slice(0, 10);
+});
+
+const latestSubmissions = computed(() => {
+    return [...allSubmissions.value]
+        .sort((a, b) => {
+            if (a.status === "pending" && b.status !== "pending") return -1;
+            if (a.status !== "pending" && b.status === "pending") return 1;
+            
+            return new Date(b.submission_date).getTime() - new Date(a.submission_date).getTime();
+        })
+        .slice(0, 10); 
+});
 
 const filteredFees = computed(() => {
     const q = searchQuery.value.toLowerCase();
 
-    return fees.value.filter(f =>
+    return latestFees.value.filter(f =>
         (
-            f.description.toLowerCase().includes(q) ||
-            f.amount.toString().includes(q) ||
+            f.category.category_name.toLowerCase().includes(q) ||
+            f.total_amount.toLowerCase().includes(q) ||
             f.status.toLowerCase().includes(q) ||
-            f.due_date.toLowerCase().includes(q)
+            f.due_date.toLowerCase().includes(q) ||
+            f.academic_year.toLowerCase().includes(q) ||
+            f.semester.toLowerCase().includes(q)
         ) &&
         (statusFilter.value === "all" || f.status === statusFilter.value)
     );
 });
 
-const paginatedFees = computed(() => paginate(filteredFees.value));
-
 const filteredPayments = computed(() => {
     const q = searchQuery.value.toLowerCase();
 
-    return payments.value.filter(p =>
+    return latestPayments.value.filter(p =>
         (
             p.method.toLowerCase().includes(q) ||
             p.reference.toLowerCase().includes(q) ||
@@ -352,435 +199,584 @@ const filteredPayments = computed(() => {
         (statusFilter.value === "all" || p.status === statusFilter.value)
     );
 });
-      
-const paginatedPayments = computed(() => paginate(filteredPayments.value));
 
 const filteredSubmissions = computed(() => {
     const q = searchQuery.value.toLowerCase();
 
-    return submissions.value
-        .filter(s =>
-            (
-                s.method.toLowerCase().includes(q) ||
-                s.reference.toLowerCase().includes(q) ||
-                s.status.toLowerCase().includes(q) ||
-                s.submission_date.toLowerCase().includes(q) ||
-                s.notes.toLowerCase().includes(q) ||
-                s.amount.toString().includes(q)
-            ) &&
-            (statusFilter.value === "all" || s.status === statusFilter.value)
-        )
-        .sort((a, b) => {
-            if (a.status === "pending" && b.status !== "pending") return -1;
-            if (a.status !== "pending" && b.status === "pending") return 1;
-            return 0;
-        });
+    return latestSubmissions.value.filter(s =>
+        (
+            s.method.toLowerCase().includes(q) ||
+            s.reference.toLowerCase().includes(q) ||
+            s.status.toLowerCase().includes(q) ||
+            s.submission_date.toLowerCase().includes(q) ||
+            s.notes.toLowerCase().includes(q) ||
+            s.amount.toString().includes(q)
+        ) &&
+        (statusFilter.value === "all" || s.status === statusFilter.value)
+    );
 });
 
-const paginatedSubmissions = computed(() => paginate(filteredSubmissions.value));
+onMounted(async () => {
+    if (studentId.value && !isNaN(studentId.value)) {
+        await fetchStudentData();
+    } else {
+        error.value = 'Invalid student ID';
+    }
+});
+
+async function fetchStudentData() {
+    isLoading.value = true;
+    error.value = null;
+    
+    try {
+        console.log('Fetching data for student:', studentId.value);
+        
+        const [profile, submissionsResponse, paymentsResponse] = await Promise.all([
+            gcashpayments_api.getStudentProfile(studentId.value),
+            gcashpayments_api.getStudentPaymentSubmissions(studentId.value, { 
+                ordering: '-created_at',
+                per_page: 100 
+            }),
+            gcashpayments_api.getStudentPaymentHistory(studentId.value, { 
+                ordering: '-created_at',
+                per_page: 100 
+            })
+        ]);
+        
+        console.log('Student profile:', profile);
+        console.log('Payment submissions:', submissionsResponse);
+        console.log('Payment history:', paymentsResponse);
+        
+        student.value = profile.student;
+        allFees.value = Array.isArray(profile.fees) ? profile.fees : [];
+        feesSummary.value = profile.summary;
+        
+        allSubmissions.value = submissionsResponse.results.map(sub => ({
+            id: sub.id,
+            amount: parseFloat(sub.amount_paid),
+            submission_date: sub.created_at,
+            method: 'GCash',
+            reference: sub.reference_number,
+            status: sub.status as 'pending' | 'verified' | 'rejected',
+            proof_url: sub.screenshot_urls[0] || '',
+            notes: sub.remarks || 'No remarks'
+        }));
+        
+        allPayments.value = paymentsResponse.results.map(payment => ({
+            id: payment.id,
+            amount: parseFloat(payment.amount_paid),
+            payment_date: payment.created_at,
+            method: payment.payment_method,
+            reference: payment.payment_submission ? `PS-${payment.payment_submission}` : `PAY-${payment.id}`,
+            status: 'completed' as const,
+            applied_to: payment.fee.category_name
+        }));
+        
+        console.log('Total fees loaded:', allFees.value.length);
+        console.log('Total payments loaded:', allPayments.value.length);
+        console.log('Total submissions loaded:', allSubmissions.value.length);
+        
+    } catch (err: any) {
+        console.error('Error fetching student data:', err);
+        error.value = err.message || 'Failed to load student data';
+        
+        if (err.response?.data?.message) {
+            error.value = err.response.data.message;
+        }
+    } finally {
+        isLoading.value = false;
+    }
+}
+
+
+function formatCurrency(amount: number | string) {
+    const numAmount = typeof amount === 'string' ? parseFloat(amount) : amount;
+    return new Intl.NumberFormat('en-PH', {
+        style: 'currency',
+        currency: 'PHP',
+    }).format(numAmount);
+}
+
+function formatDate(dateString: string) {
+    if (!dateString) return 'N/A';
+    const date = new Date(dateString);
+    if (isNaN(date.getTime())) return 'Invalid Date';
+    return date.toLocaleDateString('en-US', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+}
+
+function getStatusClass(status: string) {
+    switch (status) {
+        case 'paid':
+        case 'completed':
+        case 'verified':
+            return 'bg-emerald-100 text-emerald-800';
+        case 'pending':
+        case 'partial':
+            return 'bg-amber-100 text-amber-800';
+        case 'overdue':
+        case 'rejected':
+            return 'bg-red-100 text-red-800';
+        default:
+            return 'bg-gray-100 text-gray-800';
+    }
+}
+
+function getStatusText(status: string) {
+    return status.toUpperCase();
+}
+
+watch(activeTab, () => {
+    searchQuery.value = "";
+    statusFilter.value = "all";
+});
+
+function handleBack() {
+  if (window.history.length > 1) {
+    router.back();
+  } else {
+    router.push('/');
+  }
+}
+
+
+function handleApproveSubmission(submissionId: number) {
+    const submission = allSubmissions.value.find(s => s.id === submissionId);
+    if (submission) {
+        submission.status = 'verified';
+    }
+}
+
+function handleRejectSubmission(submissionId: number) {
+    const index = allSubmissions.value.findIndex(s => s.id === submissionId);
+    if (index !== -1) {
+        allSubmissions.value[index].status = 'rejected';
+    }
+}
+
+const viewScreenshot = (payment: any) => {
+  if (payment.screenshot_urls && payment.screenshot_urls.length > 0) {
+    window.open(payment.screenshot_urls[0], '_blank')
+  } else if (payment.screenshot) {
+    window.open(payment.screenshot, '_blank')
+  }
+}
 </script>
 
 <template>
     <div class="min-h-screen bg-gray-50">
         <div class="container mx-auto px-4 py-8">
-            <!-- Back button -->
-            <button @click="emit('back')"
-                class="inline-flex items-center text-blue-600 hover:text-blue-700 mb-6 transition-colors">
-                <ArrowLeft class="h-5 w-5 mr-2" />
-                Back to Students
-            </button>
+            <!-- Loading State -->
+            <div v-if="isLoading" class="text-center py-12">
+                <Loader2 class="inline-block animate-spin rounded-full h-8 w-8 text-blue-600" />
+                <p class="text-gray-600">Loading student data...</p>
+            </div>
 
-            <!-- Student Info Card -->
-            <div class="bg-white rounded-2xl shadow-lg p-8 mb-6">
-                <div class="flex flex-col md:flex-row gap-8">
-                    <!-- Student Details -->
-                    <div class="flex-grow">
-                        <div class="flex items-start justify-between mb-4">
+            <!-- Error State -->
+            <div v-else-if="error" class="text-center py-12">
+                <TriangleAlert class="h-12 w-12 text-red-600 mx-auto mb-4" />
+                <p class="text-red-600 mb-2">{{ error }}</p>
+                <button @click="fetchStudentData" 
+                        class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                    Try Again
+                </button>
+            </div>
+
+            <!-- Student Data -->
+            <div v-else-if="student" :key="student.id">
+                <!-- Back button -->
+                <button @click="handleBack"
+                    class="inline-flex items-center text-blue-600 hover:text-blue-700 mb-6 transition-colors">
+                    <ArrowLeft class="h-5 w-5 mr-2" />
+                    Back
+                </button>
+
+                <!-- Student Info Card -->
+                <div class="bg-white rounded-2xl shadow-lg p-8 mb-6">
+                    <div class="flex flex-col md:flex-row gap-8">
+                        <!-- Student Details -->
+                        <div class="flex-grow">
+                            <div class="flex items-start justify-between mb-4">
+                                <div>
+                                    <h1 class="text-3xl font-bold text-gray-900 mb-2">{{ fullName }}</h1>
+                                    <p class="text-lg text-gray-600">{{ student.s_studentID }}</p>
+                                </div>
+
+                                <div class="flex gap-2">
+                                    <span class="px-4 py-2 inline-flex text-sm leading-5 font-bold rounded-full" :class="{
+                                        'bg-emerald-100 text-emerald-800': student.s_status === 'enrolled',
+                                        'bg-red-100 text-red-800': student.s_status === 'dropped',
+                                        'bg-amber-100 text-amber-800': student.s_status === 'graduated',
+                                    }">
+                                        {{ student.s_status.charAt(0).toUpperCase() + student.s_status.slice(1) }}
+                                    </span>
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-gray-700 mb-4">
+                                <div class="flex items-center">
+                                    <Mail class="h-5 w-5 mr-3 text-gray-400" />
+                                    <span>{{ student.s_email || 'No email provided' }}</span>
+                                </div>
+                                <div class="flex items-center">
+                                    <Phone class="h-5 w-5 mr-3 text-gray-400" />
+                                    <span>Contact info not available</span>
+                                </div>
+                                <div class="flex items-center">
+                                    <BookOpen class="h-5 w-5 mr-3 text-gray-400" />
+                                    <span>{{ programName }}</span>
+                                </div>
+                                <div class="flex items-center">
+                                    <Calendar class="h-5 w-5 mr-3 text-gray-400" />
+                                    <span>Level {{ student.s_lvl }} - Set {{ student.s_set }}</span>
+                                </div>
+                                <div class="flex items-center">
+                                    <MapPin class="h-5 w-5 mr-3 text-gray-400" />
+                                    <span>{{ student.program?.institute?.school_name || 'No school info' }}</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Financial Summary Cards -->
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                    <div class="bg-white rounded-xl shadow-md p-6">
+                        <div class="flex items-center justify-between">
                             <div>
-                                <h1 class="text-3xl font-bold text-gray-900 mb-2">{{ student.fullname }}</h1>
-                                <p class="text-lg text-gray-600">{{ student.student_id }}</p>
+                                <p class="text-sm text-gray-600 mb-1">Total Fees</p>
+                                <p class="text-2xl font-bold text-gray-900">{{ formatCurrency(totalFees) }}</p>
                             </div>
+                            <div class="bg-blue-100 p-3 rounded-full">
+                                <CreditCard class="h-6 w-6 text-blue-600" />
+                            </div>
+                        </div>
+                    </div>
 
-                            <div class="flex gap-2">
-                                <span class="px-4 py-2 inline-flex text-sm leading-5 font-bold rounded-full" :class="{
-                                    'bg-emerald-100 text-emerald-800': student.status === 'enrolled',
-                                    'bg-red-100 text-red-800': student.status === 'dropped',
-                                    'bg-amber-100 text-amber-800': student.status === 'graduated',
-                                }">
-                                    {{ student.status.charAt(0).toUpperCase() + student.status.slice(1) }}
+                    <div class="bg-white rounded-xl shadow-md p-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm text-gray-600 mb-1">Total Paid</p>
+                                <p class="text-2xl font-bold text-emerald-600">{{ formatCurrency(totalPaid) }}</p>
+                            </div>
+                            <div class="bg-emerald-100 p-3 rounded-full">
+                                <CheckCircle class="h-6 w-6 text-emerald-600" />
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="bg-white rounded-xl shadow-md p-6">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <p class="text-sm text-gray-600 mb-1">Balance</p>
+                                <p class="text-2xl font-bold text-red-600">{{ formatCurrency(totalBalance) }}</p>
+                            </div>
+                            <div class="bg-red-100 p-3 rounded-full">
+                                <Clock class="h-6 w-6 text-red-600" />
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Tabs Container -->
+                <div class="bg-white rounded-2xl shadow-lg overflow-hidden mb-6">
+                    <div class="border-b border-gray-200">
+                        <nav class="flex -mb-px">
+                            <button @click="activeTab = 'fees'" :class="[
+                                'px-6 py-4 text-sm font-semibold transition-colors',
+                                activeTab === 'fees'
+                                    ? 'border-b-2 border-blue-600 text-blue-600'
+                                    : 'text-gray-600 hover:text-gray-900 hover:border-gray-300'
+                            ]">
+                                Fees & Collections
+                                <span v-if="allFees.length > 10" class="ml-2 text-xs text-gray-500">
+                                    (Showing 10 latest of {{ allFees.length }})
                                 </span>
-                            </div>
-                        </div>
-
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-gray-700 mb-4">
-                            <div class="flex items-center">
-                                <Mail class="h-5 w-5 mr-3 text-gray-400" />
-                                <span>{{ student.fullname.toLowerCase().replace(/\s+/g, '.') }}@example.edu</span>
-                            </div>
-                            <div class="flex items-center">
-                                <Phone class="h-5 w-5 mr-3 text-gray-400" />
-                                <span>+63 912 345 6789</span>
-                            </div>
-                            <div class="flex items-center">
-                                <MapPin class="h-5 w-5 mr-3 text-gray-400" />
-                                <span>Davao City, Philippines</span>
-                            </div>
-                            <div class="flex items-center">
-                                <Calendar class="h-5 w-5 mr-3 text-gray-400" />
-                                <span>Enrolled: August 15, 2020</span>
-                            </div>
-                            <div class="flex items-center">
-                                <BookOpen class="h-5 w-5 mr-3 text-gray-400" />
-                                <span>{{ student.set }}</span>
-                            </div>
-                        </div>
-
-                        <div class="flex gap-2 justify-end">
-                            <button @click="emit('edit', student)"
-                                class="px-4 py-2  text-gray-600 rounded-lg hover:bg-gray-200 hover:text-gray-600 transition-colors flex font-bold">
-                                <Pencil class="h-5 w-5 mr-3 text-gray-600" />
-                                Edit
                             </button>
-
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Financial Summary Cards -->
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-                <div class="bg-white rounded-xl shadow-md p-6">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <p class="text-sm text-gray-600 mb-1">Total Fees</p>
-                            <p class="text-2xl font-bold text-gray-900">₱34,500.00</p>
-                        </div>
-                        <div class="bg-blue-100 p-3 rounded-full">
-                            <CreditCard class="h-6 w-6 text-blue-600" />
-                        </div>
-                    </div>
-                </div>
-
-                <div class="bg-white rounded-xl shadow-md p-6">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <p class="text-sm text-gray-600 mb-1">Total Paid</p>
-                            <p class="text-2xl font-bold text-emerald-600">₱30,000.00</p>
-                        </div>
-                        <div class="bg-emerald-100 p-3 rounded-full">
-                            <CheckCircle class="h-6 w-6 text-emerald-600" />
-                        </div>
-                    </div>
-                </div>
-
-                <div class="bg-white rounded-xl shadow-md p-6">
-                    <div class="flex items-center justify-between">
-                        <div>
-                            <p class="text-sm text-gray-600 mb-1">Balance</p>
-                            <p class="text-2xl font-bold text-red-600">₱4,500.00</p>
-                        </div>
-                        <div class="bg-red-100 p-3 rounded-full">
-                            <Clock class="h-6 w-6 text-red-600" />
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Tabs Container -->
-            <div class="bg-white rounded-2xl shadow-lg overflow-hidden mb-6">
-                <div class="border-b border-gray-200">
-                    <nav class="flex -mb-px">
-                        <button @click="activeTab = 'fees'" :class="[
-                            'px-6 py-4 text-sm font-semibold transition-colors',
-                            activeTab === 'fees'
-                                ? 'border-b-2 border-blue-600 text-blue-600'
-                                : 'text-gray-600 hover:text-gray-900 hover:border-gray-300'
-                        ]">
-                            Fees & Collections
-                        </button>
-                        <button @click="activeTab = 'payments'" :class="[
-                            'px-6 py-4 text-sm font-semibold transition-colors',
-                            activeTab === 'payments'
-                                ? 'border-b-2 border-blue-600 text-blue-600'
-                                : 'text-gray-600 hover:text-gray-900 hover:border-gray-300'
-                        ]">
-                            Payment History
-                        </button>
-                        <button @click="activeTab = 'submissions'" :class="[
-                            'px-6 py-4 text-sm font-semibold transition-colors relative',
-                            activeTab === 'submissions'
-                                ? 'border-b-2 border-blue-600 text-blue-600'
-                                : 'text-gray-600 hover:text-gray-900 hover:border-gray-300'
-                        ]">
-                            Payment Submissions
-                            <span v-if="pendingSubmissions > 0"
-                                class="ml-2 inline-flex items-center justify-center w-5 h-5 text-xs font-bold text-white bg-red-500 rounded-full">
-                                {{ pendingSubmissions }}
-                            </span>
-                        </button>
-                    </nav>
-                </div>
-
-                <!-- Tab Content -->
-                <div class="p-6">
-                    <!-- Fees Tab -->
-                    <div v-if="activeTab === 'fees'">
-                        <div v-if="fees.length != 0" class="flex items-center justify-between mb-4">
-                            <!-- Search -->
-                            <input v-model="searchQuery" type="text" placeholder="Search..."
-                                class="px-4 py-2 border border-gray-300 rounded-lg w-1/2" />
-
-                            <!-- Filter -->
-                            <select v-model="statusFilter" class="px-4 py-2 border border-gray-300 rounded-lg">
-                                <option value="all">All</option>
-                                <option value="paid">Paid</option>
-                                <option value="pending">Pending</option>
-                                <option value="overdue">Overdue</option>
-                                <option value="completed">Completed</option>
-                                <option value="verified">Verified</option>
-                                <option value="rejected">Rejected</option>
-                            </select>
-                        </div>
-                        <div class="overflow-x-auto">
-                            <table class="min-w-full divide-y divide-gray-200">
-                                <thead class="bg-gray-50">
-                                    <tr>
-                                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase">
-                                            ID</th>
-                                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase">
-                                            Description</th>
-                                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase">
-                                            Amount</th>
-                                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase">
-                                            Due Date</th>
-                                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase">
-                                            Status</th>
-                                    </tr>
-                                </thead>
-                                <tbody class="bg-white divide-y divide-gray-200">
-                                    <tr v-for="fee in paginatedFees" :key="fee.id" class="hover:bg-gray-50">
-                                        <td class="px-6 py-4 text-sm font-medium text-gray-900">{{ fee.id }}
-                                        </td>
-                                        <td class="px-6 py-4 text-sm font-medium text-gray-900">{{ fee.description }}
-                                        </td>
-                                        <td class="px-6 py-4 text-sm text-gray-600">{{ formatCurrency(fee.amount) }}
-                                        </td>
-                                        <td class="px-6 py-4 text-sm text-gray-600">{{ fee.due_date }}</td>
-                                        <td class="px-6 py-4">
-                                            <span class="px-3 py-1 text-xs font-bold rounded-full" :class="{
-                                                'bg-emerald-100 text-emerald-800': fee.status === 'paid',
-                                                'bg-amber-100 text-amber-800': fee.status === 'pending',
-                                                'bg-red-100 text-red-800': fee.status === 'overdue',
-                                            }">
-                                                {{ fee.status.toUpperCase() }}
-                                            </span>
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                             <div v-if="fees.length === 0" class="text-center py-12">
-                                <FileText class="mx-auto h-16 w-16 text-gray-300 mb-4" />
-                                <p class="text-xl font-medium text-gray-700 mb-2">No Fees</p>
-                                <p class="text-sm text-gray-500">Fees will appear here when students have transactions.</p>
-                            </div>
-                            <div v-if="fees.length != 0" class="flex justify-end mt-4 space-x-2">
-                                <button @click="currentPage--" :disabled="currentPage === 1"
-                                    class="px-3 py-1 bg-gray-200 rounded disabled:opacity-50">
-                                    Previous
-                                </button>
-
-                                <button @click="currentPage++"
-                                    :disabled="currentPage === totalPages(filteredFees.length)"
-                                    class="px-3 py-1 bg-gray-200 rounded disabled:opacity-50">
-                                    Next
-                                </button>
-                            </div>
-                        </div>
-
-                    </div>
-
-
-                    <!-- Payments Tab -->
-                    <div v-if="activeTab === 'payments'">
-                        <div v-if="payments.length != 0" class="flex items-center justify-between mb-4">
-                            <!-- Search -->
-                            <input v-model="searchQuery" type="text" placeholder="Search..."
-                                class="px-4 py-2 border border-gray-300 rounded-lg w-1/2" />
-
-                            <!-- Filter -->
-                            <select v-model="statusFilter" class="px-4 py-2 border border-gray-300 rounded-lg">
-                                <option value="all">All</option>
-                                <option value="paid">Paid</option>
-                                <option value="pending">Pending</option>
-                                <option value="overdue">Overdue</option>
-                                <option value="completed">Completed</option>
-                                <option value="verified">Verified</option>
-                                <option value="rejected">Rejected</option>
-                            </select>
-                        </div>
-                        <div class="overflow-x-auto">
-                            <table class="min-w-full divide-y divide-gray-200">
-                                <thead class="bg-gray-50">
-                                    <tr>
-                                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase">
-                                            ID</th>
-                                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase">
-                                            Date</th>
-                                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase">
-                                            Amount</th>
-                                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase">
-                                            Method</th>
-                                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase">
-                                            Reference</th>
-                                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase">
-                                            Applied To</th>
-                                        <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase">
-                                            Status</th>
-                                    </tr>
-                                </thead>
-                                <tbody class="bg-white divide-y divide-gray-200">
-                                    <tr v-for="payment in paginatedPayments" :key="payment.id" class="hover:bg-gray-50">
-                                          <td class="px-6 py-4 text-sm text-gray-600">{{ payment.id }}</td>
-                                        <td class="px-6 py-4 text-sm text-gray-600">{{ payment.payment_date }}</td>
-                                        <td class="px-6 py-4 text-sm font-semibold text-emerald-600">{{
-                                            formatCurrency(payment.amount) }}</td>
-                                        <td class="px-6 py-4 text-sm text-gray-600">{{ payment.method }}</td>
-                                        <td class="px-6 py-4 text-sm text-gray-600 font-mono">{{ payment.reference }}
-                                        </td>
-                                        <td class="px-6 py-4 text-sm text-gray-600">{{ payment.applied_to }}</td>
-                                        <td class="px-6 py-4">
-                                            <span
-                                                class="px-3 py-1 text-xs font-bold rounded-full bg-emerald-100 text-emerald-800">
-                                                {{ payment.status.toUpperCase() }}
-                                            </span>
-                                        </td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                               <div v-if="payments.length === 0" class="text-center py-12">
-                                <FileText class="mx-auto h-16 w-16 text-gray-300 mb-4" />
-                                <p class="text-xl font-medium text-gray-700 mb-2">No payments</p>
-                                <p class="text-sm text-gray-500">Payments will appear here when students have transactions.</p>
-                            </div>
-                        </div>
-                        <div v-if="payments.length != 0" class="flex justify-end mt-4 space-x-2">
-                            <button @click="currentPage--" :disabled="currentPage === 1"
-                                class="px-3 py-1 bg-gray-200 rounded disabled:opacity-50">
-                                Previous
+                            <button @click="activeTab = 'payments'" :class="[
+                                'px-6 py-4 text-sm font-semibold transition-colors',
+                                activeTab === 'payments'
+                                    ? 'border-b-2 border-blue-600 text-blue-600'
+                                    : 'text-gray-600 hover:text-gray-900 hover:border-gray-300'
+                            ]">
+                                Payment History
+                                <span v-if="allPayments.length > 10" class="ml-2 text-xs text-gray-500">
+                                    (Showing 10 latest of {{ allPayments.length }})
+                                </span>
                             </button>
-
-                            <button @click="currentPage++" :disabled="currentPage === totalPages(filteredFees.length)"
-                                class="px-3 py-1 bg-gray-200 rounded disabled:opacity-50">
-                                Next
+                            <button @click="activeTab = 'submissions'" :class="[
+                                'px-6 py-4 text-sm font-semibold transition-colors relative',
+                                activeTab === 'submissions'
+                                    ? 'border-b-2 border-blue-600 text-blue-600'
+                                    : 'text-gray-600 hover:text-gray-900 hover:border-gray-300'
+                            ]">
+                                Payment Submissions
+                                <span v-if="pendingSubmissions > 0"
+                                    class="ml-2 inline-flex items-center justify-center w-5 h-5 text-xs font-bold text-white bg-red-500 rounded-full">
+                                    {{ pendingSubmissions }}
+                                </span>
+                                <span v-if="allSubmissions.length > 10" class="ml-2 text-xs text-gray-500">
+                                    (Showing 10 latest of {{ allSubmissions.length }})
+                                </span>
                             </button>
-                        </div>
+                        </nav>
                     </div>
 
-                    <!-- Submissions Tab -->
-                    <div v-if="activeTab === 'submissions'">
-                        <div v-if="submissions.length != 0" class="flex items-center justify-between mb-4">
-                            <!-- Search -->
-                            <input v-model="searchQuery" type="text" placeholder="Search..."
-                                class="px-4 py-2 border border-gray-300 rounded-lg w-1/2" />
+                    <!-- Tab Content -->
+                    <div class="p-6">
+                        <!-- Fees Tab -->
+                        <div v-if="activeTab === 'fees'">
+                            <div v-if="allFees.length > 0" class="flex items-center justify-between mb-4">
+                                <!-- Search -->
+                                <input v-model="searchQuery" type="text" placeholder="Search fees..."
+                                    class="px-4 py-2 border border-gray-300 rounded-lg w-1/2" />
 
-                            <!-- Filter -->
-                            <select v-model="statusFilter" class="px-4 py-2 border border-gray-300 rounded-lg">
-                                <option value="all">All</option>
-                                <option value="paid">Paid</option>
-                                <option value="pending">Pending</option>
-                                <option value="overdue">Overdue</option>
-                                <option value="completed">Completed</option>
-                                <option value="verified">Verified</option>
-                                <option value="rejected">Rejected</option>
-                            </select>
-                        </div>
-                        <div class="space-y-4">
-                            <div v-for="submission in paginatedSubmissions" :key="submission.id"
-                                class="border border-gray-200 rounded-lg p-6 hover:shadow-md transition-shadow">
-                                <div class="flex items-start justify-between mb-4">
-                                    <div class="flex-grow">
-                                           <p class="text-sm text-gray-600 mb-1">ID: {{ submission.id }}</p>
-                                        <div class="flex items-center gap-3 mb-2">
-                                            <h3 class="text-lg font-semibold text-gray-900">{{
-                                                formatCurrency(submission.amount) }}</h3>
-                                            <span class="px-3 py-1 text-xs font-bold rounded-full" :class="{
-                                                'bg-amber-100 text-amber-800': submission.status === 'pending',
-                                                'bg-emerald-100 text-emerald-800': submission.status === 'verified',
-                                                'bg-red-100 text-red-800': submission.status === 'rejected',
-                                            }">
-                                                {{ submission.status.toUpperCase() }}
-                                            </span>
-                                        </div>
-                                        <p class="text-sm text-gray-600 mb-1">{{ submission.method }} - {{
-                                            submission.reference }}</p>
-                                        <p class="text-sm text-gray-500">Submitted: {{ submission.submission_date }}</p>
-                                        <p class="text-sm text-gray-700 mt-2">{{ submission.notes }}</p>
-                                    </div>
+                                <!-- Filter -->
+                                <select v-model="statusFilter" class="px-4 py-2 border border-gray-300 rounded-lg">
+                                    <option value="all">All</option>
+                                    <option value="paid">Paid</option>
+                                    <option value="partial">Partial</option>
+                                    <option value="pending">Pending</option>
+                                    <option value="overdue">Overdue</option>
+                                </select>
+                            </div>
+                            <div class="overflow-x-auto">
+                                <table class="min-w-full divide-y divide-gray-200">
+                                    <thead class="bg-gray-50">
+                                        <tr>
+                                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase">
+                                                ID
+                                            </th>
+                                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase">
+                                                Category
+                                            </th>
+                                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase">
+                                                Amount
+                                            </th>
+                                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase">
+                                                Balance
+                                            </th>
+                                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase">
+                                                Due Date
+                                            </th>
+                                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase">
+                                                Academic Year
+                                            </th>
+                                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase">
+                                                Semester
+                                            </th>
+                                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase">
+                                                Status
+                                            </th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="bg-white divide-y divide-gray-200">
+                                        <tr v-for="fee in filteredFees" :key="fee.id" class="hover:bg-gray-50">
+                                            <td class="px-6 py-4 text-sm font-medium text-gray-900">{{ fee.id }}
+                                            </td>
+                                            <td class="px-6 py-4 text-sm text-gray-600">
+                                                <div class="font-medium">{{ fee.category.category_name }}</div>
+                                                <div class="text-xs text-gray-500">{{ fee.category.description }}</div>
+                                            </td>
+                                            <td class="px-6 py-4 text-sm text-gray-600">{{ formatCurrency(fee.total_amount) }}
+                                            </td>
+                                            <td class="px-6 py-4 text-sm text-gray-600">{{ formatCurrency(fee.balance) }}
+                                            </td>
+                                            <td class="px-6 py-4 text-sm text-gray-600">{{ formatDate(fee.due_date) }}</td>
+                                            <td class="px-6 py-4 text-sm text-gray-600">{{ fee.academic_year }}</td>
+                                            <td class="px-6 py-4 text-sm text-gray-600">{{ fee.semester }}</td>
+                                            <td class="px-6 py-4">
+                                                <span class="px-3 py-1 text-xs font-bold rounded-full" :class="getStatusClass(fee.status)">
+                                                    {{ getStatusText(fee.status) }}
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                                <div v-if="filteredFees.length === 0" class="text-center py-12">
+                                    <FileText class="mx-auto h-16 w-16 text-gray-300 mb-4" />
+                                    <p class="text-xl font-medium text-gray-700 mb-2">No Fees Found</p>
+                                    <p class="text-sm text-gray-500">This student has no fee records.</p>
                                 </div>
-
-                                <div class="flex items-center gap-3 mt-4">
-                                    <button
-                                        class="inline-flex items-center px-4 py-2 text-sm font-medium text-blue-600 bg-blue-50 rounded-lg hover:bg-blue-100 transition-colors">
-                                        <Eye class="h-4 w-4 mr-2" />
-                                        View Proof
-                                    </button>
-                                    <button v-if="submission.status === 'pending'"
-                                        @click="handleApproveSubmission(submission.id)"
-                                        class="inline-flex items-center px-4 py-2 text-sm font-medium text-emerald-600 bg-emerald-50 rounded-lg hover:bg-emerald-100 transition-colors">
-                                        <CheckCircle class="h-4 w-4 mr-2" />
-                                        Approve
-                                    </button>
-                                    <button v-if="submission.status === 'pending'"
-                                        @click="handleRejectSubmission(submission.id)"
-                                        class="inline-flex items-center px-4 py-2 text-sm font-medium text-red-600 bg-red-50 rounded-lg hover:bg-red-100 transition-colors">
-                                        <XCircle class="h-4 w-4 mr-2" />
-                                        Reject
-                                    </button>
+                                <div v-if="allFees.length > 10" class="mt-4 text-sm text-gray-500 text-center">
+                                    Showing 10 latest fees. Total fees: {{ allFees.length }}
                                 </div>
                             </div>
+                        </div>
 
-                            <div v-if="submissions.length === 0" class="text-center py-12">
-                                <FileText class="mx-auto h-16 w-16 text-gray-300 mb-4" />
-                                <p class="text-xl font-medium text-gray-700 mb-2">No payment submissions</p>
-                                <p class="text-sm text-gray-500">Payment submissions will appear here when students
-                                    upload proof of payment.</p>
+                        <!-- Payments Tab -->
+                        <div v-if="activeTab === 'payments'">
+                            <div v-if="allPayments.length > 0" class="flex items-center justify-between mb-4">
+                                <!-- Search -->
+                                <input v-model="searchQuery" type="text" placeholder="Search payments..."
+                                    class="px-4 py-2 border border-gray-300 rounded-lg w-1/2" />
+
+                                <!-- Filter -->
+                                <select v-model="statusFilter" class="px-4 py-2 border border-gray-300 rounded-lg">
+                                    <option value="all">All</option>
+                                    <option value="completed">Completed</option>
+                                    <option value="pending">Pending</option>
+                                </select>
+                            </div>
+                            <div class="overflow-x-auto">
+                                <table class="min-w-full divide-y divide-gray-200">
+                                    <thead class="bg-gray-50">
+                                        <tr>
+                                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase">
+                                                ID
+                                            </th>
+                                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase">
+                                                Date
+                                            </th>
+                                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase">
+                                                Amount
+                                            </th>
+                                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase">
+                                                Method
+                                            </th>
+                                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase">
+                                                Reference
+                                            </th>
+                                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase">
+                                                Applied To
+                                            </th>
+                                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase">
+                                                Status
+                                            </th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="bg-white divide-y divide-gray-200">
+                                        <tr v-for="payment in filteredPayments" :key="payment.id" class="hover:bg-gray-50">
+                                            <td class="px-6 py-4 text-sm text-gray-600">{{ payment.id }}</td>
+                                            <td class="px-6 py-4 text-sm text-gray-600">{{ formatDate(payment.payment_date) }}
+                                            </td>
+                                            <td class="px-6 py-4 text-sm font-semibold text-emerald-600">{{
+                                                formatCurrency(payment.amount) }}</td>
+                                            <td class="px-6 py-4 text-sm text-gray-600">{{ payment.method }}</td>
+                                            <td class="px-6 py-4 text-sm text-gray-600 font-mono">{{ payment.reference }}
+                                            </td>
+                                            <td class="px-6 py-4 text-sm text-gray-600">{{ payment.applied_to }}</td>
+                                            <td class="px-6 py-4">
+                                                <span class="px-3 py-1 text-xs font-bold rounded-full" :class="getStatusClass(payment.status)">
+                                                    {{ getStatusText(payment.status) }}
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                                <div v-if="filteredPayments.length === 0" class="text-center py-12">
+                                    <FileText class="mx-auto h-16 w-16 text-gray-300 mb-4" />
+                                    <p class="text-xl font-medium text-gray-700 mb-2">No Payment History</p>
+                                    <p class="text-sm text-gray-500">Payment records will appear here when payments are made.</p>
+                                </div>
+                                <div v-if="allPayments.length > 10" class="mt-4 text-sm text-gray-500 text-center">
+                                    Showing 10 latest payments. Total payments: {{ allPayments.length }}
+                                </div>
                             </div>
                         </div>
 
-                        <div v-if="submissions.length != 0" class="flex justify-end mt-4 space-x-2">
-                            <button @click="currentPage--" :disabled="currentPage === 1"
-                                class="px-3 py-1 bg-gray-200 rounded disabled:opacity-50">
-                                Previous
-                            </button>
+                        <!-- Submissions Tab -->
+                        <div v-if="activeTab === 'submissions'">
+                            <div v-if="allSubmissions.length > 0" class="flex items-center justify-between mb-4">
+                                <!-- Search -->
+                                <input v-model="searchQuery" type="text" placeholder="Search submissions..."
+                                    class="px-4 py-2 border border-gray-300 rounded-lg w-1/2" />
 
-                            <button @click="currentPage++" :disabled="currentPage === totalPages(filteredFees.length)"
-                                class="px-3 py-1 bg-gray-200 rounded disabled:opacity-50">
-                                Next
-                            </button>
-
+                                <!-- Filter -->
+                                <select v-model="statusFilter" class="px-4 py-2 border border-gray-300 rounded-lg">
+                                    <option value="all">All</option>
+                                    <option value="pending">Pending</option>
+                                    <option value="verified">Verified</option>
+                                    <option value="rejected">Rejected</option>
+                                </select>
+                            </div>
+                            <div class="overflow-x-auto">
+                                <table class="min-w-full divide-y divide-gray-200">
+                                    <thead class="bg-gray-50">
+                                        <tr>
+                                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase">
+                                                ID
+                                            </th>
+                                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase">
+                                                Date
+                                            </th>
+                                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase">
+                                                Amount
+                                            </th>
+                                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase">
+                                                Reference
+                                            </th>
+                                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase">
+                                                Status
+                                            </th>
+                                            <th class="px-6 py-3 text-left text-xs font-semibold text-gray-500 uppercase">
+                                                Actions
+                                            </th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="bg-white divide-y divide-gray-200">
+                                        <tr v-for="submission in filteredSubmissions" :key="submission.id" class="hover:bg-gray-50">
+                                            <td class="px-6 py-4 text-sm font-medium text-gray-900">{{ submission.id }}</td>
+                                            <td class="px-6 py-4 text-sm text-gray-600">{{ formatDate(submission.submission_date) }}</td>
+                                            <td class="px-6 py-4 text-sm font-semibold text-gray-900">{{ formatCurrency(submission.amount) }}</td>
+                                            <td class="px-6 py-4 text-sm text-gray-600 font-mono">{{ submission.reference }}</td>
+                                            <td class="px-6 py-4">
+                                                <span class="px-3 py-1 text-xs font-bold rounded-full" :class="getStatusClass(submission.status)">
+                                                    {{ getStatusText(submission.status) }}
+                                                </span>
+                                            </td>
+                                            <td class="px-6 py-4">
+                                                <div class="flex items-center gap-2">
+                                                    <button @click="viewScreenshot(p)" v-if="submission.proof_url"
+                                                        class="inline-flex items-center px-3 py-1 text-xs font-medium text-blue-600 bg-blue-50 rounded hover:bg-blue-100 transition-colors">
+                                                        <Eye class="h-3 w-3 mr-1" />
+                                                        View Proof
+                                                    </button>
+                                                    <button v-if="submission.status === 'pending'"
+                                                        @click="handleApproveSubmission(submission.id)"
+                                                        class="inline-flex items-center px-3 py-1 text-xs font-medium text-emerald-600 bg-emerald-50 rounded hover:bg-emerald-100 transition-colors">
+                                                        <CheckCircle class="h-3 w-3 mr-1" />
+                                                        Approve
+                                                    </button>
+                                                    <button v-if="submission.status === 'pending'"
+                                                        @click="handleRejectSubmission(submission.id)"
+                                                        class="inline-flex items-center px-3 py-1 text-xs font-medium text-red-600 bg-red-50 rounded hover:bg-red-100 transition-colors">
+                                                        <XCircle class="h-3 w-3 mr-1" />
+                                                        Reject
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                                <div v-if="filteredSubmissions.length === 0" class="text-center py-12">
+                                    <FileText class="mx-auto h-16 w-16 text-gray-300 mb-4" />
+                                    <p class="text-xl font-medium text-gray-700 mb-2">No Payment Submissions</p>
+                                    <p class="text-sm text-gray-500">Payment submissions will appear here when students
+                                        upload proof of payment.</p>
+                                </div>
+                                <div v-if="allSubmissions.length > 10" class="mt-4 text-sm text-gray-500 text-center">
+                                    Showing 10 latest submissions. Total submissions: {{ allSubmissions.length }}
+                                </div>
+                            </div>
                         </div>
                     </div>
-
                 </div>
-
             </div>
 
-
-            <div class="bg-white rounded-xl shadow-md p-6">
-                <div class="flex items-center justify-between">
-                    <div>
-                        <p class="text-sm text-gray-600 mb-3">Account Settings</p>
-                        <div class="flex">
-                            <TriangleAlert class="h-7 w-7 mr-2 text-red-600" />
-                            <p class="text-2xl font-bold text-red-600">DANGER</p>
-                        </div>
-
-                    </div>
-                    <button @click="emit('delete', student)"
-                        class="px-6 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors">
-                        Delete
-                    </button>
-                </div>
+            <!-- No Student Found -->
+            <div v-else class="text-center py-12">
+                <TriangleAlert class="h-12 w-12 text-yellow-600 mx-auto mb-4" />
+                <p class="text-gray-700 mb-4">Student not found</p>
+                <button @click="handleBack" 
+                        class="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                    Back
+                </button>
             </div>
         </div>
     </div>
