@@ -20,15 +20,13 @@ import {
   Info,
   FileText,
 } from "lucide-vue-next"
-import { useTransactionsStore } from "@/stores/transactions"
+import { useTransactionsStore } from "@/stores/transactions_store"
 
-// Use the store
 const store = useTransactionsStore()
 
 const isInitialized = ref(false)
 const hasError = ref(false)
 
-// Initialize the store
 onMounted(async () => {
   try {
     await store.initialize()
@@ -39,7 +37,6 @@ onMounted(async () => {
   }
 })
 
-// Watch for dialog state changes
 watch(() => store.isCreateTransactionDialogOpen, async (isOpen) => {
   if (isOpen) {
     await store.loadAllStudents()
@@ -89,7 +86,6 @@ watch(() => store.selectedStudent, async (student) => {
   }
 }, { immediate: true });
 
-// Watch for total amount changes
 watch(() => store.newTransaction.total_amount_paid, (totalAmount) => {
   const total = parseFloat(totalAmount) || 0
   store.updateFeeDistribution(total)
@@ -116,23 +112,19 @@ const formatDate = (date: string | number | Date) => {
   }
 }
 
-// Add missing computed for better UI
 const isReadyForPayment = computed(() => {
   return store.selectedStudent && store.feeDistribution.length > 0 &&
     parseFloat(store.newTransaction.total_amount_paid || "0") > 0
 })
 
-// Add a computed for available fees count
 const availableFeesCount = computed(() => {
   return store.availableFees.length
 })
 
-// Add a computed for total selected fees amount
 const totalSelectedFeesAmount = computed(() => {
   return store.feeDistribution.reduce((sum, fee) => sum + fee.original_amount, 0)
 })
 
-// Add a computed for total balance
 const totalBalance = computed(() => {
   return store.feeDistribution.reduce((sum, fee) => sum + fee.balance, 0)
 })
@@ -141,23 +133,20 @@ const remainingBalance = computed(() => {
   return store.feeDistribution.reduce((sum, fee) => sum + fee.balance, 0)
 })
 
-// Pagination helpers
+// Pagination
 const pageNumbers = computed(() => {
   const pages = []
   const total = store.totalPages
   const current = store.currentPage
 
-  // Always show first page
   pages.push(1)
 
-  // Show pages around current page
   for (let i = Math.max(2, current - 1); i <= Math.min(total - 1, current + 1); i++) {
     if (!pages.includes(i)) {
       pages.push(i)
     }
   }
 
-  // Always show last page
   if (total > 1 && !pages.includes(total)) {
     pages.push(total)
   }
@@ -204,7 +193,7 @@ const pageEnd = computed(() =>
 
 
       <div v-else>
-        <!-- Stats Cards - Using transactionStats from store (all transactions) -->
+        <!-- Stats Cards -->
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-8">
           <div class="p-6 bg-white rounded-xl shadow flex items-center justify-between h-full">
             <div>
@@ -370,7 +359,6 @@ const pageEnd = computed(() =>
                     </p>
                   </td>
                 </tr>
-                <!-- Use paginatedTransactions instead of filteredTransactions -->
                 <tr v-for="transaction in store.paginatedTransactions" :key="transaction.id">
                   <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">
                     {{ transaction.transactionNumber }}
@@ -425,7 +413,6 @@ const pageEnd = computed(() =>
               </tbody>
             </table>
 
-            <!-- Enhanced Pagination -->
             <div v-if="store.totalPages > 1"
               class="flex items-center justify-between border-t border-gray-200 px-4 py-3 sm:px-6 mt-4">
               <div class="flex items-center justify-between mt-4">
@@ -510,7 +497,7 @@ const pageEnd = computed(() =>
             <div>
               <h3 class="text-lg font-medium text-gray-900 mb-4">1. Select Student</h3>
 
-              <!-- Search Input with Button -->
+              <!-- Search Input -->
               <div class="mb-4">
                 <label class="block text-sm font-medium text-gray-700 mb-2">
                   Search Student
@@ -888,7 +875,7 @@ const pageEnd = computed(() =>
                   <div
                     v-if="totalBalance > 0 && parseFloat(store.newTransaction.total_amount_paid || '0') > totalBalance"
                     class="mt-1 text-xs text-red-600">
-                    ⚠️ Payment amount exceeds total balance. Remaining will be considered as overpayment.
+                    Payment amount exceeds total balance. Remaining will be considered as overpayment.
                   </div>
                 </div>
 

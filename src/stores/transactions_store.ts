@@ -45,16 +45,9 @@ interface FeeDropdownOptionExtended extends FeeDropdownOption {
   _rawStudentId?: number;
 }
 
-interface StudentApiResponse {
-  count: number;
-  next: string | null;
-  previous: string | null;
-  results: Student[];
-}
-
 export const useTransactionsStore = defineStore('transactions', () => {
   // State
-  const allTransactions = ref<Transaction[]>([]) // All transactions loaded from API
+  const allTransactions = ref<Transaction[]>([]) 
   const searchQuery = ref("")
   const activeFilter = ref<"all" | TransactionStatus>("all")
   const paymentSubmissionFilter = ref<"all" | PaymentSubmissionStatus>("all")
@@ -85,7 +78,6 @@ export const useTransactionsStore = defineStore('transactions', () => {
   const availableFees = ref<FeeDropdownOption[]>([])
 
   const allStudents = ref<Student[]>([])
-  const searchTimeout = ref<NodeJS.Timeout>()
 
   // Helper Functions
   const formatDate = (dateString: string): string => {
@@ -161,17 +153,16 @@ const transactionsWithCorrectedNames = computed(() => {
   })
 
 const paginatedTransactions = computed(() => {
-  console.log("🔹 filteredTransactions before sort:", filteredTransactions.value.map(t => ({
+  console.log("filteredTransactions before sort:", filteredTransactions.value.map(t => ({
     id: t.id,
     createdAt: t.createdAt
   })));
 
-  // Sort by createdAt descending (newest first)
   const sorted = [...filteredTransactions.value].sort(
     (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
   );
 
-  console.log("🔹 sortedTransactions by createdAt:", sorted.map(t => ({
+  console.log("sortedTransactions by createdAt:", sorted.map(t => ({
     id: t.id,
     createdAt: t.createdAt
   })));
@@ -181,7 +172,7 @@ const paginatedTransactions = computed(() => {
   const end = start + perPage.value;
   const paginated = sorted.slice(start, end);
 
-  console.log(`🔹 paginatedTransactions (page ${currentPage.value}):`, paginated.map(t => ({
+  console.log(`paginatedTransactions (page ${currentPage.value}):`, paginated.map(t => ({
     id: t.id,
     createdAt: t.createdAt
   })));
@@ -237,20 +228,20 @@ const paginatedTransactions = computed(() => {
       params: {
         page: page,
         per_page: perPage.value,
-        ordering: '-created_at' // API should return latest first
+        ordering: '-created_at' 
       }
     });
 
     const paginationData = response?.data;
 
     if (!paginationData || typeof paginationData !== 'object') {
-      console.error("❌ Invalid response structure:", response);
+      console.error("Invalid response structure:", response);
       allTransactions.value = [];
       return;
     }
 
     if (!Array.isArray(paginationData.data)) {
-      console.error("❌ Data is not an array:", paginationData);
+      console.error("Data is not an array:", paginationData);
       allTransactions.value = [];
       return;
     }
@@ -260,57 +251,50 @@ const paginatedTransactions = computed(() => {
       .map(processPaymentData)
       .filter(Boolean);
 
-    // Sort by createdAt in descending order (latest first)
     processedTransactions.sort((a, b) => {
       const dateA = new Date(a.createdAt).getTime();
       const dateB = new Date(b.createdAt).getTime();
-      return dateB - dateA; // Descending order
+      return dateB - dateA; 
     });
 
     allTransactions.value = processedTransactions;
 
-    // Update pagination state
     currentPage.value = paginationData.current_page || page;
     perPage.value = paginationData.per_page || 10;
     totalItems.value = paginationData.total_items || 0;
 
-    console.log(`✅ Loaded ${processedTransactions.length} transactions (Page ${currentPage.value}/${paginationData.total_pages})`);
+    console.log(`Loaded ${processedTransactions.length} transactions (Page ${currentPage.value}/${paginationData.total_pages})`);
 
   } catch (error) {
-    console.error("❌ Error fetching transactions:", error);
+    console.error("Error fetching transactions:", error);
     allTransactions.value = [];
   } finally {
     isLoading.value = false;
   }
 }
-  // Updated extractDataFromResponse to match apiService behavior
   function extractDataFromResponse(data: any): any[] {
     console.log("extractDataFromResponse - Debug structure:", data);
 
-    // If apiService already unwrapped: { current_page, ..., data: [] }
     if (data?.data && Array.isArray(data.data)) {
-      console.log("✅ Extracting from data.data (pagination object), length:", data.data.length);
+      console.log("Extracting from data.data (pagination object), length:", data.data.length);
       return data.data;
     }
 
-    // If response is directly the array (no wrapper)
     if (Array.isArray(data)) {
-      console.log("✅ Extracting from data (direct array), length:", data.length);
+      console.log("Extracting from data (direct array), length:", data.length);
       return data;
     }
 
-    // Handle fully wrapped response if apiService doesn't unwrap: { status_code, message, data: {...} }
     if (data?.data?.data && Array.isArray(data.data.data)) {
-      console.log("✅ Extracting from data.data.data (wrapped pagination), length:", data.data.data.length);
+      console.log("Extracting from data.data.data (wrapped pagination), length:", data.data.data.length);
       return data.data.data;
     }
 
-    console.warn("❌ Could not find array in response:", data);
+    console.warn("Could not find array in response:", data);
     return [];
   }
 
   function goToPage(page: number) {
-    // Calculate total pages dynamically
     const calculatedTotalPages = Math.ceil(totalItems.value / perPage.value)
     if (page < 1 || page > calculatedTotalPages) return
     currentPage.value = page
@@ -318,10 +302,8 @@ const paginatedTransactions = computed(() => {
   }
 
 
-  // Helper function to process payment data into Transaction format
   function processPaymentData(payment: any): Transaction | null {
     try {
-      // Your payment data structure from the API
       console.log("Processing payment:", payment);
 
       const feeData = payment.fee;
@@ -336,7 +318,6 @@ const paginatedTransactions = computed(() => {
         return null;
       }
 
-      // Get s_studentID from the student data
       let studentId = "N/A";
       if (studentData.s_studentID && studentData.s_studentID.trim() !== '') {
         studentId = studentData.s_studentID.trim();
@@ -344,7 +325,6 @@ const paginatedTransactions = computed(() => {
         studentId = `ID-${studentData.id}`;
       }
 
-      // Build full name
       const nameParts = [
         studentData.s_fname?.trim(),
         studentData.s_mname?.trim(),
@@ -355,14 +335,12 @@ const paginatedTransactions = computed(() => {
         studentName += ` ${studentData.s_suffix.trim()}`;
       }
 
-      // Determine status from fee status
       const feeStatus = feeData.status?.toLowerCase();
       let status: TransactionStatus = "pending";
       if (feeStatus === 'paid') status = "paid";
       else if (feeStatus === 'overdue') status = "overdue";
       else if (feeStatus === 'partial') status = "sent";
 
-      // Determine payment submission status
       let paymentSubmissionStatus: PaymentSubmissionStatus = "none";
       if (payment.payment_submission) {
         const submissionStatus = payment.payment_submission;
@@ -371,13 +349,10 @@ const paginatedTransactions = computed(() => {
         else if (submissionStatus === 'rejected') paymentSubmissionStatus = "rejected";
       }
 
-      // Get category
       const category = feeData.category_name || feeData.category || 'General';
 
-      // Get amount
       const amount = parseFloat(payment.amount_paid || "0");
 
-      // Get due date
       const dueDate = feeData.due_date || payment.due_date || '';
 
       const transaction: Transaction = {
@@ -401,12 +376,11 @@ const paginatedTransactions = computed(() => {
 
       return transaction;
     } catch (error) {
-      console.error("❌ Error processing payment:", payment, error);
+      console.error("Error processing payment:", payment, error);
       return null;
     }
   }
 
-  // Actions - Student Management
   async function loadAllStudents() {
     try {
       const response = await apiService.get<any>('/api/v1/students/', {
@@ -476,7 +450,6 @@ const paginatedTransactions = computed(() => {
     availableFees.value = [];
   }
 
-  // Actions - Fee Management
   async function loadStudentFees(studentId: number) {
     try {
       isLoadingFees.value = true;
@@ -493,7 +466,6 @@ const paginatedTransactions = computed(() => {
         }
       });
 
-      // Debug the response structure
       console.log("Fees API Response:", response);
       console.log("Fees API Response data:", response.data);
 
@@ -527,7 +499,7 @@ const paginatedTransactions = computed(() => {
           return matchesStudent && hasBalance;
         });
 
-      console.log(`✅ Final result: ${validFees.length} valid fees for student ${studentId}`);
+      console.log(`Final result: ${validFees.length} valid fees for student ${studentId}`);
 
       feeOptions.value = validFees;
       availableFees.value = [...validFees];
@@ -628,7 +600,6 @@ const paginatedTransactions = computed(() => {
     newTransaction.value.total_amount_paid = newTotal.toFixed(2);
   }
 
-  // Actions - Transaction Creation
   async function handleCreateTransaction() {
     if (!selectedStudent.value || feeDistribution.value.length === 0 || !newTransaction.value.total_amount_paid) {
       alert("Please select a student, add at least one fee to pay, and enter total amount");
@@ -686,7 +657,7 @@ const paginatedTransactions = computed(() => {
         isCreateTransactionDialogOpen.value = false;
         resetForm();
         alert(`Successfully created ${paymentsToCreate.length} payment(s)!`);
-        await fetchTransactions(); // Reload all transactions
+        await fetchTransactions();
       } else {
         alert("Failed to create some payments");
       }
@@ -711,7 +682,6 @@ const paginatedTransactions = computed(() => {
     students.value = [];
   }
 
-  // UI Actions
   const showDialog = (transaction: Transaction) => {
     selectedTransaction.value = transaction;
     isViewTransactionDialogOpen.value = true;
@@ -723,23 +693,18 @@ const paginatedTransactions = computed(() => {
   };
 
   function handleSearch() {
-    currentPage.value = 1; // Reset to first page when searching
+    currentPage.value = 1; 
   }
 
   function handleFilterChange() {
-    currentPage.value = 1; // Reset to first page when filtering
+    currentPage.value = 1; 
   }
 
   function handlePaymentSubmissionFilterChange() {
-    currentPage.value = 1; // Reset to first page when filtering
+    currentPage.value = 1; 
   }
 
-  // function goToPage(page: number) {
-  //   if (page < 1 || page > totalPages.value) return
-  //   fetchTransactions(page)
-  // }
 
-  // Distribution Helpers
   function autoDistributeEvenly() {
     if (feeDistribution.value.length === 0) return;
 
@@ -850,8 +815,8 @@ const paginatedTransactions = computed(() => {
     isLoading,
     currentPage,
     itemsPerPage,
-    totalItems, // Make sure this is included
-    perPage, // Make sure this is included
+    totalItems, 
+    perPage, 
     newTransaction,
     students,
     selectedStudent,
@@ -866,7 +831,7 @@ const paginatedTransactions = computed(() => {
     transactionsWithCorrectedNames,
     filteredTransactions,
     paginatedTransactions,
-    totalPages, // This is computed, not state
+    totalPages, 
     transactionStats,
     distributionStats,
 
