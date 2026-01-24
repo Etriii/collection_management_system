@@ -13,6 +13,7 @@ import api from '@services/apiService';
 
 import { ENDPOINTS } from '@core/url_paths';
 import PayFeesModal from '@components/modals/PayFeesModal.vue';
+import { useAlertStore } from '@store/ui/alert';
 
 interface Props {
     student: StudentEntity;
@@ -175,6 +176,7 @@ type BulkPaymentPayload = {
 }[];
 
 const submitPayments = async (payload: BulkPaymentPayload) => {
+    const alert = useAlertStore()
     try {
         const body = {
             payments: payload.map(p => ({
@@ -185,10 +187,12 @@ const submitPayments = async (payload: BulkPaymentPayload) => {
 
         await api.post(`${ENDPOINTS.payments}bulk/`, body);
 
+        alert.show('Payments Successfull', 'success');
         const studentId = store.selectedStudent?.id ?? props.student.id;
         delete store.studentFinancials[studentId];
         await store.fetchStudentFinancials(studentId);
     } catch (error) {
+        alert.show('Failed to create payments', 'error');
         console.error('Failed add bulk:', error);
     }
 }
@@ -233,10 +237,10 @@ const submitPayments = async (payload: BulkPaymentPayload) => {
                         </div>
 
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-gray-700 mb-4">
-                            <div class="flex items-center">
+                            <!-- <div class="flex items-center">
                                 <Mail class="h-5 w-5 mr-3 text-gray-400" />
                                 <span>{{ student.s_email }}</span>
-                            </div>
+                            </div> -->
                             <div class="flex items-center">
                                 <FileQuestionMark class="h-5 w-5 mr-3 text-gray-400" />
                                 <span>{{ student.program.name + "-" + student.s_lvl + "" + student.s_set }}</span>
@@ -525,9 +529,9 @@ const submitPayments = async (payload: BulkPaymentPayload) => {
                                         <p class="text-sm text-gray-600 mb-1">GCASH REFERENCE NUMBER - {{
                                             submission.reference_number }}</p>
                                         <p class="text-sm text-gray-500">Submitted: {{ formatDate(submission.created_at)
-                                            }}</p>
+                                        }}</p>
                                         <p class="text-sm text-gray-700 mt-2">Remarks: {{ submission.remarks ?? "None"
-                                            }}
+                                        }}
                                         </p>
                                     </div>
                                 </div>

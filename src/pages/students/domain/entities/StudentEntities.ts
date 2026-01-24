@@ -6,7 +6,7 @@ export interface StudentEntity {
   s_mname?: string | null
   s_lname: string
   s_suffix?: string | null
-  s_email: string
+  // s_email: string
   s_set?: string | null
   s_lvl: number
   s_status: string

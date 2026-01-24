@@ -20,6 +20,6 @@ export const ENDPOINTS = {
   attendanceRecords: `${API_V1}/attendance-records/`,
   attendanceEventSettings: `${API_V1}/attendance-event-settings/`,
   payments: `${API_V1}/payments/`,
-  paymentSubmissions: `${API_V1}/payment_submissions/`,
+  paymentSubmissions: `${API_V1}/payment-submissions/`,
   cloudinary: `${API_V1}/cloudinary/`,
 };
