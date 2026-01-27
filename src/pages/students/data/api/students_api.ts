@@ -2,11 +2,11 @@
 
 import api from "@services/apiService"
 import { type ApiResponse, type PaginatedApiResnpose } from "@core/types"
-import { type FeeEntity, type PaymentEntity, type PaymentSubmissionEntity, type StudentEntity, type StudentFilters } from "@pages/students/domain/entities/StudentEntities"
+import { type FeeEntity, type PaymentEntity, type PaymentSubmissionEntity, type StudentEntity, type StudentFilters, type StudentSummaryFeesResponse } from "@pages/students/domain/entities/StudentEntities"
 import { ENDPOINTS } from '@core/url_paths';
 
 export async function getStudentsApi(params: {
-    page: number
+    current_page: number
     per_page: number
     search?: string
     ordering?: string
@@ -15,13 +15,11 @@ export async function getStudentsApi(params: {
     const result = await api.get<ApiResponse<PaginatedApiResnpose<StudentEntity>>>(
         ENDPOINTS.students,
         {
-            params: {
-                page: params.page,
-                per_page: params.per_page,
-                search: params.search,
-                ordering: params.ordering,
-                ...params.filters,
-            },
+            current_page: params.current_page,
+            per_page: params.per_page,
+            search: params.search,
+            ordering: params.ordering,
+            ...params.filters,
         }
     )
 
@@ -40,6 +38,14 @@ export async function getStudentApi(
         throw new Error(err.response?.data?.message || "Failed to load student")
     }
 }
+
+export async function getStudentSummaryFees(studentId: number): Promise<StudentSummaryFeesResponse> {
+    const result = await api.get<ApiResponse<StudentSummaryFeesResponse>>(
+        `${ENDPOINTS.students}${studentId}/fees-summary`
+    )
+    return result.data
+}
+
 export async function getStudentFeesApi(studentId: number): Promise<PaginatedApiResnpose<FeeEntity>> {
     const result = await api.get<ApiResponse<PaginatedApiResnpose<FeeEntity>>>(
         ENDPOINTS.fees,
@@ -67,8 +73,8 @@ export async function getStudentSubmissionsApi(studentId: number): Promise<Pagin
     const result = await api.get<ApiResponse<PaginatedApiResnpose<PaymentSubmissionEntity>>>(
         ENDPOINTS.paymentSubmissions,
         {
-                student__id: studentId,
-                per_page: 100
+            student__id: studentId,
+            per_page: 100
         }
     )
 

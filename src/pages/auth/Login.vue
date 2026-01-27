@@ -11,13 +11,14 @@
             <br>
 
             <form @submit.prevent="handleLoginButtonClick" class="space-y-2">
-                <Input type="text" label="Username" v-model="loginForm.username" :leftIcon="CircleUser"
-                    :error="loginForm.username_error" placeholder="Enter your username" required ref="inputElement" />
+                <Input label="Username" v-model="loginForm.username" :leftIcon="CircleUser"
+                    :error="loginForm.username_error" placeholder="Enter your username" required />
 
                 <Input :type="loginForm.passwordIconToggled ? 'text' : 'password'" label="Password"
                     v-model="loginForm.password" :leftIcon="LockKeyhole"
-                    :right-icon="loginForm.passwordIconToggled ? Eye : EyeOff" placeholder="Enter your password"
-                    :onRightIconClick="handlePasswordIconClick" required :error="loginForm.password_error" />
+                    :rightIcon="loginForm.passwordIconToggled ? Eye : EyeOff" placeholder="Enter your password" required
+                    :error="loginForm.password_error" @right-icon-click="handlePasswordIconClick" />
+
 
                 <div class="flex items-center justify-between">
                     <div class="flex items-center">

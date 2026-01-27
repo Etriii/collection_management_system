@@ -11,7 +11,7 @@ export interface StudentEntity {
   s_lvl: number
   s_status: string
   s_image?: string | null
-  program: Program
+  program_name: string
   created_at: string
   updated_at: string
 }
@@ -66,6 +66,12 @@ export interface StudentData {
   submissions: PaymentSubmissionEntity[];
 }
 
+
+export interface StudentSummaryFeesResponse {
+  student_id: number;
+  total_amount: number;
+  total_balance: number;
+}
 
 export interface GeneratedFeeBatchEntity {
   id: number

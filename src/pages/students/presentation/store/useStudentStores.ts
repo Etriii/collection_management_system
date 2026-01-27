@@ -1,148 +1,170 @@
 // stores/students.ts
+import { defineStore } from "pinia";
+import { ref, reactive, computed } from "vue";
+import type { FeeEntity, PaymentEntity, PaymentSubmissionEntity, StudentEntity, StudentFilters } from "@pages/students/domain/entities/StudentEntities";
+import type { PaginatedApiResnpose } from "@core/types";
+import { getStudentsApi, getStudentApi, getStudentSummaryFees, getStudentFeesApi, getStudentPaymentsApi, getStudentSubmissionsApi } from "@pages/students/data/api/students_api";
 
-import { defineStore } from "pinia"
-import { type FeeEntity, type PaymentEntity, type PaymentSubmissionEntity, type StudentEntity, type StudentFilters } from "@pages/students/domain/entities/StudentEntities"
-import { type PaginatedApiResnpose } from "@core/types"
-import { getStudentsApi, getStudentApi, getStudentFeesApi, getStudentPaymentsApi, getStudentSubmissionsApi } from "@pages/students/data/api/students_api"
+import { useDebounce } from "@utils/composables/useDebounc";
+import { cancelPreviousRequest } from "@utils/cancenllationRequest";
+import { createStudentFinancialCache } from "./createStudentFinancialCache";
+const { debounce } = useDebounce();
 
-export const useStudentsStore = defineStore("students", {
-  state: () => ({
-    // Paginated response
-    studentsResponse: null as PaginatedApiResnpose<StudentEntity> | null,
-    loadingList: false,
+export const useStudentsStore = defineStore("students", () => {
+  const students = reactive({
+    data: null as PaginatedApiResnpose<StudentEntity> | null,
+    loading: false,
+    fetched: false,
+    params: {
+      currentPage: 1,
+      perPage: 10,
+      search: "",
+      filters: {} as StudentFilters,
+    },
+  });
 
-    // Pagination
-    currentPage: 1,
-    perPage: 10,
-    search: "",
-    filters: {} as StudentFilters,
-    ordering: "s_lname",
+  const selectedStudent = reactive({
+    id: null as number | null,
+    loading: false
+  });
 
-    // Selected student
+  const caches = reactive({
     studentsById: {} as Record<number, StudentEntity>,
-    selectedStudent: null as StudentEntity | null,
-    loadingStudent: false,
-    selectedStudentId: null as number | null,
-
-
-
-    //  per-student financial data cache
     studentFinancials: {} as Record<number, {
-      fees: FeeEntity[];
-      payments: PaymentEntity[];
-      submissions: PaymentSubmissionEntity[];
+      fees_summary: {
+        total_amount: number;
+        total_balance: number;
+        loading: boolean;
+        fetched: boolean
+        //  I THINK IS SHOULD ADD PARAMS HERE TO FILTER CURRENT SCHOOL YEAR LEVEL AND SEMESTER
+      };
+      fees: {
+        data: FeeEntity[];
+        params: {
+          currentPage: number;
+          perPage: number;
+          search: string;
+        };
+        loading: boolean;
+        fetched: boolean
+      };
+      payments: {
+        data: PaymentEntity[];
+        params: {
+          currentPage: number;
+          perPage: number;
+          search: string;
+        };
+        loading: boolean;
+        fetched: boolean
+      };
+      submissions: {
+        data: PaymentSubmissionEntity[];
+        params: {
+          currentPage: number;
+          perPage: number;
+          search: string;
+        };
+        loading: boolean;
+        fetched: boolean
+      };
     }>,
-    loadingFinancials: false,
-  }),
+  });
 
-  // get sa mga stats :>
-  getters: {
-    selectedStudent: (state) => {
-      if (!state.selectedStudentId) return null
-      return state.studentsById[state.selectedStudentId] ?? null
-    },
-    totalFeeAmount: (state) => {
-      return Object.values(state.studentFinancials)
-        .flatMap(financial => financial.fees)
-        .reduce((total, fee) => total + Number(fee.total_amount), 0)
-    },
-    totalFeePaid: (state) => {
-      return Object.values(state.studentFinancials).flatMap(financial => financial.fees).reduce((total, fee) => total + (Number(fee.total_amount ?? 0) - Number(fee.balance ?? 0)), 0)
-    },
-    totalFeeBalance: (state) => {
-      return Object.values(state.studentFinancials).flatMap(financial => financial.fees).reduce((total, fee) => total + (Number(fee.balance ?? 0)), 0)
-    }, pendingFees: (state) => {
-      return Object.values(state.studentFinancials)
-        .flatMap(financial => financial.fees)
-        .filter(fee => fee.status === "pending")
+  /*** GETTERS ***/
+  const getSelectedStudent = computed(() => {
+    if (!selectedStudent.id) return null;
+    return caches.studentsById[selectedStudent.id] ?? null;
+  });
+  const getStudentFinancialCache = (id: number) => {
+    return (
+      caches.studentFinancials[id] ??
+      (caches.studentFinancials[id] = createStudentFinancialCache())
+    );
+  };
+  /*** ACTIONS ***/
+  const fetchStudents = async (force = false) => {
+    if (students.fetched && !force) return
+
+    cancelPreviousRequest();
+
+    students.loading = true;
+    try {
+      students.data = await getStudentsApi({
+        current_page: students.params.currentPage,
+        per_page: students.params.perPage,
+        search: students.params.search || undefined,
+        filters: students.params.filters,
+      });
+      students.fetched = true
+    } finally {
+      students.loading = false;
     }
-  },
+  };
 
-  actions: {
-    async fetchStudents() {
-      this.loadingList = true
-      try {
-        this.studentsResponse = await getStudentsApi({
-          page: this.currentPage,
-          per_page: this.perPage,
-          search: this.search || undefined,
-          ordering: this.ordering,
-          filters: this.filters,
-        })
-      } finally {
-        this.loadingList = false
-      }
-    },
+  const fetchStudent = async (id: number) => {
+    if (caches.studentsById[id]) {
+      selectedStudent.id = id;
+      return;
+    }
+    selectedStudent.loading = true;
+    try {
+      const res = await getStudentApi(id);
+      caches.studentsById[id] = res.data;
+      selectedStudent.id = id;
+    } finally {
+      selectedStudent.loading = false;
+    }
+  };
 
-    // async fetchStudent(id: number) {
-    //   this.loadingStudent = true
-    //   try {
-    //     const res = await getStudentApi(id)
-    //     this.selectedStudent = res.data
-    //   } finally {
-    //     this.loadingStudent = false
-    //   }
-    // },
-    async fetchStudent(id: number) {
-      if (this.studentsById[id]) {
-        this.selectedStudentId = id
-        return
-      }
+  const fetchStudentSummaryFees = async (id: number, force = false) => {
+    const cache = getStudentFinancialCache(id).fees_summary;
 
-      this.loadingStudent = true
-      try {
-        const res = await getStudentApi(id)
-        this.studentsById[id] = res.data
-        this.selectedStudentId = id
-      } finally {
-        this.loadingStudent = false
-      }
-    },
-    async fetchStudentFinancials(studentId: number) {
-      if (this.studentFinancials[studentId]) return
+    if (!force && cache.fetched) return cache;
 
-      this.loadingFinancials = true
-      try {
-        const [feesRes, paymentsRes, submissionsRes] = await Promise.all([
-          getStudentFeesApi(studentId),
-          getStudentPaymentsApi(studentId),
-          getStudentSubmissionsApi(studentId),
-        ])
+    cache.loading = true;
+    try {
+      const data = await getStudentSummaryFees(id);
+      cache.total_amount = data.total_amount;
+      cache.total_balance = data.total_balance;
+      cache.fetched = true;
+    } finally {
+      cache.loading = false;
+    }
 
-        this.studentFinancials[studentId] = {
-          fees: feesRes.data,
-          payments: paymentsRes.data,
-          submissions: submissionsRes.data,
-        }
-      } finally {
-        this.loadingFinancials = false
-      }
-    },
+    return cache;
+  };
 
-    getSelectedStudentFinancials() {
-      if (!this.selectedStudent) return null
-      return this.studentFinancials[this.selectedStudent.id] ?? null
-    },
 
-    setPage(page: number) {
-      this.currentPage = page
-      this.fetchStudents()
-    },
+  const setPage = (page: number) => {
+    students.params.currentPage = page;
+    fetchStudents(true)
+    // debounce(() => fetchStudents(true), 1000);
+  };
 
-    setSearch(search: string) {
-      this.search = search
-      this.currentPage = 1
-      this.fetchStudents()
-    },
+  const setPerPage = (perPage: number = 10) => {
+    students.params.perPage = perPage;
+    fetchStudents(true)
+  }
 
-    setFilters(filters: StudentFilters) {
-      this.filters = filters
-      this.currentPage = 1
-      this.fetchStudents()
-    },
+  const setSearch = (search: string) => {
+    students.params.search = search;
+    students.params.currentPage = 1;
+    debounce(() => fetchStudents(true), 1000);
+  };
 
-    clearSelectedStudent() {
-      this.selectedStudent = null
-    },
-  },
-})
+  const setFilters = (filters: StudentFilters) => {
+    students.params.filters = filters;
+    students.params.currentPage = 1;
+    fetchStudents(true);
+  };
+
+  const clearSelectedStudent = () => {
+    selectedStudent.id = null;
+    selectedStudent.loading = false;
+  };
+
+  return {
+    students, selectedStudent, getSelectedStudent, caches, fetchStudents, fetchStudent, setPage, setPerPage, setSearch, setFilters, clearSelectedStudent, fetchStudentSummaryFees,getStudentFinancialCache
+  };
+});
