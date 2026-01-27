@@ -2,7 +2,7 @@
 import { defineStore } from "pinia";
 import { ref, reactive, computed } from "vue";
 import type { FeeEntity, PaymentEntity, PaymentSubmissionEntity, StudentEntity, StudentFilters } from "@pages/students/domain/entities/StudentEntities";
-import type { PaginatedApiResnpose } from "@core/types";
+import type { PaginatedApiResponse } from "@core/types";
 import { getStudentsApi, getStudentApi, getStudentSummaryFees, getStudentFeesApi, getStudentPaymentsApi, getStudentSubmissionsApi } from "@pages/students/data/api/students_api";
 
 import { useDebounce } from "@utils/composables/useDebounc";
@@ -12,7 +12,7 @@ const { debounce } = useDebounce();
 
 export const useStudentsStore = defineStore("students", () => {
   const students = reactive({
-    data: null as PaginatedApiResnpose<StudentEntity> | null,
+    data: null as PaginatedApiResponse<StudentEntity> | null,
     loading: false,
     fetched: false,
     params: {

@@ -88,6 +88,11 @@ const routes: RouteRecordRaw[] = [
                 component: AdminManager,
                 meta: { pageTitle: 'Admin manager' },
             },
+            {
+                path: '/students/view/:id',
+                name: 'ViewStudent',
+                component: () => import('@/pages/students/ViewStudent.vue')
+            }
         ]
     },
     {
