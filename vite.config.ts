@@ -14,7 +14,7 @@ export default defineConfig({
       '@layouts': resolve(__dirname, 'src/layouts'),
       '@pages': resolve(__dirname, 'src/pages'),
       '@utils': resolve(__dirname, 'src/utils'),
-      '@store': resolve(__dirname, 'src/store'),
+      '@store': resolve(__dirname, 'src/stores'),
       "@services":resolve(__dirname, 'src/services'),
       "@core": resolve(__dirname, 'src/core'),
     }

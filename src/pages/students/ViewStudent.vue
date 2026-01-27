@@ -20,7 +20,7 @@ import {
 } from 'lucide-vue-next';
 import type { StudentStatus } from '@core/constants';
 
-import { gcashpayments_api } from '@/services/api/gcashpayments_api';
+import { gcashpayments_api } from '@services/api/gcashpayments_api';
 
 interface Student {
     id: number;
@@ -370,6 +370,7 @@ const viewScreenshot = (payment: any) => {
 
 <template>
     <div class="min-h-screen bg-gray-50">
+        <PayFeesModal v-model:open="PayFeesOpen" :fees="pendingFees" @submit="submitPayments" />
         <div class="container mx-auto px-4 py-8">
             <!-- Loading State -->
             <div v-if="isLoading" class="text-center py-12">

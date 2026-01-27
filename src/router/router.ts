@@ -3,7 +3,7 @@ import type { RouteRecordRaw } from 'vue-router'
 
 import AuthenticatedLayout from "@layouts/AuthenticatedLayout.vue";
 
-import { Dashboard, Transactions, GCashPayments, Collections, Reports, Users, Activities, MyAccount, AdminManager, Login, AccountRecovery, PageNotFound, AccountRecoveryConfirmaion, Fees } from '@pages/index.ts';
+import { Dashboard, Transactions, GCashPayments, Collections, Reports, Users, Activities, MyAccount, AdminManager, Login, AccountRecovery, PageNotFound, AccountRecoveryConfirmaion, Fees, GeneratedFees } from '@pages/index.ts';
 
 import { StudentRoutes } from './index';
 import LogInSignupLayout from "@layouts/LogInSignupLayout.vue";
@@ -33,6 +33,12 @@ const routes: RouteRecordRaw[] = [
                 name: 'fees',
                 component: Fees,
                 meta: { pageTitle: 'Fees' }
+            },
+            {
+                path: 'generated-fees',
+                name: 'geneated-fees',
+                component: GeneratedFees,
+                meta: { pageTitle: 'Generated Fees' }
             },
             {
                 path: 'transactions',

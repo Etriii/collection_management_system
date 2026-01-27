@@ -1,6 +1,6 @@
 import api from "../../../../services/apiService";
 import { type ApiResponse } from "../../../../core/types";
-import { ENDPOINTS } from "@core/constants";
+import { ENDPOINTS } from "@core/url_paths";
 
 interface LoginPayload {
     username: string;

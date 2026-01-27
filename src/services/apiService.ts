@@ -1,5 +1,5 @@
 import type { ApiResponse } from "@core/types";
-import axios, { type AxiosInstance, type InternalAxiosRequestConfig, AxiosError } from "axios";
+import axios, { type AxiosInstance, type InternalAxiosRequestConfig, AxiosError, type CancelTokenSource } from "axios";
 
 interface TokenResponse {
   access: string;
@@ -8,6 +8,7 @@ interface TokenResponse {
 
 class ApiService {
   private api: AxiosInstance;
+  private cancelTokenSource: CancelTokenSource | null = null;
 
   constructor() {
     this.api = axios.create({
@@ -25,6 +26,11 @@ class ApiService {
       if (token) {
         (config.headers as Record<string, string>)["Authorization"] = `Bearer ${token}`;
       }
+
+      if (this.cancelTokenSource) {
+        config.cancelToken = this.cancelTokenSource.token;
+      }
+
       return config;
     });
 
@@ -69,27 +75,39 @@ class ApiService {
     );
   }
 
+  cancelRequest() {
+    if (this.cancelTokenSource) {
+      this.cancelTokenSource.cancel("Request canceled");
+    }
+    this.cancelTokenSource = axios.CancelToken.source();
+  }
+
   async get<T>(endpoint: string, params: Record<string, any> = {}): Promise<T> {
+    this.cancelRequest();
     const res = await this.api.get<T>(endpoint, { params });
     return res.data;
   }
 
   async post<T>(endpoint: string, body: Record<string, any> = {}): Promise<T> {
+    this.cancelRequest();
     const res = await this.api.post<T>(endpoint, body);
     return res.data;
   }
 
   async put<T>(endpoint: string, body: Record<string, any> = {}): Promise<T> {
+    this.cancelRequest();
     const res = await this.api.put<T>(endpoint, body);
     return res.data;
   }
 
   async delete<T>(endpoint: string): Promise<T> {
+    this.cancelRequest();
     const res = await this.api.delete<T>(endpoint);
     return res.data;
   }
 
   async patch<T>(endpoint: string, body: Record<string, any> = {}): Promise<T> {
+    this.cancelRequest();
     const res = await this.api.patch<T>(endpoint, body);
     return res.data;
   }

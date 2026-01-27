@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ArrowLeftRight, FileText, History, LayoutDashboard, LayoutGrid, BanknoteArrowDown, UsersRound, HandCoins } from 'lucide-vue-next';
+import { ArrowLeftRight, FileText, History, LayoutDashboard, LayoutGrid, BanknoteArrowDown, UsersRound, HandCoins, GitPullRequestArrow } from 'lucide-vue-next';
 import SidebarLink from '@components/SidebarLink.vue';
 import icsa_logo from '@assets/icsa_logo.png';
 
@@ -26,6 +26,7 @@ const props = defineProps<Props>();
             <SidebarLink :icon="LayoutDashboard" label="Dashboard" to="/" exact />
             <SidebarLink :icon="UsersRound" label="Students" to="/students" />
             <SidebarLink :icon="HandCoins" label="Fees" to="/fees" />
+            <SidebarLink :icon="GitPullRequestArrow" label="Generated Fees" to="/generated-fees" />
             <SidebarLink :icon="ArrowLeftRight" label="Transaction" to="/transactions" />
             <SidebarLink :icon="BanknoteArrowDown" label="GCash Payments" to="/gcash-payments" />
             <SidebarLink :icon="LayoutGrid" label="Collections" to="/collections" />

@@ -6,8 +6,8 @@ import type {
     PaginatedResponse,
     ApiResponse,
     PaymentHistory,
-} from '@/core/types'
-import apiService from '@/services/apiService.ts'
+} from '@core/types'
+import apiService from '@services/apiService.ts'
 
 export type PaymentSubmissionStatus = "pending" | "approved" | "rejected"
 
@@ -206,7 +206,7 @@ export const gcashpayments_api = {
       console.log('Fetching payment submissions with params:', apiParams);
 
       const response = await fetchWithRetry(() =>
-        apiService.get('/api/v1/payment_submissions/', { params: apiParams })
+        apiService.get('/api/v1/payment-submissions/', { params: apiParams })
       );
 
       console.log('API Response:', response.data);
@@ -258,7 +258,7 @@ export const gcashpayments_api = {
     getPaymentSubmission: async (id: number): Promise<GcashPaymentSubmissionResponse> => {
         return fetchWithRetry(async () => {
             const response = await apiService.get<ApiResponse<GcashPaymentSubmissionResponse>>(
-                `/api/v1/payment_submissions/${id}/`
+                `/api/v1/-/${id}/`
             );
             return response.data;
         });
@@ -269,7 +269,7 @@ export const gcashpayments_api = {
             console.log(`Approving payment submission ${id} with remarks:`, data.remarks);
 
             const response = await apiService.post<ApiResponse<any>>(
-                `/api/v1/payment_submissions/${id}/approve/`,
+                `/api/v1/-/${id}/approve/`,
                 data
             );
 
@@ -286,7 +286,7 @@ export const gcashpayments_api = {
             console.log(`Rejecting payment submission ${id} with remarks:`, data.remarks);
 
             const response = await apiService.post<ApiResponse<any>>(
-                `/api/v1/payment_submissions/${id}/reject/`,
+                `/api/v1/-/${id}/reject/`,
                 data
             );
 
@@ -301,7 +301,7 @@ export const gcashpayments_api = {
     updatePayment: async (id: number, data: Partial<GcashPaymentSubmissionResponse>): Promise<GcashPaymentSubmissionResponse> => {
         return fetchWithRetry(async () => {
             const response = await apiService.put<ApiResponse<GcashPaymentSubmissionResponse>>(
-                `/api/v1/payment_submissions/${id}/`,
+                `/api/v1/-/${id}/`,
                 data
             );
             cache.clear();
@@ -311,7 +311,7 @@ export const gcashpayments_api = {
 
     deletePayment: async (id: number): Promise<void> => {
         await fetchWithRetry(async () => {
-            await apiService.delete(`/api/v1/payment_submissions/${id}/`);
+            await apiService.delete(`/api/v1/-/${id}/`);
             cache.clear();
         });
     },
@@ -434,7 +434,7 @@ getStudentPaymentSubmissions: async (studentId: number, params?: {
         console.log('Fetching submissions with params:', apiParams);
 
         const response = await fetchWithRetry(() =>
-            apiService.get('/api/v1/payment_submissions/', { params: apiParams })
+            apiService.get('/api/v1/-/', { params: apiParams })
         );
         
         const paginationWrapper = response.data;
