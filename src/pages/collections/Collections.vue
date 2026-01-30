@@ -396,6 +396,17 @@ function handleDelete(id: string) {
               placeholder="Describe what this fee covers..." />
           </div>
 
+          <div>
+            <label for="status" class="block mb-1 text-sm font-medium text-gray-700">Status</label>
+            <select id="status" v-model="editCollection.status"
+              class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+              <option value="active">Active</option>
+              <option value="completed">Completed</option>
+              <!-- <option value="draft">Draft</option> -->
+            </select>
+          </div>
+
+
           <div class="flex justify-end gap-3 pt-4">
             <button type="button"
               class="px-5 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-100 transition-colors"
