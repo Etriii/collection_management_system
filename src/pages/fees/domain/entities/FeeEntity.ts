@@ -32,3 +32,14 @@ export type FeeStatus =
   | "paid"
   | "waived"
   | "overdue";
+
+
+export interface FeeSlimEntity {
+  id: number
+  student: StudentMiniEntity
+  category_id: number
+  category_name: string
+  total_amount: number
+  balance: number
+  status: FeeStatus
+}

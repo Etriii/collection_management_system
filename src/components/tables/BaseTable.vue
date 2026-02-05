@@ -56,7 +56,7 @@ const emit = defineEmits<{
           </thead>
 
           <tbody class="bg-white divide-y divide-gray-200">
-            <tr v-if="loading" v-for="n in 10" :key="n" class="animate-pulse">
+            <tr v-if="loading" v-for="n in 5" :key="n" class="animate-pulse">
               <td v-for="col in columns" :key="col.key" class="px-6 py-[1.126rem]">
                 <div class="h-4 w-full rounded bg-gray-200"></div>
               </td>

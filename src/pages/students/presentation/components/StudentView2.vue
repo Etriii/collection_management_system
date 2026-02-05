@@ -17,7 +17,7 @@
       <div class="flex flex-col gap-5">
         <StudentProfile :student="student" :loading="selectedStudent.loading" />
         <StudentSummaryFees v-if="student" :fees_summary="fees.fees_summary" />
-        <StudentFinancials v-if="student" :student_id="student.id"/>
+        <StudentFinancials v-if="student" :student_id="student.id" />
       </div>
     </div>
   </div>
@@ -32,11 +32,6 @@ import { useStudentsFeesStore } from '@pages/students/presentation/store/useStud
 
 import { useRoute } from 'vue-router';
 import { storeToRefs } from 'pinia';
-// import api from '@services/apiService';
-
-// import { ENDPOINTS } from '@core/url_paths';
-// import PayFeesModal from '@components/modals/PayFeesModal.vue';
-// import { useAlertStore } from '@stores/ui/alert';
 
 import StudentProfile from './StudentProfile.vue';
 import StudentSummaryFees from './StudentSummaryFees.vue';
@@ -48,7 +43,7 @@ const student_fees_store = useStudentsFeesStore();
 
 const { selectedStudent, getSelectedStudent: student, } = storeToRefs(students_store);
 const { fetchStudent } = students_store;
- 
+
 // const { getF } = storeToRefs(student_financial_store);
 const { fetchStudentSummaryFees, getStudentFeesCache } = student_fees_store;
 
@@ -58,7 +53,7 @@ const studentId = Number(route.params.id);
 onMounted(async () => {
   if (studentId) {
     fetchStudent(studentId);
-    fetchStudentSummaryFees(studentId);
+    await fetchStudentSummaryFees(studentId);
   }
 });
 

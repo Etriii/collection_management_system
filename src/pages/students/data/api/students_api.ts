@@ -2,11 +2,13 @@
 
 import api from "@services/apiService"
 import { type ApiResponse, type ListParams, type PaginatedApiResponse } from "@core/types"
-import { type PaymentEntity, type PaymentSubmissionEntity, type StudentEntity, type StudentFilters, type StudentSummaryFeesResponse } from "@pages/students/domain/entities/StudentEntities"
+import { type StudentEntity, type StudentFilters, type StudentSummaryFeesResponse } from "@pages/students/domain/entities/StudentEntities"
 import { ENDPOINTS } from '@core/url_paths';
 import { cleanObject } from "@utils/cleanObject";
 import type { FeeEntity } from "@pages/fees/domain/entities/FeeEntity";
 import { type FeeFilter } from "@pages/fees/fee_filter";
+import type { PaymentFilter } from "@pages/transactions/presentation/payment_filters";
+import type { PaymentEntity } from "@pages/transactions/domain/payments_entities";
 
 export async function getStudentsApi(params: ListParams<StudentFilters>): Promise<PaginatedApiResponse<StudentEntity>> {
     const result = await api.get<ApiResponse<PaginatedApiResponse<StudentEntity>>>(
@@ -45,33 +47,35 @@ export async function getStudentFeesApi(studentId: number, params: ListParams<Fe
         ENDPOINTS.fees,
         {
             student_id: studentId,
-            ...params,
-            ...params.filters,
+            ...cleanObject(params),
+            ...cleanObject(params.filters), 
         }
     )
     return result.data
 }
 
-export async function getStudentPaymentsApi(studentId: number): Promise<PaginatedApiResponse<PaymentEntity>> {
+export async function getStudentPaymentsApi(studentId: number, params: ListParams<PaymentFilter>): Promise<PaginatedApiResponse<PaymentEntity>> {
     const result = await api.get<ApiResponse<PaginatedApiResponse<PaymentEntity>>>(
         ENDPOINTS.payments,
         {
             student_id: studentId,
-            per_page: 100
+            ...cleanObject(params),
+            ...cleanObject(params.filters),
         }
     )
     return result.data
 }
-export async function getStudentSubmissionsApi(studentId: number): Promise<PaginatedApiResponse<PaymentSubmissionEntity>> {
-    const result = await api.get<ApiResponse<PaginatedApiResponse<PaymentSubmissionEntity>>>(
-        ENDPOINTS.paymentSubmissions,
-        {
-            student__id: studentId,
-            per_page: 100
-        }
-    )
-    return result.data
-}
+// export async function getStudentSubmissionsApi(studentId: number, params: ListParams<PaymentSubmissionFilter>): Promise<PaginatedApiResponse<PaymentSubmissionEntity>> {
+//     const result = await api.get<ApiResponse<PaginatedApiResponse<PaymentSubmissionEntity>>>(
+//         ENDPOINTS.paymentSubmissions,
+//         {
+//             student__id: studentId,
+//             ...params,
+//             ...params.filters,
+//         }
+//     )
+//     return result.data
+// }
 
 // // src/modules/students/data/api/students.api.ts
 // import api from "@services/apiService";

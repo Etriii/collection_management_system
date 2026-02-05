@@ -1,7 +1,7 @@
 // stores/students.ts
 import { defineStore } from "pinia";
 import { reactive, } from "vue";
-import { getStudentsApi, getStudentApi, getStudentSummaryFees, getStudentFeesApi, getStudentPaymentsApi, getStudentSubmissionsApi } from "@pages/students/data/api/students_api";
+import { getStudentSummaryFees, getStudentFeesApi, getStudentPaymentsApi } from "@pages/students/data/api/students_api"; //, getStudentSubmissionsApi
 
 // import { useDebounce } from "@utils/composables/useDebounc";
 // import { cancelPreviousRequest } from "@utils/cancenllationRequest";
@@ -11,7 +11,7 @@ import type { FeeEntity } from "@pages/fees/domain/entities/FeeEntity";
 import { type PaginatedApiResponse } from "@core/types";
 // const { debounce } = useDebounce();
 
-export const useStudentsFeesStore = defineStore("students_financial", () => {
+export const useStudentsFeesStore = defineStore("students_financial_fees", () => {
 
   const caches = reactive({
     studentFees: {} as Record<number, {
@@ -33,27 +33,6 @@ export const useStudentsFeesStore = defineStore("students_financial", () => {
         loading: boolean;
         fetched: boolean
       };
-
-      // payments: {
-      //   data: PaymentEntity[];
-      //   params: {
-      //     currentPage: number;
-      //     perPage: number;
-      //     search: string;
-      //   };
-      //   loading: boolean;
-      //   fetched: boolean
-      // };
-      // submissions: {
-      //   data: PaymentSubmissionEntity[];
-      //   params: {
-      //     currentPage: number;
-      //     perPage: number;
-      //     search: string;
-      //   };
-      //   loading: boolean;
-      //   fetched: boolean
-      // };
     }>,
   });
 
@@ -71,6 +50,7 @@ export const useStudentsFeesStore = defineStore("students_financial", () => {
 
     if (!force && cache.fetched) return cache;
 
+    cache.fetched = false;
     cache.loading = true;
     try {
       const data = await getStudentSummaryFees(id);
@@ -89,6 +69,7 @@ export const useStudentsFeesStore = defineStore("students_financial", () => {
 
     if (!force && cache.fetched) return cache;
 
+    cache.fetched = false;
     cache.loading = true;
     try {
       const data = await getStudentFeesApi(student_id, {
@@ -107,16 +88,16 @@ export const useStudentsFeesStore = defineStore("students_financial", () => {
   }
 
 
-  // const setPage = (page: number) => {
-  //   students.params.currentPage = page;
-  //   fetchStudents(true)
-  //   // debounce(() => fetchStudents(true), 1000);
-  // };
+  const setPage = (student_id: number, page: number,) => {
+    getStudentFeesCache(student_id).fees.params.currentPage = page;
+    fetchStudentFees(student_id, true);
+    // debounce(() => fetchStudents(true), 1000);
+  };
 
-  // const setPerPage = (perPage: number = 10) => {
-  //   students.params.perPage = perPage;
-  //   fetchStudents(true)
-  // }
+  const setPerPage = (student_id: number, perPage: number) => {
+    getStudentFeesCache(student_id).fees.params.perPage = perPage;
+    fetchStudentFees(student_id, true);
+  }
 
   // const setSearch = (search: string) => {
   //   students.params.search = search;
@@ -137,6 +118,6 @@ export const useStudentsFeesStore = defineStore("students_financial", () => {
 
   return {
     caches,
-    fetchStudentSummaryFees, getStudentFeesCache, fetchStudentFees
+    fetchStudentSummaryFees, getStudentFeesCache, fetchStudentFees, setPage, setPerPage
   };
 });

@@ -16,7 +16,7 @@ export const useStudentsStore = defineStore("students", () => {
     fetched: false,
     params: {
       currentPage: 1,
-      perPage: 10,
+      perPage: 5,
       search: "",
       filters: {} as StudentFilters,
     },
@@ -36,13 +36,14 @@ export const useStudentsStore = defineStore("students", () => {
     if (!selectedStudent.id) return null;
     return caches.studentsById[selectedStudent.id] ?? null;
   });
-  
+
   /*** ACTIONS ***/
   const fetchStudents = async (force = false) => {
     if (students.fetched && !force) return
 
     cancelPreviousRequest();
 
+    students.fetched = false;
     students.loading = true;
     try {
       students.data = await getStudentsApi({

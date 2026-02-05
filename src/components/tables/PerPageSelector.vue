@@ -6,7 +6,7 @@ defineProps({
   },
   options: {
     type: Array,
-    default: () => [10, 25, 50, 75, 100]
+    default: () => [5, 10, 25, 50, 75, 100]
   }
 });
 
