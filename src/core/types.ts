@@ -20,6 +20,14 @@ export interface PaginatedResponse<T> {
   results: T[]
 }
 
+export interface ListParams<EntityFilter> {
+    current_page: number
+    per_page: number
+    search?: string
+    ordering?: string
+    filters?: EntityFilter  
+}
+
 
 // STUDENT TYPES
 export interface Student {

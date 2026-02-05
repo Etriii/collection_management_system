@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { onBeforeUnmount, onMounted, ref } from 'vue';
 import { Menu, Bell, ChevronDown } from 'lucide-vue-next';
 import ProfileMenu from '@components/navbar/partials/ProfileMenu.vue';
 
@@ -16,14 +16,32 @@ const props = defineProps<Props>();
 
 
 const isProfileMenuOpen = ref(false);
+const profileMenuRef = ref<HTMLElement | null>(null);
 
 const toggleProfileMenu = () => {
     isProfileMenuOpen.value = !isProfileMenuOpen.value;
 }
+
+const handleClickOutside = (event: MouseEvent) => {
+    if (!isProfileMenuOpen.value) return;
+
+    if (profileMenuRef.value && !profileMenuRef.value.contains(event.target as Node)) {
+        isProfileMenuOpen.value = false;
+    }
+};
+
+onMounted(() => {
+    document.addEventListener('click', handleClickOutside);
+});
+
+onBeforeUnmount(() => {
+    document.removeEventListener('click', handleClickOutside);
+});
+
 </script>
 
 <template>
-    <div class="flex justify-between shadow-lg px-4 py-2 transition-all duration-300 bg-white z-2"
+    <div class="flex justify-between shadow-lg px-4 py-2 transition-all duration-300 bg-white z-2 sticky top-0"
         :class="[props.isSidebarOpen ? props.contentMargin : 'ml-0']">
         <div class="flex items-center gap-4">
             <button @click="props.toggleSidebar" class="cursor-pointer">
@@ -44,14 +62,13 @@ const toggleProfileMenu = () => {
             <p>{{ props.username }}</p>
 
             <!-- profile -->
-            <div class="relative w-10 cursor-pointer" @click="toggleProfileMenu">
+            <div ref="profileMenuRef" class="relative w-10 cursor-pointer" @click="toggleProfileMenu">
                 <img :src="props.profilePicPath" alt="logo" class="hover:outline-3 hover:outline-gray-300 rounded-full">
 
                 <ChevronDown :size="15"
                     class="absolute right-0 -bottom-1 bg-gray-200 rounded-full transition-all duration-100 border-2 border-white"
                     :class="[isProfileMenuOpen ? 'rotate-180' : '']" />
 
-                <!-- profile menu -->
                 <ProfileMenu v-if="isProfileMenuOpen" />
             </div>
         </div>

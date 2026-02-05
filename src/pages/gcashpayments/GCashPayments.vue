@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, watch, nextTick } from 'vue'
-import { useGcashpaymentsStore } from '@/stores/gcashpayments_store'
+import { useGcashpaymentsStore } from '@stores/gcashpayments_store'
 import {
   Search,
   CheckCircle,

@@ -24,7 +24,7 @@
 
 <script setup lang="ts">
 import { storeToRefs } from 'pinia'
-import { useAlertStore } from '@store/ui/alert'
+import { useAlertStore } from '@stores/ui/alert'
 import {
     X,
     CheckCircle,

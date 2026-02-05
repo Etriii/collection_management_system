@@ -33,7 +33,7 @@ const pages = computed(() => {
 </script>
 <template>
     <div
-        class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-4 border-t border-gray-100 bg-white">
+        class="flex flex-col sm:flex-row flex-wrap sm:items-center sm:justify-between gap-4 p-4 border-t border-gray-100 bg-white">
 
         <div class="text-sm text-gray-600">
             Showing

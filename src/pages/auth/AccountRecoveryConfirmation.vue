@@ -61,7 +61,7 @@
 
 <script setup>
 import { useRouter } from 'vue-router';
-import { useTempStore } from '@/stores/tempStore';
+import { useTempStore } from '@stores/tempStore';
 const router = useRouter()
 
 const emailStored = useTempStore().get('email')

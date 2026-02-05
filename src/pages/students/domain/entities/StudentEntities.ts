@@ -1,3 +1,5 @@
+import type { FeeEntity } from "@pages/fees/domain/entities/FeeEntity"
+
 export interface StudentEntity {
   id: number
   s_studentID: string
@@ -16,6 +18,14 @@ export interface StudentEntity {
   updated_at: string
 }
 
+export interface StudentMiniEntity {
+  id: number,
+  full_name: string,
+  program_name: string,
+  s_set: string,
+  s_lvl: number
+}
+
 export interface Program {
   name: string
 }
@@ -27,37 +37,6 @@ export interface StudentFilters {
 }
 
 export type Semester = "first" | "second";
-
-export type FeeStatus =
-  | "pending"
-  | "partial"
-  | "paid"
-  | "waived"
-  | "overdue";
-
-
-export interface FeeEntity {
-  id: number
-  student_id: number
-  category_id: number
-  category_name: string
-
-  total_amount: string
-  balance: string
-  status: FeeStatus
-
-  due_date: string
-  issued_by_id?: number | null
-  remarks?: string | null
-
-  academic_year: string
-  semester: Semester
-
-  batch_id?: number | null
-
-  created_at: string
-  updated_at: string
-}
 
 
 export interface StudentData {

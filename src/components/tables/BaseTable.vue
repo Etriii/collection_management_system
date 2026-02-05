@@ -33,7 +33,6 @@ const emit = defineEmits<{
 }>();
 </script>
 
-
 <template>
   <section class="space-y-3">
     <header v-if="$slots.toolbar" class="flex items-center justify-between gap-2">

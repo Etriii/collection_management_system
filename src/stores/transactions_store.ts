@@ -148,7 +148,6 @@ const transactionsWithCorrectedNames = computed(() => {
       return matchesSearch && matchesFilter && matchesPaymentSubmissionFilter
     })
 
-
     return result
   })
 

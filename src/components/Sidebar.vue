@@ -22,7 +22,7 @@ const props = defineProps<Props>();
             <p class="text-xl font-semibold">ICCMS</p>
         </div>
 
-        <div class="space-y-1 px-2 py-2">
+        <div class="space-y-1 px-2 py-2 overflow-y-auto h-[93vh]">
             <SidebarLink :icon="LayoutDashboard" label="Dashboard" to="/" exact />
             <SidebarLink :icon="UsersRound" label="Students" to="/students" />
             <SidebarLink :icon="HandCoins" label="Fees" to="/fees" />
