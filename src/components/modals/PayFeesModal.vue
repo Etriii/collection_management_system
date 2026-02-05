@@ -84,8 +84,8 @@
 
 
 <script setup lang="ts">
+import type { FeeEntity } from "@pages/fees/domain/entities/FeeEntity";
 import { ref, computed, watch } from "vue"
-import type { FeeEntity } from "@pages/students/domain/entities/StudentEntities"
 
 const props = defineProps<{
     open: boolean

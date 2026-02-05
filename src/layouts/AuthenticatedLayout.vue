@@ -26,7 +26,7 @@ const username = user ? JSON.parse(user)?.username : "Dev Admin";
 </script>
 
 <template>
-    <div class="flex h-screen overflow-hidden">
+    <div class="h-screen ">
         
         <Sidebar :sidebarWidth="sidebarWidth" :isSidebarOpen="isSidebarOpen" />
 

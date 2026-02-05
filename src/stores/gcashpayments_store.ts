@@ -10,10 +10,10 @@ import type {
   FeesSummary,
   PaginatedResponse,
   ApiResponse
-} from '@/core/types'
+} from '@core/types'
 
 // API Service - Make sure this path is correct
-import gcashpayments_api, { studentApi } from '@/services/api/gcashpayments_api'
+import gcashpayments_api, { studentApi } from '@services/api/gcashpayments_api'
 export const useGcashpaymentsStore = defineStore('gcashpayments', () => {
   // State
   const gcashPayments: Ref<PaymentApproval[]> = ref([])

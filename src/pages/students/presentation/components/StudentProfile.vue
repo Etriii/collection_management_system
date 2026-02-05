@@ -39,7 +39,7 @@ const router = useRouter()
             <div class="h-32 bg-gradient-to-r from-violet-600 to-indigo-700 w-full"></div>
 
             <div class="px-8 pb-8">
-                <div class="relative flex flex-col md:flex-row gap-8 items-end -mt-12 mb-6">
+                <div class="relative flex flex-col lg:flex-row gap-8 items-end -mt-12 mb-6">
                     <div class="w-32 h-32 bg-white p-2 rounded-3xl shadow-md">
                         <div
                             class="w-full h-full bg-slate-100 rounded-2xl flex items-center justify-center text-slate-400">
@@ -48,7 +48,7 @@ const router = useRouter()
                     </div>
 
                     <div class="flex-1 flex flex-col md:flex-row md:items-center justify-between gap-4 pb-2">
-                        <div>
+                        <div class="text-nowrap">
                             <h1 class="text-3xl font-extrabold text-slate-900 tracking-tight">
                                 {{ student.s_fname }} {{ student.s_mname ? student.s_mname[0] : "" }}. {{
                                     student.s_lname }}
@@ -58,7 +58,7 @@ const router = useRouter()
                             </h1>
                             <p class="text-slate-500 font-medium flex items-center gap-2">
                                 <span
-                                    class="bg-slate-100 px-2 py-0.5 rounded text-sm uppercase tracking-wider font-bold">ID</span>
+                                    class="bg-slate-100 px-2 py-0.5 rounded text-sm uppercase tracking-wider font-bold">STUDENT ID</span>
                                 {{ student.s_studentID }}
                             </p>
                         </div>
@@ -80,7 +80,7 @@ const router = useRouter()
                     </div>
                 </div>
 
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-6 pt-6 border-t border-slate-100">
+                <div class="grid grid-cols-1 text-center lg:text-left lg:grid-cols-3 gap-6 pt-6 border-t border-slate-100 text-nowrap">
                     <div class="p-4 rounded-2xl bg-slate-50 border border-slate-100">
                         <p class="text-xs font-semibold text-slate-400 uppercase tracking-widest mb-1">Academic Program
                         </p>

@@ -29,7 +29,7 @@ import Button from '@components/button/Button.vue';
 import { Mail } from 'lucide-vue-next';
 import { useRouter } from 'vue-router';
 
-import { useTempStore } from '@/stores/tempStore';
+import { useTempStore } from '@stores/tempStore';
 
 const router = useRouter();
 
