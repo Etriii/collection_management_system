@@ -57,19 +57,7 @@ onMounted(async () => {
   }
 });
 
-
 const fees = computed(() => getStudentFeesCache(studentId));
-
-
-// const emit = defineEmits<{
-//     back: [];
-//     edit: [student: StudentEntity];
-//     delete: [student: StudentEntity];
-// }>();
-
-
-
-// const activeTab = ref<'fees' | 'payments' | 'submissions'>('fees');
 
 
 // // Approve
@@ -99,20 +87,6 @@ const fees = computed(() => getStudentFeesCache(studentId));
 // function handleRejectSubmission(submissionId: number) {
 //     const index = financials.value.submissions.findIndex(s => s.id === submissionId);
 //     if (index !== -1) financials.value.submissions[index].status = 'rejected';
-// }
-
-// // Currency formatter
-// function formatCurrency(amount: number) {
-//     return new Intl.NumberFormat('en-PH', {
-//         style: 'currency',
-//         currency: 'PHP',
-//     }).format(amount);
-// }
-
-// // Pagination helper
-// function paginate(list: any[]) {
-//     const start = (currentPage.value - 1) * itemsPerPage;
-//     return list.slice(start, start + itemsPerPage);
 // }
 
 

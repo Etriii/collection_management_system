@@ -125,7 +125,7 @@ const viewStudentProfile = (payment: any) => {
     return;
   }
 
-  const studentId = payment?.student || payment?.studentId || payment?.student_id;
+  const studentId = payment.fee.student.id;
 
   if (studentId) {
     console.log('Found student ID:', studentId);

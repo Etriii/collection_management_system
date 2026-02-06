@@ -9,6 +9,8 @@ import type { FeeEntity } from "@pages/fees/domain/entities/FeeEntity";
 import { type FeeFilter } from "@pages/fees/fee_filter";
 import type { PaymentFilter } from "@pages/transactions/presentation/payment_filters";
 import type { PaymentEntity } from "@pages/transactions/domain/payments_entities";
+import type { PaymentSubmissionFilter } from "@pages/gcashpayments/presentation/submission_filters";
+import type { PaymentSubmissionEntity } from "@pages/gcashpayments/domain/entities/PaymentSubmissionEntity";
 
 export async function getStudentsApi(params: ListParams<StudentFilters>): Promise<PaginatedApiResponse<StudentEntity>> {
     const result = await api.get<ApiResponse<PaginatedApiResponse<StudentEntity>>>(
@@ -65,17 +67,18 @@ export async function getStudentPaymentsApi(studentId: number, params: ListParam
     )
     return result.data
 }
-// export async function getStudentSubmissionsApi(studentId: number, params: ListParams<PaymentSubmissionFilter>): Promise<PaginatedApiResponse<PaymentSubmissionEntity>> {
-//     const result = await api.get<ApiResponse<PaginatedApiResponse<PaymentSubmissionEntity>>>(
-//         ENDPOINTS.paymentSubmissions,
-//         {
-//             student__id: studentId,
-//             ...params,
-//             ...params.filters,
-//         }
-//     )
-//     return result.data
-// }
+
+export async function getStudentSubmissionsApi(studentId: number, params: ListParams<PaymentSubmissionFilter>): Promise<PaginatedApiResponse<PaymentSubmissionEntity>> {
+    const result = await api.get<ApiResponse<PaginatedApiResponse<PaymentSubmissionEntity>>>(
+        ENDPOINTS.paymentSubmissions,
+        {
+            student__id: studentId,
+            ...params,
+            ...params.filters,
+        }
+    )
+    return result.data
+}
 
 // // src/modules/students/data/api/students.api.ts
 // import api from "@services/apiService";
