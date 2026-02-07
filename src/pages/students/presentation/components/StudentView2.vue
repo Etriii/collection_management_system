@@ -16,7 +16,7 @@
 
       <div class="flex flex-col gap-5">
         <StudentProfile :student="student" :loading="selectedStudent.loading" />
-        <StudentSummaryFees v-if="student" :fees_summary="fees.fees_summary" />
+        <StudentSummaryFees v-if="student" :student_id="student.id" />
         <StudentFinancials v-if="student" :student_id="student.id" />
       </div>
     </div>
@@ -25,9 +25,8 @@
 
 
 <script setup lang="ts">
-import { computed, onMounted } from 'vue';
+import {  onMounted } from 'vue';
 import { useStudentsStore } from '@pages/students/presentation/store/useStudentStores';
-import { useStudentsFeesStore } from '@pages/students/presentation/store/useStudentFeeslStore';
 
 
 import { useRoute } from 'vue-router';
@@ -39,13 +38,11 @@ import StudentFinancials from './StudentFinancials.vue';
 
 const route = useRoute();
 const students_store = useStudentsStore();
-const student_fees_store = useStudentsFeesStore();
 
 const { selectedStudent, getSelectedStudent: student, } = storeToRefs(students_store);
 const { fetchStudent } = students_store;
 
 // const { getF } = storeToRefs(student_financial_store);
-const { fetchStudentSummaryFees, getStudentFeesCache } = student_fees_store;
 
 
 const studentId = Number(route.params.id);
@@ -53,12 +50,8 @@ const studentId = Number(route.params.id);
 onMounted(async () => {
   if (studentId) {
     fetchStudent(studentId);
-    await fetchStudentSummaryFees(studentId);
   }
 });
-
-const fees = computed(() => getStudentFeesCache(studentId));
-
 
 // // Approve
 // async function handleApproveSubmission(submissionId: number) {

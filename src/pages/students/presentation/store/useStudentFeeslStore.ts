@@ -6,10 +6,13 @@ import { getStudentSummaryFees, getStudentFeesApi, getStudentPaymentsApi } from 
 // import { useDebounce } from "@utils/composables/useDebounc";
 // import { cancelPreviousRequest } from "@utils/cancenllationRequest";
 import { createStudentFinancialCache } from "./utils/createStudentFinancialCache";
-import { type FeeFilter } from "@pages/fees/fee_filter";
+import { type FeeFilter, type FeeFilterOptional } from "@pages/fees/fee_filter";
 import type { FeeEntity } from "@pages/fees/domain/entities/FeeEntity";
 import { type PaginatedApiResponse } from "@core/types";
 // const { debounce } = useDebounce();
+import { cancelPreviousRequest } from "@utils/cancenllationRequest";
+import { useAlertStore } from "@stores/ui/alert";
+
 
 export const useStudentsFeesStore = defineStore("students_financial_fees", () => {
 
@@ -68,6 +71,7 @@ export const useStudentsFeesStore = defineStore("students_financial_fees", () =>
     const cache = getStudentFeesCache(student_id).fees;
 
     if (!force && cache.fetched) return cache;
+    cancelPreviousRequest()
 
     cache.fetched = false;
     cache.loading = true;
@@ -105,11 +109,11 @@ export const useStudentsFeesStore = defineStore("students_financial_fees", () =>
   //   debounce(() => fetchStudents(true), 1000);
   // };
 
-  // const setFilters = (filters: StudentFilters) => {
-  //   students.params.filters = filters;
-  //   students.params.currentPage = 1;
-  //   fetchStudents(true);
-  // };
+  const setFilters = (student_id: number, filters: FeeFilter) => {
+    getStudentFeesCache(student_id).fees.params.filters = filters
+    getStudentFeesCache(student_id).fees.params.currentPage = 1
+    fetchStudentFees(student_id, true);
+  };
 
   // const clearSelectedStudent = () => {
   //   selectedStudent.id = null;
@@ -118,6 +122,6 @@ export const useStudentsFeesStore = defineStore("students_financial_fees", () =>
 
   return {
     caches,
-    fetchStudentSummaryFees, getStudentFeesCache, fetchStudentFees, setPage, setPerPage
+    fetchStudentSummaryFees, getStudentFeesCache, fetchStudentFees, setPage, setPerPage, setFilters,
   };
 });

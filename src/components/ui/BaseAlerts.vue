@@ -1,24 +1,25 @@
 <template>
-<div class="fixed top-4 left-1/2 z-[9999] min-w-[360px] space-y-3 -translate-x-1/2">
-    <transition-group name="toast" tag="div" class="space-y-3">
-        <div v-for="alert in alerts" :key="alert.id" :class="[
-            'flex items-start gap-3 rounded-xl border px-4 py-3 shadow-lg backdrop-blur',
-            alertClasses[alert.type]
-        ]">
-            <component :is="iconMap[alert.type]" class="h-5 w-5 flex-shrink-0 mt-0.5" />
+    <!-- left-1/2 -translate-x-1/2 -->
+    <div class="fixed bottom-4 left-4 z-[9999] min-w-[360px] space-y-3 ">
+        <transition-group name="toast" tag="div" class="space-y-3">
+            <div v-for="alert in alerts" :key="alert.id" :class="[
+                'flex items-start gap-3 rounded-xl border px-4 py-3 shadow-lg backdrop-blur',
+                alertClasses[alert.type]
+            ]">
+                <component :is="iconMap[alert.type]" class="h-5 w-5 flex-shrink-0 mt-0.5" />
 
-            <p class="flex-1 text-sm font-medium leading-snug">
-                {{ alert.message }}
-            </p>
+                <p class="flex-1 text-sm font-medium leading-snug">
+                    {{ alert.message }}
+                </p>
 
-            <button
-                class="rounded-md p-1 opacity-60 transition hover:opacity-100 hover:bg-black/5 dark:hover:bg-white/10"
-                @click="remove(alert.id)">
-                <X class="h-4 w-4" />
-            </button>
-        </div>
-    </transition-group>
-</div>
+                <button
+                    class="rounded-md p-1 opacity-60 transition hover:opacity-100 hover:bg-black/5 dark:hover:bg-white/10"
+                    @click="remove(alert.id)">
+                    <X class="h-4 w-4" />
+                </button>
+            </div>
+        </transition-group>
+    </div>
 
 </template>
 

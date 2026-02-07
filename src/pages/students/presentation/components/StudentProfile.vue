@@ -35,18 +35,17 @@ const router = useRouter()
     </div>
 
     <div v-else-if="student" class="space-y-6">
-        <div class="bg-white rounded-3xl shadow-sm border border-slate-200/60 overflow-hidden">
+        <div class="bg-white rounded-3xl shadow-lg border border-slate-200/60 overflow-hidden">
             <div class="h-32 bg-gradient-to-r from-violet-600 to-indigo-700 w-full"></div>
 
             <div class="px-8 pb-8">
-                <div class="relative flex flex-col lg:flex-row gap-8 items-end -mt-12 mb-6">
-                    <div class="w-32 h-32 bg-white p-2 rounded-3xl shadow-md">
+                <div class="relative flex flex-col lg:flex-row gap-8 items-center lg:items-end -mt-12 mb-6 flex-wrap">
+                    <div class="min-w-32 h-32 bg-white p-2 rounded-3xl shadow-md">
                         <div
                             class="w-full h-full bg-slate-100 rounded-2xl flex items-center justify-center text-slate-400">
                             <span class="text-4xl font-bold">{{ student.s_fname[0] }}{{ student.s_lname[0] }}</span>
                         </div>
                     </div>
-
                     <div class="flex-1 flex flex-col md:flex-row md:items-center justify-between gap-4 pb-2">
                         <div class="text-nowrap">
                             <h1 class="text-3xl font-extrabold text-slate-900 tracking-tight">
@@ -58,44 +57,50 @@ const router = useRouter()
                             </h1>
                             <p class="text-slate-500 font-medium flex items-center gap-2">
                                 <span
-                                    class="bg-slate-100 px-2 py-0.5 rounded text-sm uppercase tracking-wider font-bold">STUDENT ID</span>
+                                    class="bg-slate-100 px-2 py-0.5 rounded text-sm uppercase tracking-wider font-bold">STUDENT
+                                    ID</span>
                                 {{ student.s_studentID }}
                             </p>
                         </div>
-
-                        <div :class="[
-                            'px-6 py-2 rounded-full text-sm font-bold border-2 transition-all',
-                            student.s_status === 'enrolled' ? 'bg-emerald-50 border-emerald-100 text-emerald-700' :
-                                student.s_status === 'dropped' ? 'bg-rose-50 border-rose-100 text-rose-700' :
-                                    'bg-amber-50 border-amber-100 text-amber-700'
-                        ]">
-                            <span class="relative h-2 w-2 mr-2 inline-block">
-                                <span
-                                    :class="['animate-ping absolute inline-flex h-full w-full rounded-full opacity-75', student.s_status === 'enrolled' ? 'bg-emerald-400' : 'bg-rose-400']"></span>
-                                <span
-                                    :class="['relative inline-flex rounded-full h-2 w-2', student.s_status === 'enrolled' ? 'bg-emerald-500' : 'bg-rose-500']"></span>
-                            </span>
-                            {{ student.s_status.toUpperCase() }}
+                    </div>
+                    <!--  pt-6 border-t border-slate-100 -->
+                    <div
+                        class="grow grid grid-cols-1 text-center lg:text-left lg:grid-cols-3 gap-6 text-nowrap min-w-sm">
+                        <div class="p-2 rounded-2xl bg-slate-50 border border-slate-100 text-center">
+                            <p class="text-xs font-semibold text-slate-400 uppercase tracking-widest mb-1">Academic
+                                Program
+                            </p>
+                            <p class="text-slate-700 font-bold">{{ student.program_name }}</p>
+                        </div>
+                        <div class="p-2 rounded-2xl bg-slate-50 border border-slate-100 text-center">
+                            <p class="text-xs font-semibold text-slate-400 uppercase tracking-widest mb-1">Year &
+                                Section
+                            </p>
+                            <p class="text-slate-700 font-bold"> {{ student.s_lvl }} - {{ student.s_set }}</p>
+                        </div>
+                        <!-- <div class="p-4 rounded-2xl bg-slate-50 border border-slate-100">
+                                <p class="text-xs font-semibold text-slate-400 uppercase tracking-widest mb-1">Email Address</p>
+                                <p class="text-slate-700 font-bold">{{student?.user.email ?? 'N/A' }}</p>
+                            </div> -->
+                        <div class="flex justify-center">
+                            <div :class="[
+                                'px-6 py-2 rounded-full h-10 text-sm font-bold border-2 transition-all ',
+                                student.s_status === 'enrolled' ? 'bg-emerald-50 border-emerald-100 text-emerald-700' :
+                                    student.s_status === 'dropped' ? 'bg-rose-50 border-rose-100 text-rose-700' :
+                                        'bg-amber-50 border-amber-100 text-amber-700'
+                            ]">
+                                <span class="relative h-2 w-2 mr-2 inline-block">
+                                    <span
+                                        :class="['animate-ping absolute inline-flex h-full w-full rounded-full opacity-75', student.s_status === 'enrolled' ? 'bg-emerald-400' : 'bg-rose-400']"></span>
+                                    <span
+                                        :class="['relative inline-flex rounded-full h-2 w-2', student.s_status === 'enrolled' ? 'bg-emerald-500' : 'bg-rose-500']"></span>
+                                </span>
+                                {{ student.s_status.toUpperCase() }}
+                            </div>
                         </div>
                     </div>
                 </div>
 
-                <div class="grid grid-cols-1 text-center lg:text-left lg:grid-cols-3 gap-6 pt-6 border-t border-slate-100 text-nowrap">
-                    <div class="p-4 rounded-2xl bg-slate-50 border border-slate-100">
-                        <p class="text-xs font-semibold text-slate-400 uppercase tracking-widest mb-1">Academic Program
-                        </p>
-                        <p class="text-slate-700 font-bold">{{ student.program_name }}</p>
-                    </div>
-                    <div class="p-4 rounded-2xl bg-slate-50 border border-slate-100">
-                        <p class="text-xs font-semibold text-slate-400 uppercase tracking-widest mb-1">Year & Section
-                        </p>
-                        <p class="text-slate-700 font-bold"> {{ student.s_lvl }} - {{ student.s_set }}</p>
-                    </div>
-                    <div class="p-4 rounded-2xl bg-slate-50 border border-slate-100">
-                        <p class="text-xs font-semibold text-slate-400 uppercase tracking-widest mb-1">Email Address</p>
-                        <p class="text-slate-700 font-bold">{{ 'N/A' }}</p>
-                    </div>
-                </div>
             </div>
         </div>
     </div>

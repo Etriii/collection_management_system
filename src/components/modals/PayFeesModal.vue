@@ -90,7 +90,7 @@ import { ref, computed, watch } from "vue"
 const props = defineProps<{
     open: boolean
     fees: FeeEntity[]
-}>()
+}>()    
 
 const emit = defineEmits<{
     (e: "update:open", v: boolean): void

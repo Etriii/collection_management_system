@@ -1,18 +1,33 @@
 <script setup lang="ts">
 import { formatCurrency } from '@utils/formatCurrency';
 import { CreditCard, CheckCircle, Clock } from 'lucide-vue-next';
+import { computed, onMounted } from 'vue';
+import { useStudentsFeesStore } from '@pages/students/presentation/store/useStudentFeeslStore';
+
 const props = defineProps<{
-    fees_summary: {
-        total_amount: number;
-        total_balance: number;
-        loading: boolean;
-        fetched: boolean
-    };
+    // fees_summary: {
+    //     total_amount: number;
+    //     total_balance: number;
+    //     loading: boolean;
+    //     fetched: boolean
+    // };
+    student_id:number
 }>()
+
+const student_fees_store = useStudentsFeesStore();
+
+onMounted(async () => {
+  if (props.student_id) {
+    student_fees_store.fetchStudentSummaryFees(props.student_id);
+  }
+});
+
+const fees_summary = computed(() =>student_fees_store.getStudentFeesCache(props.student_id).fees_summary);
+
 </script>
 
 <template>
-    <div v-if="props.fees_summary.loading" class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+    <div v-if="fees_summary.loading" class="grid grid-cols-1 md:grid-cols-3 gap-2 mb-2">
         <div v-for="i in 3" :key="i" class="bg-white rounded-xl shadow-md p-6 animate-pulse">
             <div class="flex items-center justify-between">
                 <div class="space-y-3 w-full">
@@ -24,13 +39,13 @@ const props = defineProps<{
         </div>
     </div>
 
-    <div v-else class="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-        <div class="bg-white rounded-xl shadow-md p-6">
+    <div v-else class="grid grid-cols-1 lg:grid-cols-3 gap-3 mb-2">
+        <div class="bg-white rounded-xl shadow-lg p-6">
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-sm text-gray-600 mb-1">Total Fees</p>
                     <p class="text-2xl font-bold text-gray-900">
-                        {{ formatCurrency(props.fees_summary.total_amount) }}
+                        {{ formatCurrency(fees_summary.total_amount) }}
                     </p>
                 </div>
                 <div class="bg-blue-100 p-3 rounded-full">
@@ -39,15 +54,15 @@ const props = defineProps<{
             </div>
         </div>
 
-        <div class="bg-white rounded-xl shadow-md p-6">
+        <div class="bg-white rounded-xl shadow-lg p-6">
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-sm text-gray-600 mb-1">Total Paid</p>
                     <p class="text-2xl font-bold text-emerald-600">
                         {{
                             formatCurrency(
-                                props.fees_summary.total_amount -
-                                props.fees_summary.total_balance
+                                fees_summary.total_amount -
+                                fees_summary.total_balance
                         )
                         }}
                     </p>
@@ -58,12 +73,12 @@ const props = defineProps<{
             </div>
         </div>
 
-        <div class="bg-white rounded-xl shadow-md p-6">
+        <div class="bg-white rounded-xl shadow-lg p-6">
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-sm text-gray-600 mb-1">Balance</p>
                     <p class="text-2xl font-bold text-red-600">
-                        {{ formatCurrency(props.fees_summary.total_balance) }}
+                        {{ formatCurrency(fees_summary.total_balance) }}
                     </p>
                 </div>
                 <div class="bg-red-100 p-3 rounded-full">

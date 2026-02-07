@@ -15,7 +15,7 @@ const changeTab = (tab: Tabs) => {
 </script>
 
 <template>
-   <div class="border-b border-gray-200">
+   <div class="border-b border-gray-200 mb-2">
         <nav class="flex gap-6">
             <button @click="changeTab('fees')" :class="[
                 'pb-3 text-sm font-semibold transition-colors relative',

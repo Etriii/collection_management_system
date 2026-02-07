@@ -31,8 +31,10 @@ onMounted(() => {
 </script>
 
 <template>
-    <StudentFinancialTabs v-model="selectedTab" />
-    <ViewStudentFees v-if="selectedTab == 'fees'" :student_id="props.student_id" />
-    <ViewStudentPayments v-if="selectedTab == 'payments'" :student_id="props.student_id" />
-    <ViewStudentPaymentSubmissions v-if="selectedTab == 'submissions'" :student_id="props.student_id" />
+    <div class="px-2">
+        <StudentFinancialTabs v-model="selectedTab" />
+        <ViewStudentFees v-if="selectedTab == 'fees'" :student_id="props.student_id" />
+        <ViewStudentPayments v-if="selectedTab == 'payments'" :student_id="props.student_id" />
+        <ViewStudentPaymentSubmissions v-if="selectedTab == 'submissions'" :student_id="props.student_id" />
+    </div>
 </template>
