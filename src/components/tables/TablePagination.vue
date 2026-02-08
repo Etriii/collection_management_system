@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { useDebounce } from '@utils/composables/useDebounce';
 import { computed } from 'vue';
 
 const props = defineProps<{
@@ -6,6 +7,7 @@ const props = defineProps<{
     perPage: number;
     totalPages: number;
     total_items: number;
+    loading: boolean
 }>();
 
 const emit = defineEmits<{
@@ -30,6 +32,12 @@ const pages = computed(() => {
     }
     return pagesToShow;
 });
+
+const { debounce } = useDebounce();
+
+const changePage = (currentPage: number) => {
+    debounce(() => emit('change', currentPage + 1), 300)
+}
 </script>
 <template>
     <div
@@ -55,17 +63,20 @@ const pages = computed(() => {
 
             <button class="px-3 py-2 rounded-lg border border-gray-200 text-sm font-medium transition-all
                hover:bg-gray-50 disabled:opacity-40 cursor-pointer disabled:cursor-not-allowed"
-                :disabled="currentPage <= 1" @click="emit('change', currentPage - 1)">
+                :disabled="currentPage <= 1" @click="changePage(currentPage - 1)">
                 ← Prev
             </button>
 
             <template v-for="(page, index) in pages" :key="index">
                 <button v-if="typeof page === 'number'"
-                    class="min-w-[38px] px-3 py-2 rounded-lg text-sm font-medium border transition-all"
-                    :class="currentPage === page
-                        ? 'bg-ic-primary text-white border-ic-primary shadow-sm cursor-default pointer-events-none'
-                        : 'bg-white text-gray-700 border-gray-200 hover:bg-blue-50 hover:border-blue-200 cursor-pointer'" :disabled="currentPage === page"
-                    @click="currentPage !== page && emit('change', page)">
+                    class="min-w-[38px] px-3 py-2 rounded-lg text-sm font-medium border transition-all" :class="[
+                        currentPage === page
+                            ? 'bg-ic-primary text-white border-ic-primary shadow-sm cursor-default pointer-events-none'
+                            : 'bg-white text-gray-700 border-gray-200 hover:bg-blue-50 hover:border-blue-200 cursor-pointer',
+
+                        props.loading && currentPage === page ? 'animate-spin' : ''
+                    ]" :disabled="currentPage === page || props.loading"
+                    @click="currentPage !== page && changePage(page)">
                     {{ page }}
                 </button>
 
@@ -77,7 +88,7 @@ const pages = computed(() => {
 
             <button class="px-3 py-2 rounded-lg border border-gray-200 text-sm font-medium transition-all
                hover:bg-gray-50 disabled:opacity-40 cursor-pointer disabled:cursor-not-allowed"
-                :disabled="currentPage >= totalPages" @click="emit('change', currentPage + 1)">
+                :disabled="currentPage >= totalPages" @click="changePage(currentPage + 1)">
                 Next →
             </button>
 

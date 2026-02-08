@@ -99,6 +99,7 @@ export const useStudentsFeesStore = defineStore("students_financial_fees", () =>
 
   const setPerPage = (student_id: number, perPage: number) => {
     getStudentFeesCache(student_id).fees.params.perPage = perPage;
+    getStudentFeesCache(student_id).fees.params.currentPage = 1
     fetchStudentFees(student_id, true);
   }
 

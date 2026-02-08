@@ -69,6 +69,7 @@ export const useStudentsSubmissionsStore = defineStore("students_financial_submi
 
     const setPerPage = (student_id: number, perPage: number) => {
         getStudentPaymentSubmissionsCache(student_id).submissions.params.perPage = perPage;
+        getStudentPaymentSubmissionsCache(student_id).submissions.params.currentPage = 1;
         fetchStudentPaymentSubmissions(student_id, true);
     }
 

@@ -63,7 +63,7 @@ const goToStudent = (student: StudentEntity) => {
 
         <template #pagination>
             <TablePagination v-if="meta" :current-page="meta.current_page" :per-page="meta.per_page"
-                :total-pages="meta.total_pages" :total_items="meta.total_items" @change="store.setPage" />
+                :total-pages="meta.total_pages" :total_items="meta.total_items" @change="store.setPage" :loading="store.students.loading"/>
         </template>
     </BaseTable>
 </template>

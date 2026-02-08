@@ -64,7 +64,7 @@ const setPerPageLocal = (perPage: number) => {
         <template #pagination>
             <TablePagination v-if="payments.params" :current-page="payments.data.current_page"
                 :per-page="payments.data.per_page" :total-pages="payments.data.total_pages"
-                :total_items="payments.data.total_items" @change="setPagelocal" />
+                :total_items="payments.data.total_items" @change="setPagelocal" :loading="payments.loading"/>
         </template>
     </BaseTable>
 </template>

@@ -81,6 +81,7 @@ export const useStudentsStore = defineStore("students", () => {
 
   const setPerPage = (perPage: number = 10) => {
     students.params.perPage = perPage;
+    students.params.currentPage = 1;
     fetchStudents(true)
   }
 

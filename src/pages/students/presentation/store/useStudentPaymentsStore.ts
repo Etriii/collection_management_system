@@ -70,6 +70,7 @@ export const useStudentsPaymentsStore = defineStore("students_financial_payments
 
     const setPerPage = (student_id: number, perPage: number) => {
         getStudentPaymentsCache(student_id).payments.params.perPage = perPage;
+        getStudentPaymentsCache(student_id).payments.params.currentPage = 1;
         fetchStudentPayments(student_id, true);
     }
 

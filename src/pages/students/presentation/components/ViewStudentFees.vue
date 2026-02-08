@@ -84,7 +84,7 @@ const handleViewFeeForPayments = (id: number) => {
 
         <template #pagination>
             <TablePagination v-if="fees.params" :current-page="fees.data.current_page" :per-page="fees.data.per_page"
-                :total-pages="fees.data.total_pages" :total_items="fees.data.total_items" @change="setPagelocal" />
+                :total-pages="fees.data.total_pages" :total_items="fees.data.total_items" @change="setPagelocal" :loading="fees.loading" />
         </template>
     </BaseTable>
 </template>
