@@ -4,7 +4,7 @@ import { computed, onMounted, onUnmounted, ref, watch } from "vue";
 interface Props {
     isModalOpen: boolean;
     title?: string;
-    size?: "sm" | "md" | "lg" | "xl" | "full";
+    size?: "sm" | "md" | "lg" | "xl" | "xxl" | "full";
     theme?: ThemeType
     closeOnBackdrop?: boolean;
     closeOnEsc?: boolean;
@@ -19,6 +19,7 @@ const props = withDefaults(defineProps<Props>(), {
 
 const emit = defineEmits<{
     (e: "update:isModalOpen", value: boolean): void;
+    (e: "onClose"): void;
 }>();
 
 const isOpen = computed({
@@ -79,7 +80,7 @@ const currentTheme = computed(() => themes[props.theme]);
 
 // const modalRef = ref<HTMLElement | null>(null);
 
-function close() { isOpen.value = false; }
+function close() { isOpen.value = false; emit("onClose") }
 
 function onBackdropClick() { if (props.closeOnBackdrop) close(); }
 
@@ -97,13 +98,13 @@ onUnmounted(() => { document.body.style.overflow = ""; document.removeEventListe
             <div v-if="isOpen" class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
                 @click.self="onBackdropClick">
 
-                <div ref="modalRef" :class="[
-                    'shadow-lg w-full mx-4 flex flex-col rounded-2xl overflow-hidden  border border-gray-300 bg-gray-50  max-h-[92%] max-w-[92%]',
+                <div ref="modalRef" :class="['shadow-lg  mx-4 flex flex-col rounded-2xl overflow-hidden  border border-gray-300 bg-gray-50  max-h-[92%] max-w-[92%]',
                     currentTheme.container,
                     size === 'sm' && 'max-w-sm',
                     size === 'md' && 'max-w-md',
                     size === 'lg' && 'max-w-lg',
-                    size === 'xl' && 'max-w-2xl',
+                    size === 'xl' && 'max-w-xl',
+                    size === 'xxl' && 'max-w-[45rem]',
                 ]" role="dialog" aria-modal="true">
 
                     <header :class="['flex items-center justify-between px-6 py-4 rounded-t-xl', currentTheme.header]">

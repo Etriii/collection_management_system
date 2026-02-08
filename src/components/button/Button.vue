@@ -61,7 +61,7 @@ const variantStyles = computed(() => ({
     read: "bg-blue-500 text-white border-none hover:bg-blue-600",
     update: "bg-yellow-500 text-white border-none hover:bg-yellow-600",
     delete: "bg-red-600 text-white border-none hover:bg-red-700",
-    cancel: "bg-gray-300 text-gray-800 hover:bg-gray-400",
+    cancel: "bg-gray-200 text-gray-800 hover:bg-gray-300",
 }));
 
 const sizeStyles = computed(() => ({

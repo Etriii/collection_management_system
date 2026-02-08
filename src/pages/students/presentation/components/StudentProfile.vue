@@ -91,7 +91,7 @@ const router = useRouter()
                             ]">
                                 <span class="relative h-2 w-2 mr-2 inline-block">
                                     <span
-                                        :class="['animate-ping absolute inline-flex h-full w-full rounded-full opacity-75', student.s_status === 'enrolled' ? 'bg-emerald-400' : 'bg-rose-400']"></span>
+                                        :class="['animate-ping absolute top-2 inline-flex h-full w-full rounded-full opacity-75 ', student.s_status === 'enrolled' ? 'bg-emerald-400' : 'bg-rose-400']"></span>
                                     <span
                                         :class="['relative inline-flex rounded-full h-2 w-2', student.s_status === 'enrolled' ? 'bg-emerald-500' : 'bg-rose-500']"></span>
                                 </span>

@@ -62,7 +62,6 @@ const emit = defineEmits<{
               </td>
             </tr>
 
-
             <tr v-else-if="!rows.length">
               <td :colspan="columns.length" class="px-6 py-16 text-center text-gray-500">
                 <div>

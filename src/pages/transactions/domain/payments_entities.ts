@@ -15,3 +15,9 @@ export interface PaymentEntity {
     updated_at: string
     updated_by: string | null
 }
+
+
+export type BulkPaymentPayload = {
+    fee: number;
+    amount_paid: number;
+}[];

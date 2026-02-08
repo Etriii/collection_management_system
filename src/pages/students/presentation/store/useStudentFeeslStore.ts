@@ -71,7 +71,6 @@ export const useStudentsFeesStore = defineStore("students_financial_fees", () =>
     const cache = getStudentFeesCache(student_id).fees;
 
     if (!force && cache.fetched) return cache;
-    cancelPreviousRequest()
 
     cache.fetched = false;
     cache.loading = true;

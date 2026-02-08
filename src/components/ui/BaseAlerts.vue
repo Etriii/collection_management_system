@@ -13,7 +13,7 @@
                 </p>
 
                 <button
-                    class="rounded-md p-1 opacity-60 transition hover:opacity-100 hover:bg-black/5 dark:hover:bg-white/10"
+                    class="rounded-md p-1 opacity-60 transition hover:opacity-100 hover:bg-black/5 dark:hover:bg-white/10 cursor-pointer"
                     @click="remove(alert.id)">
                     <X class="h-4 w-4" />
                 </button>

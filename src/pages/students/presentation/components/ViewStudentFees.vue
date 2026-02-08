@@ -42,7 +42,6 @@ const setPerPageLocal = (perPage: number) => {
     setPerPage(props.student_id, perPage)
 }
 
-
 const selectedFee = ref<number | null>(null)
 const viewFees = (fee: FeeEntity) => {
     // selectedFee.value = fee.id
@@ -70,7 +69,7 @@ const handleViewFeeForPayments = (id: number) => {
                 <PerPageSelector v-model="fees.params.perPage" @onChange="setPerPageLocal" />
                 <div class="px-2 py-1 hover:cursor-pointer bg-green-50 border border-gray-300">Filters</div>
             </div>
-            <button class="px-2 py-1 border border-gray-500 rounded-md"
+            <button class="px-2 py-1 border border-gray-300 rounded-md cursor-pointer"
                 @click="handleViewFeeForPayments(props.student_id)">New
                 Payment</button>
         </template>

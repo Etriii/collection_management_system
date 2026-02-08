@@ -5,7 +5,7 @@ import type { StudentEntity, StudentFilters } from "@pages/students/domain/entit
 import type { PaginatedApiResponse } from "@core/types";
 import { getStudentsApi, getStudentApi } from "@pages/students/data/api/students_api";
 
-import { useDebounce } from "@utils/composables/useDebounc";
+import { useDebounce } from "@utils/composables/useDebounce";
 import { cancelPreviousRequest } from "@utils/cancenllationRequest";
 const { debounce } = useDebounce();
 

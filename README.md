@@ -1,8 +1,4 @@
-<p align="center">
-  <img src="public/images/icsa_logo.png" width="200" alt="ICSA Logo">
-</p>
 
-<h1 align="center">ICSA Collection Management System</h1>
 <p align="center">
   <img src="public/images/icsa_logo.png" width="200" alt="ICSA Logo">
 </p>

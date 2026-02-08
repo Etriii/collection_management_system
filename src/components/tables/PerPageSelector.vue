@@ -20,9 +20,9 @@ const handleChange = (event) => {
 </script>
 
 <template>
-  <div class="per-page-container text-sm m-2 flex gap-2">
+  <div class="per-page-container text-sm m-2 flex gap-2 ">
     <span>Show </span>
-    <select :value="modelValue" class="border border-gray-400 rounded " @change="handleChange">
+    <select :value="modelValue" class="border border-gray-400 rounded cursor-pointer " @change="handleChange">
       <option v-for="num in options" :key="num" :value="num">
         {{ num }}
       </option>

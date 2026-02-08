@@ -1,79 +1,102 @@
 <script setup lang="ts">
-import { onMounted, watch } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 import BaseModal from '@components/modals/BaseModal.vue';
 import { useStudentPendingFees } from '@pages/students/presentation/composables/useStudentPendingFeesComposables';
+import BaseTable, { type TableColumn } from '@components/tables/BaseTable.vue';
+import { formatCurrency } from '@utils/formatCurrency';
+import { formatDate } from '@utils/dateFormat';
+import { usePayFees } from '@pages/transactions/presentation/store/composables/usePayFeesComposables';
+import Button from '@components/button/Button.vue';
 
-const props = defineProps<{
-    student_id: number,
-}>()
-const isModalOpen = defineModel<boolean>("isModalOpen", {
-    default: false,
-})
+const props = defineProps<{ student_id: number, }>()
+const isModalOpen = defineModel<boolean>("isModalOpen", { default: false, })
+
+const close = () => {
+    if (payPendingFeesBulkLoading.value) { cancel_payment_request() }
+    isModalOpen.value = false; amounts.value = {}
+}
 
 const { fees, loading, fetchPendingFees } = useStudentPendingFees()
 
-watch([isModalOpen], () => {
-    if (isModalOpen.value) fetchPendingFees(props.student_id
-    )
-})
+watch([isModalOpen], () => { if (isModalOpen.value) fetchPendingFees(props.student_id) })
 
+const columns: TableColumn<any>[] = [
+    { key: "id", label: "#", align: "center" },
+    { key: "category_name", label: "Collection Category", align: "left" },
+    { key: "due_date", label: "Due", align: "right", render: (e) => formatDate(e.due_date) },
+    { key: "semester", label: "Year & Sem", align: "right", render: (e) => `${e.academic_year} ${e.semester}` },
+    { key: "total_amount", label: "Amount", align: "left", render: (e) => formatCurrency(e.total_amount) },
+    { key: "balance", label: "Balance", align: "left", render: (e) => formatCurrency(e.balance) }, { key: "amount", label: "Amount to pay", align: "right" },
+];
+
+const amounts = ref<Record<number, number>>({})
+
+watch(fees, (fees) => {
+    const next: Record<number, number> = {};
+    fees.forEach(f => { next[f.id] = amounts.value[f.id] ?? 0 });
+    amounts.value = next;
+}, { immediate: true })
+
+const { loading: payPendingFeesBulkLoading, payPendingFeesBulk, cancel_payment_request } = usePayFees()
+
+const submit = async () => {
+    const payload = fees.value.map(fee => ({
+        fee: fee.id,
+        amount_paid: amounts.value[fee.id],
+    })).filter(p => p.amount_paid > 0)
+
+    await payPendingFeesBulk(payload); close()
+}
+
+const totalFees = computed(() => fees.value.reduce((sum, fee) => sum + Number(fee.balance), 0))
+
+const totalPayment = computed(() => Object.values(amounts.value).reduce((t, v) => t + (v || 0), 0))
+
+// SUNOD NA KUNI E CLEAN MAG FOCUS SA KO SA FEATURES
 </script>
 
 <template>
-    <BaseModal v-model:is-modal-open="isModalOpen" :title="'Create Fee Payment'" :close-on-backdrop="false" size="lg">
-        <div class="">
-            <div v-if="loading">loading pa lods</div>
-            <div class="" v-else>
-                <div class="space-y-4">
-                    <div v-for="fee in fees" :key="fee.id"
-                        class="bg-white rounded-2xl shadow-sm p-5 flex flex-col gap-4 transition hover:shadow-md">
-                        <div class="flex flex-col gap-1">
-                            <p class="text-lg font-semibold text-gray-800">{{ fee.student.full_name }}</p>
-                            <p class="text-sm text-gray-500">
-                                {{ fee.student.program_name }} - {{ fee.student.s_set }}{{ fee.student.s_lvl }}
-                            </p>
-                        </div>
+    <BaseModal v-model:is-modal-open="isModalOpen" :title="'Pay Fees'" :close-on-backdrop="false" size="xxl"
+        v-on:on-close="close">
+        <div class="font-medium pb-2">Pending Fees</div>
+        <BaseTable :columns="columns" :rows="fees" :loading="loading">
+            <template #cell-amount="{ row }">
+                <input type="number" min="0" :max="row.balance" :value="amounts[row.id] ?? 0"
+                    @input="amounts[row.id] = +($event.target as HTMLInputElement).value"
+                    class="w-full text-right rounded-md border-gray-300 px-3 py-2 border " />
+            </template>
+        </BaseTable>
 
-                        <div class="flex flex-col gap-1">
-                            <p class="text-sm font-medium text-gray-600">{{ fee.category_name }}</p>
-                            <p class="text-xs text-gray-400">
-                                {{ fee.academic_year }} | Semester {{ fee.semester }}
-                            </p>
-                        </div>
-
-                        <div class="flex flex-col gap-1">
-                            <p class="text-sm text-gray-500">
-                                Total: <span class="font-semibold">{{ parseFloat(fee.total_amount).toLocaleString()
-                                }}</span>
-                            </p>
-                            <p class="text-sm text-gray-500">
-                                Balance: <span class="font-semibold">{{ parseFloat(fee.balance).toLocaleString()
-                                }}</span>
-                            </p>
-                        </div>
-
-                        <div class="flex items-center gap-2">
-                            <span class="px-3 py-1 rounded-full text-xs font-semibold" :class="{
-                                'bg-green-100 text-green-700': fee.status === 'paid',
-                                'bg-yellow-100 text-yellow-700': fee.status === 'pending',
-                                'bg-red-100 text-red-700': fee.status === 'overdue',
-                            }">
-                                {{ fee.status }}
-                            </span>
-                            <p class="text-xs text-gray-400">Due: {{ new Date(fee.due_date).toLocaleDateString() }}</p>
-                        </div>
-
-                        <div>
-                            <input type="number"
-                                class="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-1 focus:ring-blue-400"
-                                placeholder="Enter amount to pay" />
-                        </div>
+        <template #footer>
+            <div class="pt-6 flex justify-between items-center border-t flex-col sm:flex-row gap-5">
+                <div class=" flex items-center space-x-3">
+                    <div class="flex items-center gap-2 text-md text-gray-500">
+                        <span>Total Fees</span>
+                        <span class="font-medium text-red-600">
+                            {{ formatCurrency(totalFees) }}
+                        </span>
+                    </div>
+                    <div class="flex items-center gap-2 text-md text-gray-500">
+                        <span>Total Payment</span>
+                        <span class="font-semibold text-green-700">
+                            {{ formatCurrency(totalPayment) }}
+                        </span>
                     </div>
                 </div>
+
+                <div class="flex gap-3">
+                    <Button type="button" variant="cancel" @click="close" class="">
+                        Cancel
+                    </Button>
+
+                    <Button v-on:click="submit" :disabled="payPendingFeesBulkLoading || totalPayment <= 0"
+                        :loading="payPendingFeesBulkLoading" loading-text="Confirming..."
+                        class="px-5 py-2 text-sm rounded-md bg-blue-600 text-white hover:bg-blue-700">
+                        Confirm Payment
+                    </Button>
+                </div>
             </div>
-        </div>
-        <template #footer>
-            <button type="button" @click="isModalOpen = false">cancel</button>
+
         </template>
     </BaseModal>
 </template>
