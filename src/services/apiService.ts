@@ -94,6 +94,7 @@ class ApiService {
     return res.data;
   }
 
+  // WHEN UPDATING FIELDS PLEASE USE PATCH INSEAD
   async put<T>(endpoint: string, body: Record<string, any> = {}): Promise<T> {
     this.cancelRequest();
     const res = await this.api.put<T>(endpoint, body);

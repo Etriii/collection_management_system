@@ -8,8 +8,8 @@ import { useStudentsStore } from "@pages/students/presentation/store/useStudentS
 import { useStudentsPaymentsStore } from "@pages/students/presentation/store/useStudentPaymentsStore"
 export function usePayFees() {
     const { getSelectedStudent: student } = useStudentsStore()
-    const { fetchStudentFees } = useStudentsFeesStore()
-    const { fetchStudentPayments } = useStudentsPaymentsStore()
+    const { setPage: setFeesPage } = useStudentsFeesStore()
+    const { setPage: setPaymentPage } = useStudentsPaymentsStore()
 
     const alert = useAlertStore()
     const loading = ref<boolean>(false)
@@ -29,8 +29,8 @@ export function usePayFees() {
             alert.show(` ${response.data.message} : Created ${response.data.count} payments`, "success")
             loading.value = false
             if (student?.id) {
-                fetchStudentFees(student.id, true)
-                fetchStudentPayments(student.id, true)
+                setFeesPage(student.id, 1)
+                setPaymentPage(student.id, 1)
             }
         } catch (e: any) {
             if (e.isAutoCancel) {

@@ -8,4 +8,5 @@ export interface UserEntity {
     exp: number | null;
     groups: string[];
     institute: Institute | null;
+    profile: string
 }

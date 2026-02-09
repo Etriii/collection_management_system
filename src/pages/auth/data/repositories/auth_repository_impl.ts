@@ -26,7 +26,7 @@ export class AuthRepositoryImpl implements AuthRepository {
 
     async getCurrentUser(): Promise<UserEntity> {
         const model = await this.remote.fetchProfile();
-        localStorage.setItem("userData", JSON.stringify(model.data.toJson()));
+        // localStorage.setItem("userData", JSON.stringify(model.data.toJson()));
         return model.data.toEntity();
     }
 

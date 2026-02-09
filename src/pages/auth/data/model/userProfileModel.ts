@@ -10,6 +10,7 @@ export class UserModel implements UserEntity {
   public exp: number | null;
   public groups: string[];
   public institute: Institute | null;
+  public profile: string;
 
   constructor(
     username: string,
@@ -19,6 +20,7 @@ export class UserModel implements UserEntity {
     exp: number | null,
     groups: string[],
     institute: Institute | null,
+    profile: string,
   ) {
     this.username = username;
     this.first_name = first_name;
@@ -27,6 +29,7 @@ export class UserModel implements UserEntity {
     this.exp = exp;
     this.groups = groups;
     this.institute = institute;
+    this.profile = profile
   }
 
   static fromJson(json: any): UserModel {
@@ -56,7 +59,8 @@ export class UserModel implements UserEntity {
       json.email,
       json.exp ?? null,
       json.groups ?? [],
-      institute
+      institute,
+      json.profile,
     );
   }
 
@@ -69,6 +73,7 @@ export class UserModel implements UserEntity {
       exp: this.exp,
       groups: this.groups,
       institute: this.institute?.id,
+      profile: this.profile,
     };
   }
 
@@ -85,6 +90,7 @@ export class UserModel implements UserEntity {
       entity.exp,
       entity.groups,
       entity.institute,
+      entity.profile
     );
   }
 }

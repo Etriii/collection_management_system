@@ -43,6 +43,7 @@ const setPerPageLocal = (perPage: number) => {
 }
 
 const selectedFee = ref<number | null>(null)
+    
 const viewFees = (fee: FeeEntity) => {
     // selectedFee.value = fee.id
     alert(fee)

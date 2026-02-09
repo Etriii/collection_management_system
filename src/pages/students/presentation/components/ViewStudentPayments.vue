@@ -25,9 +25,11 @@ const payments = computed(() => {
 const columns: TableColumn<any>[] = [
     { key: "id", label: "#", align: "center" },
     { key: "category_name", label: "Collection Category", render: (e) => e.fee.category_name },
-    { key: "total_amount", label: "Total Amount", render: ((e) => `${formatCurrency(e.amount_paid)}`) },
+    { key: "total_amount", label: "Fee Amount", render:(e)=> formatCurrency(e.fee.total_amount) },
+    { key: "previous_balance", label: "Previous Balance", render:(e)=> formatCurrency(e.previous_balance) },
+    { key: "amount_paid", label: "Amount Paid", render: ((e) => `${formatCurrency(e.amount_paid)}`) },
     { key: "payment_method", label: "Payment Metohd" },
-    { key: "payment_submission", label: "Payment Submission" },
+    { key: "received_by", label: "Received By" },
     { key: "created_at", label: "Transact Date" ,render:(e)=>`${formatDate(e.created_at)}`},
 ];
 

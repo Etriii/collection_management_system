@@ -5,6 +5,7 @@ export interface PaymentEntity {
     id: number
     fee: FeeSlimEntity
 
+    previous_balance:number
     amount_paid: number
     payment_method: PaymentMethod
 

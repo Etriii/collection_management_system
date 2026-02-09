@@ -36,9 +36,9 @@ const pages = computed(() => {
 const { debounce } = useDebounce();
 
 const changePage = (currentPage: number) => {
-    debounce(() => emit('change', currentPage + 1), 300)
+    debounce(() => emit('change', currentPage), 300)
 }
-</script>
+</script>   
 <template>
     <div
         class="flex flex-col sm:flex-row flex-wrap sm:items-center sm:justify-between gap-4 p-4 border-t border-gray-100 bg-white">
