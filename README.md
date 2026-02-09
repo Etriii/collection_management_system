@@ -141,7 +141,7 @@ npm run dev
 
 ## 📊 Project Analytics
 
-![Alt](https://repobeats.axiom.co/api/embed/3f977d2d3ef680382bb862b62787e434404db6e1.svg "Repobeats analytics image")
+![Alt](https://repobeats.axiom.co/api/embed/f7574f59a2fcf400a28701cae830d5f7acb17ef4.svg "Repobeats analytics image")
 
 ## 🙏 Acknowledgments
 
