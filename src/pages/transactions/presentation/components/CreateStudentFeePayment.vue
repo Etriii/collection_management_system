@@ -12,7 +12,7 @@ const props = defineProps<{ student_id: number, }>()
 const isModalOpen = defineModel<boolean>("isModalOpen", { default: false, })
 
 const close = () => {
-    if (payPendingFeesBulkLoading.value) { cancel_payment_request() }
+    // if (payPendingFeesBulkLoading.value) { cancel_payment_request() } mybad, i have done my research and it says "Payments must be allowed to finish. Always."
     isModalOpen.value = false; amounts.value = {}
 }
 
@@ -85,7 +85,7 @@ const totalPayment = computed(() => Object.values(amounts.value).reduce((t, v) =
                 </div>
 
                 <div class="flex gap-3">
-                    <Button type="button" variant="cancel" @click="close" class="">
+                    <Button type="button" variant="cancel" @click="close" class="" :disabled="payPendingFeesBulkLoading">
                         Cancel
                     </Button>
 

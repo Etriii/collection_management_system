@@ -36,9 +36,9 @@ export function usePayFees() {
             if (e.isAutoCancel) {
                 return;
             }
-            alert.show("Failed to create Bulk Payments", "error")
+            alert.show("Failed to create Payments", "error")
             loading.value = false
-            throw Error("Failed to create Bulk Payments: " + e.error)
+            throw Error("Failed to create Payments: " + e.error)
         }
     }
 

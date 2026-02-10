@@ -20,7 +20,7 @@ const search = computed({
 })
 
 const columns: TableColumn<any>[] = [
-    { key: "id", label: "#", align: "center" }, 
+    { key: "id", label: "#", align: "center" },
     { key: "name", label: "Name", render: (s) => `${s.s_lname}, ${s.s_fname}`, align: "left" },
     { key: "s_studentID", label: "Student ID", align: "right" },
     { key: "program_name", label: "Program", align: "right" },
@@ -40,6 +40,7 @@ const goToStudent = (student: StudentEntity) => {
 </script>
 
 <template>
+    <div class="p-5">
     <BaseTable :columns="columns" :rows="rows" :loading="store.students.loading" v-on:rowClick="goToStudent">
         <!-- Toolbar -->
         <template #toolbar>
@@ -63,7 +64,9 @@ const goToStudent = (student: StudentEntity) => {
 
         <template #pagination>
             <TablePagination v-if="meta" :current-page="meta.current_page" :per-page="meta.per_page"
-                :total-pages="meta.total_pages" :total_items="meta.total_items" @change="store.setPage" :loading="store.students.loading"/>
-        </template>
+                :total-pages="meta.total_pages" :total_items="meta.total_items" @change="store.setPage"
+                :loading="store.students.loading" />
+        </template> 
     </BaseTable>
+    </div>
 </template>
