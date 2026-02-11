@@ -6,17 +6,34 @@ import icsa_logo from '@assets/icsa_logo.png';
 interface Props {
     sidebarWidth: string
     isSidebarOpen?: boolean
+    isMobile: boolean
 }
 
 const props = defineProps<Props>();
 
+import { watch } from 'vue'
+
+watch(
+    () => props.isSidebarOpen,
+    (newVal) => {
+        if (props.isMobile && newVal) {
+            document.body.classList.add('overflow-hidden')
+        } else {
+            document.body.classList.remove('overflow-hidden')
+        }
+    }
+)
 
 </script>
 
 <template>
-    <aside class="fixed left-0 inset-y-0 z-30 transition-all duration-300 shadow-lg"
-        :class="[props.sidebarWidth, props.isSidebarOpen ? 'translate-x-0' : '-translate-x-full']">
-        <!-- logo -->
+    <aside class="left-0 inset-y-0 transition-all duration-300 shadow-lg bg-white" :class="[
+        props.sidebarWidth,
+        props.isSidebarOpen ? 'translate-x-0' : '-translate-x-full',
+        props.isMobile
+            ? 'fixed z-40'
+            : 'fixed z-30'
+    ]">
         <div class="flex items-center gap-4 px-5 py-2 shadow-sm">
             <img :src="icsa_logo" alt="icsa_logo" width="40">
             <p class="text-xl font-semibold">ICCMS</p>
