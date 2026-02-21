@@ -10,7 +10,6 @@ interface Props {
     pageTitle: string
     username: string
     profilePicPath: string | null
-
 }
 
 

@@ -30,37 +30,60 @@ export function useAuth(googleClientId?: string) {
   };
 
   // Google login SDK
-  if (googleClientId) {
-    onMounted(() => {
-      const script = document.createElement("script");
-      script.src = "https://accounts.google.com/gsi/client";
-      script.async = true;
-      script.defer = true;
-      document.body.appendChild(script);
+  // if (googleClientId) {
+  //   onMounted(() => {
+  //     const script = document.createElement("script");
+  //     script.src = "https://accounts.google.com/gsi/client";
+  //     script.async = true;
+  //     script.defer = true;
+  //     document.body.appendChild(script);
 
-      script.onload = () => {
-        const gIdOnLoadElement = document.getElementById("g_id_onload");
-        if (gIdOnLoadElement) gIdOnLoadElement.setAttribute("data-client_id", googleClientId);
+  //     script.onload = () => {
+  //       requestAnimationFrame(() => {
+  //         const gIdOnLoadElement = document.getElementById("g_id_onload");
+  //         if (gIdOnLoadElement) gIdOnLoadElement.setAttribute("data-client_id", googleClientId);
 
-        window.google.accounts.id.initialize({
-          client_id: googleClientId,
-          callback: async (response: any) => {
-            try {
-              await loginWithGoogle(response.credential);
-              router.push("/");
-            } catch {
-              alert("Google login failed.");
-            }
-          },
-        });
+  //         window.google.accounts.id.initialize({
+  //           client_id: googleClientId,
+  //           callback: async (response: any) => {
+  //             try {
+  //               await loginWithGoogle(response.credential);
+  //               router.push("/");
+  //             } catch {
+  //               alert("Google login failed.");
+  //             }
+  //           },
+  //         });
 
-        window.google.accounts.id.renderButton(
-          document.querySelector(".g_id_signin"),
-          { theme: "outline", size: "large" }
-        );
-      };
+  //         window.google.accounts.id.renderButton(
+  //           document.querySelector(".g_id_signin"),
+  //           { theme: "outline", size: "large" }
+  //         );
+  //       });
+  //     };
+  //   });
+  // }
+
+
+  const handleGoogleLogin = () => {
+    if (!window.google) {
+      console.error("Google SDK not loaded");
+      return;
+    }
+    
+    const client = window.google.accounts.oauth2.initTokenClient({
+      client_id: googleClientId,
+      scope: 'email profile',
+      callback: async (response: { access_token: string; }) => {
+        if (response.access_token) {
+          await loginWithGoogle(response.access_token);
+          router.push("/");
+        }
+      },
     });
-  }
+    
+    client.requestAccessToken();
+  };
 
-  return { user, loading, error, login, loginWithGoogle, logout };
+  return { user, loading, error, login, loginWithGoogle, handleGoogleLogin, logout };
 }

@@ -43,8 +43,17 @@
 
             <p class="text-center text-gray-500 py-2">or</p>
 
+            <!-- 
             <div id="g_id_onload"></div>
             <div class="g_id_signin flex justify-center"></div>
+             -->
+
+            <div @click="handleGoogleLogin"
+                class="cursor-pointer flex items-center justify-center w-full border border-gray-300 rounded-md p-2 bg-white hover:bg-gray-100 transition">
+                <img src="https://developers.google.com/identity/images/g-logo.png" class="h-5 w-5 mr-2"
+                    alt="Google logo" />
+                <span class="text-sm text-gray-700">Sign in with Google</span>
+            </div>
         </div>
     </div>
 </template>
@@ -61,7 +70,8 @@ import Button from "@components/button/Button.vue";
 const router = useRouter();
 const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
-const { login, loading, error } = useAuth(googleClientId);
+const { login, loginWithGoogle, handleGoogleLogin, loading, error } = useAuth(googleClientId);
+
 
 const inputElement = ref(null);
 
