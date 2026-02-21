@@ -1,33 +1,33 @@
-import type {  Semester } from "@pages/students/domain/entities/StudentEntities"
+import type { CollectionCategorySlimEntity } from "@pages/collections/domain/entity/CollectionCategoryEntity"
+import type { Semester } from "@pages/students/domain/entities/StudentEntities"
 import type { StudentMiniEntity } from "@pages/students/domain/entities/StudentEntities"
 
 export interface FeeEntity {
-    id: number
-    student: StudentMiniEntity
-    category_id: number
-    category_name: string
+  id: number
+  student: StudentMiniEntity
+  category_id: number
+  category_name: string
 
-    total_amount: string
-    balance: string
-    status: FeeStatus
+  total_amount: string
+  balance: string
+  status: FeeStatus
 
-    due_date: string
-    issued_by_id?: number | null
-    remarks?: string | null
+  due_date: string
+  issued_by_id?: number | null
+  remarks?: string | null
 
-    academic_year: string
-    semester: Semester
+  academic_year: string
+  semester: Semester
 
-    batch_id?: number | null
+  batch_id?: number | null
 
-    created_at: string
-    updated_at: string
+  created_at: string
+  updated_at: string
 }
 
 
 export type FeeStatus =
   | "pending"
-  | "partial"
   | "paid"
   | "waived"
   | "overdue";
@@ -41,4 +41,22 @@ export interface FeeSlimEntity {
   total_amount: number
   balance: number
   status: FeeStatus
+}
+
+
+export interface FeeDetailedEntity {
+  id: number;
+  student: StudentMiniEntity;
+  category: CollectionCategorySlimEntity;
+  issued_by: string;
+  total_amount: number;
+  balance: number;
+  status: FeeStatus;
+  due_date: string;
+  remarks: string;
+  academic_year: string;
+  semester: string;
+  updated_by: string | null;
+  created_at: string;
+  updated_at: string;
 }

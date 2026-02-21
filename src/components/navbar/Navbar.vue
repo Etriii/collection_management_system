@@ -9,7 +9,8 @@ interface Props {
     contentClass: string
     pageTitle: string
     username: string
-    profilePicPath: string
+    profilePicPath: string | null
+
 }
 
 
@@ -33,7 +34,7 @@ const handleClickOutside = (event: MouseEvent) => {
 
 onMounted(() => {
     document.addEventListener('click', handleClickOutside);
-    console.log(props.profilePicPath)
+    // console.log(props.profilePicPath)
 });
 
 onBeforeUnmount(() => {

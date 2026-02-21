@@ -42,7 +42,6 @@ const goToStudent = (student: StudentEntity) => {
 <template>
     <div class="p-5">
     <BaseTable :columns="columns" :rows="rows" :loading="store.students.loading" v-on:rowClick="goToStudent">
-        <!-- Toolbar -->
         <template #toolbar>
             <div class="flex items-center gap-2">
                 <PerPageSelector v-model="store.students.params.perPage" @onChange="store.setPerPage" />

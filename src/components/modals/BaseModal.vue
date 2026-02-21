@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref, watch } from "vue";
+import { computed, onMounted, onUnmounted, watch } from "vue";
 
 interface Props {
     isModalOpen: boolean;
@@ -112,12 +112,12 @@ onUnmounted(() => { document.body.style.overflow = ""; document.removeEventListe
                             <slot name="title">{{ title }}</slot>
                         </h2>
                         <button :class="['transition-colors cursor-pointer hover:font-bold', currentTheme.closeBtn]"
-                            aria-label="Close" @click="close">
+                            aria-label="Close" @click="close()">
                             ✕
                         </button>
                     </header>
 
-                    <section :class="['px-6 py-4 overflow-y-auto overflow-x-hidden', currentTheme.body]">
+                    <section :class="[' overflow-y-auto overflow-x-hidden', currentTheme.body]">
                         <slot></slot>
                     </section>
 

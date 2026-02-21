@@ -74,7 +74,7 @@ const changePage = (currentPage: number) => {
                             ? 'bg-ic-primary text-white border-ic-primary shadow-sm cursor-default pointer-events-none'
                             : 'bg-white text-gray-700 border-gray-200 hover:bg-blue-50 hover:border-blue-200 cursor-pointer',
 
-                        props.loading && currentPage === page ? 'animate-spin' : ''
+                        props.loading && currentPage === page ? 'animate-pulse' : ''
                     ]" :disabled="currentPage === page || props.loading"
                     @click="currentPage !== page && changePage(page)">
                     {{ page }}

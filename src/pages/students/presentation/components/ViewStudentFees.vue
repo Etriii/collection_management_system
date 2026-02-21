@@ -8,8 +8,9 @@ import { formatCurrency } from '@utils/formatCurrency';
 import PerPageSelector from '@components/tables/PerPageSelector.vue';
 import { formatDate } from '@utils/dateFormat';
 
-import ViewFee from '@pages/fees/presentation/component/modals/ViewFee.vue';
 import CreateStudentFeePayment from '@pages/transactions/presentation/components/CreateStudentFeePayment.vue';
+
+import ViewFeeModal from '@components/modals/fees/ViewFeeModal.vue';
 const props = defineProps<{
     student_id: number
 }>()
@@ -33,8 +34,6 @@ const columns: TableColumn<any>[] = [
     { key: "due_date", label: "Due Date", render: (e) => formatDate(e.due_date) },
 ];
 
-
-
 const setPagelocal = (page: number) => {
     setPage(props.student_id, page)
 }
@@ -42,12 +41,11 @@ const setPerPageLocal = (perPage: number) => {
     setPerPage(props.student_id, perPage)
 }
 
-const selectedFee = ref<number | null>(null)
-    
 const viewFees = (fee: FeeEntity) => {
-    // selectedFee.value = fee.id
-    alert(fee)
+    viewFeetModal.value.fee_id = fee.id
+    viewFeetModal.value.isOpen = true
 }
+
 const createPaymentModal = ref<{ isOpen: boolean, student_id: number }>({
     isOpen: false,
     student_id: 0
@@ -57,12 +55,20 @@ const handleViewFeeForPayments = (id: number) => {
     createPaymentModal.value.isOpen = true
     createPaymentModal.value.student_id = id
 }
+
+const viewFeetModal = ref<{ isOpen: boolean, fee_id: number }>({
+    isOpen: false,
+    fee_id: 0
+})
+
 </script>
 
 <template>
     <!-- <ViewFee v-if="selectedFee" :fee_id="selectedFee" /> -->
-    <CreateStudentFeePayment  v-model:is-modal-open="createPaymentModal.isOpen"
+    <CreateStudentFeePayment v-model:is-modal-open="createPaymentModal.isOpen"
         :student_id="createPaymentModal.student_id" />
+
+    <ViewFeeModal v-model:is-open="viewFeetModal.isOpen" :feeId="viewFeetModal.fee_id" />
 
     <BaseTable :columns="columns" :rows="fees.data.data" :loading="fees.loading" v-on:rowClick="viewFees">
         <template #toolbar>
@@ -85,7 +91,8 @@ const handleViewFeeForPayments = (id: number) => {
 
         <template #pagination>
             <TablePagination v-if="fees.params" :current-page="fees.data.current_page" :per-page="fees.data.per_page"
-                :total-pages="fees.data.total_pages" :total_items="fees.data.total_items" @change="setPagelocal" :loading="fees.loading" />
+                :total-pages="fees.data.total_pages" :total_items="fees.data.total_items" @change="setPagelocal"
+                :loading="fees.loading" />
         </template>
     </BaseTable>
 </template>

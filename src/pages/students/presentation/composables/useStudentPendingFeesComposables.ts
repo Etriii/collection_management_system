@@ -12,7 +12,6 @@ export function useStudentPendingFees() {
     async function fetchPendingFees(student_id: number) {
         loading.value = true
         try {
-
             const data = await getStudentFeesApi(student_id, {
                 per_page: 100,
                 current_page: 1,
@@ -28,7 +27,6 @@ export function useStudentPendingFees() {
             alert.show("Error Fetch Fees Par", "error")
         }
     }
-
 
     return {fees, loading, fetchPendingFees}
 }

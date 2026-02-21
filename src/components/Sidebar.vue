@@ -27,7 +27,7 @@ watch(
 </script>
 
 <template>
-    <aside class="left-0 inset-y-0 transition-all duration-300 shadow-lg bg-white" :class="[
+    <aside class="left-0 inset-y-0 transition-all duration-300 shadow-2xl bg-white " :class="[
         props.sidebarWidth,
         props.isSidebarOpen ? 'translate-x-0' : '-translate-x-full',
         props.isMobile

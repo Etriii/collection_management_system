@@ -58,17 +58,19 @@ const totalPayment = computed(() => Object.values(amounts.value).reduce((t, v) =
 <template>
     <BaseModal v-model:is-modal-open="isModalOpen" :title="'Pay Fees'" :close-on-backdrop="false" size="xxl"
         v-on:on-close="close">
-        <div class="font-medium pb-2">Pending Fees</div>
-        <BaseTable :columns="columns" :rows="fees" :loading="loading">
-            <template #cell-amount="{ row }">
-                <input type="number" min="0" :max="row.balance" :value="amounts[row.id] ?? 0"
-                    @input="amounts[row.id] = +($event.target as HTMLInputElement).value"
-                    class="w-full text-right rounded-md border-gray-300 px-3 py-2 border " />
-            </template>
-        </BaseTable>
+        <div class="p-5">
+            <div class="font-medium pb-2">Pending Fees</div>
+            <BaseTable :columns="columns" :rows="fees" :loading="loading">
+                <template #cell-amount="{ row }">
+                    <input type="number" min="0" :max="row.balance" :value="amounts[row.id] ?? 0"
+                        @input="amounts[row.id] = +($event.target as HTMLInputElement).value"
+                        class="w-full text-right rounded-md border-gray-300 px-3 py-2 border " />
+                </template>
+            </BaseTable>
+        </div>
 
         <template #footer>
-            <div class="pt-6 flex justify-between items-center border-t flex-col sm:flex-row gap-5">
+            <div class="pt-6  flex justify-between items-center border-t border-t-gray-300 flex-col sm:flex-row gap-5">
                 <div class=" flex items-center space-x-3">
                     <div class="flex items-center gap-2 text-md text-gray-500">
                         <span>Total Fees</span>
@@ -85,7 +87,8 @@ const totalPayment = computed(() => Object.values(amounts.value).reduce((t, v) =
                 </div>
 
                 <div class="flex gap-3">
-                    <Button type="button" variant="cancel" @click="close" class="" :disabled="payPendingFeesBulkLoading">
+                    <Button type="button" variant="cancel" @click="close" class=""
+                        :disabled="payPendingFeesBulkLoading">
                         Cancel
                     </Button>
 
