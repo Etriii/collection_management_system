@@ -3,6 +3,7 @@ export const API_V1 = "/api/v1";
 export const ENDPOINTS = {
   auth: {
     login: `${API_V1}/login/`,
+    logout: `${API_V1}/logout/`,
     refresh: `${API_V1}/token/refresh/`,
     google: `${API_V1}/auth/google/`,
   },

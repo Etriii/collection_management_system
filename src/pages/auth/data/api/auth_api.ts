@@ -44,3 +44,13 @@ export async function fetchProfile(): Promise<ApiResponse<UserProfile>> {
         throw new Error(err.response?.result?.detail || "Profile fetch failed");
     }
 }
+
+
+export async function logoutApi(refreshToken: string): Promise<ApiResponse<TokenResponse>> {
+    try {
+        const result = await api.post<ApiResponse<TokenResponse>>(ENDPOINTS.auth.logout, { "refresh": refreshToken });
+        return result;
+    } catch (err: any) {
+        throw new Error(err.response?.result?.errors || "Invalid Token");
+    }
+}

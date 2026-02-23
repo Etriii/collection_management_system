@@ -52,7 +52,8 @@ class ApiService {
                 { headers: { "Content-Type": "application/json" } }
               );
 
-              localStorage.setItem("accessToken", res.data.data.access);
+              localStorage.setItem("accessToken", res.data.data.access); 
+              localStorage.setItem("refreshToken", res.data.data.refresh);
 
               // Retry original request with new token
               if (originalRequest.headers)
