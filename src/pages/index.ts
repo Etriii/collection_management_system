@@ -16,3 +16,5 @@ export {default as Fees} from '@pages/fees/Fees.vue'
 export {default as GeneratedFees} from '@pages/geneated_fees/GeneratedFees.vue';
 
 export { default as PageNotFound } from './PageNotFound.vue'
+export {default as Unauthorized} from '@pages/auth/UnAuthorized.vue'
+export {default as ViewStudent} from '@pages/students/presentation/components/StudentView2.vue'

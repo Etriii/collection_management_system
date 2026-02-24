@@ -1,4 +1,4 @@
-import { computed, onMounted } from "vue";
+import { computed } from "vue";
 import { useRouter } from "vue-router";
 import { useAuthStore } from "../stores/useAuthStore";
 
@@ -18,6 +18,9 @@ export function useAuth(googleClientId?: string) {
 
   const login = async (username: string, password: string) => {
     await store.login(username, password);
+    if (isAllowedToLogin()) {
+      router.push('/auth/unauthorized');
+    }
   };
 
   const loginWithGoogle = async (token: string) => {
@@ -70,20 +73,35 @@ export function useAuth(googleClientId?: string) {
       console.error("Google SDK not loaded");
       return;
     }
-    
+
     const client = window.google.accounts.oauth2.initTokenClient({
       client_id: googleClientId,
       scope: 'email profile',
       callback: async (response: { access_token: string; }) => {
         if (response.access_token) {
           await loginWithGoogle(response.access_token);
+          if (!isAllowedToLogin()) {
+            router.push('/unauthorized');
+            return
+          }
           router.push("/");
         }
       },
     });
-    
+
     client.requestAccessToken();
   };
 
-  return { user, loading, error, login, loginWithGoogle, handleGoogleLogin, logout };
+  function isAllowedToLogin(): boolean {
+    if (!user.value?.groups) return false
+    return user.value.groups.some((g: string) => {
+      const group = g.toLowerCase()
+      return (
+        group === "student" ||
+        group.includes("collection")
+      )
+    })
+  }
+
+  return { user, loading, error, login, loginWithGoogle, handleGoogleLogin, logout, isAllowedToLogin };
 }

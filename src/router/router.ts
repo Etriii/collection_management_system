@@ -3,12 +3,12 @@ import type { RouteRecordRaw } from 'vue-router'
 
 import AuthenticatedLayout from "@layouts/AuthenticatedLayout.vue";
 
-import { Dashboard, Transactions, GCashPayments, Collections, Reports, Users, Activities, MyAccount, AdminManager, Login, AccountRecovery, PageNotFound, AccountRecoveryConfirmaion, Fees, GeneratedFees } from '@pages/index.ts';
+import { Dashboard, Transactions, GCashPayments, Collections, Reports, Users, Activities, MyAccount, AdminManager, Login, AccountRecovery, PageNotFound, AccountRecoveryConfirmaion, Fees, GeneratedFees, ViewStudent, Unauthorized } from '@pages/index.ts';
 
 import { StudentRoutes } from './index';
 import LogInSignupLayout from "@layouts/LogInSignupLayout.vue";
 import { useAuthStore } from "@pages/auth/presentation/stores/useAuthStore";
-
+import { useAuth } from "@pages/auth/presentation/composables/useAuth";
 /* search the difference between 
 createWebHistory and createWebHashHistory
 */
@@ -56,7 +56,7 @@ const routes: RouteRecordRaw[] = [
                 path: 'collections',
                 name: 'collections',
                 component: Collections,
-                meta: { pageTitle: 'Collections' },
+                meta: { pageTitle: 'Collections', roles: [] },
             },
             {
                 path: 'users',
@@ -91,9 +91,14 @@ const routes: RouteRecordRaw[] = [
             {
                 path: '/students/view/:id',
                 name: 'ViewStudent',
-                component: () => import('@/pages/students/ViewStudent.vue')
-            }
+                component: ViewStudent
+            },
         ]
+    },
+    {
+        path: '/unauthorized',
+        component: Unauthorized,
+        meta: { requiresAuth: true },
     },
     {
         path: '/auth',
@@ -115,7 +120,7 @@ const routes: RouteRecordRaw[] = [
                 path: 'account-recovery/confirmation',
                 name: 'Account Recovery Confirmation',
                 component: AccountRecoveryConfirmaion,
-            }
+            },
         ]
     },
     {
@@ -130,7 +135,9 @@ const router = createRouter({
     routes: routes
 });
 
+
 router.beforeEach(async (to, _from, next) => {
+    const { user } = useAuth();
     const authStore = useAuthStore();
 
     if (!authStore.initialized) {
@@ -145,6 +152,13 @@ router.beforeEach(async (to, _from, next) => {
 
     if (to.path.startsWith("/auth") && isLoggedIn) {
         return next("/");
+    }
+
+    const allowedRoles = to.meta.roles as string[] | undefined
+    if (allowedRoles && user.value) {
+        if (!allowedRoles.includes(user.value.groups)) {
+            return next("/auth/unauthorized")
+        }
     }
 
     next();

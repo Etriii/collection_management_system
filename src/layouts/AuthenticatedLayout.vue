@@ -1,10 +1,10 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue';
+import { computed, ref } from 'vue';
 import { useRoute } from 'vue-router';
 import Sidebar from '@components/Sidebar.vue';
 import Navbar from '@components/navbar/Navbar.vue';
-import { useAuthStore } from '@pages/auth/presentation/stores/useAuthStore';
 import { useScreenWidth } from '@utils/composables/useScreenWidth';
+import { useAuth } from '@pages/auth/presentation/composables/useAuth';
 
 const route = useRoute();
 const pageTitle = computed(() => route.meta.pageTitle as string);
@@ -25,8 +25,8 @@ const contentClass = computed(() => {
 })
 
 
-const store = useAuthStore();
-const currentUser = computed(() => store.getCurrentUser)
+const { user } = useAuth();
+const currentUser = user.value
 
 const { width } = useScreenWidth()
 const isMobile = computed(() => width.value < 768)
@@ -37,7 +37,7 @@ const isMobile = computed(() => width.value < 768)
         @click="isSidebarOpen = false">
     </div>
 
-    <Sidebar :sidebarWidth="sidebarWidth" :isSidebarOpen="isSidebarOpen" :isMobile="isMobile" />
+    <Sidebar :sidebarWidth="sidebarWidth" :isSidebarOpen="isSidebarOpen" :isMobile="isMobile" :user="user" />
 
     <Navbar :isSidebarOpen="isSidebarOpen" :contentClass="contentClass" :toggleSidebar="toggleSidebar"
         :pageTitle="pageTitle" :username="currentUser.username" :profilePicPath="currentUser.profile" />

@@ -7,11 +7,13 @@ interface Props {
     sidebarWidth: string
     isSidebarOpen?: boolean
     isMobile: boolean
+    user: UserEntity
 }
 
 const props = defineProps<Props>();
 
-import { watch } from 'vue'
+import { computed, watch } from 'vue'
+import type { UserEntity } from '@pages/auth/domain/entities/user_entity';
 
 watch(
     () => props.isSidebarOpen,
@@ -23,6 +25,8 @@ watch(
         }
     }
 )
+
+const isStudent = props.user.groups.includes("Students") ? true : false;
 
 </script>
 
@@ -40,15 +44,20 @@ watch(
         </div>
 
         <div class="space-y-1 px-2 py-2 overflow-y-auto h-[93vh]">
-            <SidebarLink :icon="LayoutDashboard" label="Dashboard" to="/" exact />
-            <SidebarLink :icon="UsersRound" label="Students" to="/students" />
-            <SidebarLink :icon="HandCoins" label="Fees" to="/fees" />
-            <SidebarLink :icon="GitPullRequestArrow" label="Generated Fees" to="/generated-fees" />
-            <SidebarLink :icon="ArrowLeftRight" label="Transaction" to="/transactions" />
-            <SidebarLink :icon="BanknoteArrowDown" label="GCash Payments" to="/gcash-payments" />
-            <SidebarLink :icon="LayoutGrid" label="Collections" to="/collections" />
-            <SidebarLink :icon="FileText" label="Reports" to="/reports" />
-            <SidebarLink :icon="History" label="Activity" to="/activities" />
+            <div v-if="!isStudent">
+                <SidebarLink :icon="LayoutDashboard" label="Dashboard" to="/" exact />
+                <SidebarLink :icon="UsersRound" label="Students" to="/students" />
+                <SidebarLink :icon="HandCoins" label="Fees" to="/fees" />
+                <SidebarLink :icon="GitPullRequestArrow" label="Generated Fees" to="/generated-fees" />
+                <SidebarLink :icon="ArrowLeftRight" label="Transaction" to="/transactions" />
+                <SidebarLink :icon="BanknoteArrowDown" label="GCash Payments" to="/gcash-payments" />
+                <SidebarLink :icon="LayoutGrid" label="Collections" to="/collections" />
+                <SidebarLink :icon="FileText" label="Reports" to="/reports" />
+                <SidebarLink :icon="History" label="Activity" to="/activities" />
+            </div>
+            <div v-else>
+                <SidebarLink :icon="HandCoins" label="Fees" to="/fees" />
+            </div>
         </div>
     </aside>
 </template>

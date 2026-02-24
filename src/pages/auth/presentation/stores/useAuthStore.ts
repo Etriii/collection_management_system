@@ -60,8 +60,8 @@ export const useAuthStore = defineStore("auth", {
       }
     },
     logout() {
-      repo.logout();
       this.user = null;
+      repo.logout();
     },
   },
 });

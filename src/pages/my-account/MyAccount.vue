@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
-import { useAuthStore } from '@pages/auth/presentation/stores/useAuthStore'
+import { onMounted, ref } from 'vue'
 import type { Institute } from '@core/models'
+import { useAuth } from '@pages/auth/presentation/composables/useAuth';
 
 const default_profile = 'https://i.pinimg.com/736x/34/41/65/3441659db45374c4303b0ad3308db348.jpg';
 
@@ -14,8 +14,8 @@ const form = ref({
     institute: null as Institute | null
 })
 
-const store = useAuthStore();
-const currentUser = computed(() => store.getCurrentUser)
+const {user} = useAuth();
+const currentUser = user
 
 const onProfileChange = (event: Event) => {
     const target = event.target as HTMLInputElement

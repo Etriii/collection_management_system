@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { onBeforeUnmount, onMounted, ref } from 'vue';
-import { Menu, Bell, ChevronDown } from 'lucide-vue-next';
+import { PanelLeftClose, Bell, ChevronDown } from 'lucide-vue-next';
 import ProfileMenu from '@components/navbar/partials/ProfileMenu.vue';
 import temp_image from '@assets/default_profile.jpg'
 
@@ -9,7 +9,8 @@ interface Props {
     contentClass: string
     pageTitle: string
     username: string
-    profilePicPath: string | null
+    profilePicPath: string | null,
+    isSidebarOpen: boolean
 }
 
 
@@ -47,7 +48,7 @@ onBeforeUnmount(() => {
         :class="props.contentClass">
         <div class="flex items-center gap-4">
             <button @click="props.toggleSidebar" class="cursor-pointer">
-                <Menu></Menu>
+                <PanelLeftClose class="transition-transform duration-700" :class="{ '-scale-x-100': isSidebarOpen }" />
             </button>
 
             <p>{{ props.pageTitle }}</p>
