@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, computed} from "vue"
+import CollectionCard from "@components/card/CollectionCard.vue"
 import {
   Plus,
   Search,
@@ -9,8 +10,8 @@ import {
   CalendarCheck,
   LayoutGrid,
   Wallet
-
 } from "lucide-vue-next"
+
 
 type Status = "active" | "completed" | "draft"
 // type Category = "academic" | "facilities" | "activities" | "miscellaneous"
@@ -88,7 +89,7 @@ const filteredCollections = computed(() =>
     // const matchesFilter =
       // activeFilter.value === "all" ||
       // c.status === activeFilter.value 
-    return matchesSearch 
+    return matchesSearch  
   })
 )
 
@@ -185,7 +186,35 @@ function handleDelete(id: string) {
 
       <!-- Stats -->
       <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 mb-8">
-        <div class="p-6 bg-white rounded-xl shadow flex items-center justify-between">
+        <CollectionCard 
+        :text1="collections.length" 
+        text2="Total Collections" 
+        text3="Number of Total Collection" 
+        :icon="LayoutGrid" 
+        iconColor="text-blue-500" 
+        textColor="text-blue-600"/>
+        <CollectionCard 
+        :text1="stats.activeCount" 
+        text2="Active Collections" 
+        text3="Number of Active Collections" 
+        :icon="CheckCircle" 
+        iconColor="text-green-500" 
+        textColor="text-green-600"/>
+        <CollectionCard 
+        :text1="stats.completedCount" 
+        text2="Completed Collections" 
+        text3="Number of Completed Collections" 
+        :icon="CalendarCheck" 
+        iconColor="text-blue-500" 
+        textColor="text-blue-600"/>
+        <CollectionCard 
+        :text1="stats.totalCollected" 
+        text2="Total Amount Collected" 
+        text3="Overall Collection Amount" 
+        :icon="Wallet" 
+        iconColor="text-purple-500" 
+        textColor="text-purple-600"/>
+        <!-- <div class="p-6 bg-white rounded-xl shadow flex items-center justify-between">
           <div>
             <div class="text-3xl font-bold">{{ collections.length }}</div>
             <p class="text-sm text-gray-500">Total Collections</p>
@@ -216,11 +245,11 @@ function handleDelete(id: string) {
             <p class="text-xs text-gray-400">Overall Collected Payments</p>
           </div>
           <Wallet class="h-8 w-8 text-purple-500" />
-        </div>
+        </div> -->
       </div>
 
       <!-- main -->
-      <div class="bg-white rounded-xl shadow p-6">
+      <div class="bg-white rounded-xl shadow p-5">
 
         <div class="flex justify-end mb-6">
           <button
@@ -364,7 +393,7 @@ function handleDelete(id: string) {
               Create Collection
             </button>
           </div>
-        </form>
+        </form  >
       </div>
     </div>
 
@@ -393,7 +422,7 @@ function handleDelete(id: string) {
             <label for="editdescription" class="block mb-1 text-sm font-medium text-gray-700">Description</label>
             <textarea id="editdescription" v-model="editCollection.description"
               class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              placeholder="Describe what this fee covers..." />
+              placeholder="Describe what this fee covers..." ></textarea>
           </div>
 
           <div class="flex justify-end gap-3 pt-4">
