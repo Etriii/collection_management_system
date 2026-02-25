@@ -8,11 +8,11 @@ export interface localStorageKeys {
   refreshToken: string;
 }
 
-export const STUDENT_STATUSES = ["enrolled", "graduated","dropped",] as const;
+export const STUDENT_STATUSES = ["enrolled", "graduated", "dropped",] as const;
 export type StudentStatus = typeof STUDENT_STATUSES[number];
 
-
 export const Roles = {
-    STUDENT: 'student',
-    COLLETCION_ADMIN: 'Collection Management System Admins',
+  STUDENT: 'Students',
+  ADMIN: 'Collection Management System Admins',
+  STAFF: 'Collection Management System Staffs',
 } as const

@@ -25,9 +25,9 @@
                     Go to Dashboard
                 </router-link>
 
-                <button @click="$router.back()"
-                    class="px-5 py-2.5 rounded-xl border border-gray-300 text-sm font-medium text-gray-700 hover:bg-gray-100 transition hover:cursor-pointer">
-                    Go Back
+                <button @click="logout"
+                    class="px-5 py-2.5 rounded-xl border border-red-300 text-sm font-medium text-red-700 hover:bg-red-100 transition hover:cursor-pointer">
+                    Log Out
                 </button>
             </div>
 
@@ -36,4 +36,6 @@
 </template>
 
 <script setup lang="ts">
+import { useAuth } from './presentation/composables/useAuth';
+const { logout } = useAuth()
 </script>

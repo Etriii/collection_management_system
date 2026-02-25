@@ -18,9 +18,6 @@ export function useAuth(googleClientId?: string) {
 
   const login = async (username: string, password: string) => {
     await store.login(username, password);
-    if (isAllowedToLogin()) {
-      router.push('/auth/unauthorized');
-    }
   };
 
   const loginWithGoogle = async (token: string) => {
@@ -80,10 +77,6 @@ export function useAuth(googleClientId?: string) {
       callback: async (response: { access_token: string; }) => {
         if (response.access_token) {
           await loginWithGoogle(response.access_token);
-          if (!isAllowedToLogin()) {
-            router.push('/unauthorized');
-            return
-          }
           router.push("/");
         }
       },
@@ -92,16 +85,15 @@ export function useAuth(googleClientId?: string) {
     client.requestAccessToken();
   };
 
-  function isAllowedToLogin(): boolean {
+  function isStudent(): boolean {
     if (!user.value?.groups) return false
     return user.value.groups.some((g: string) => {
       const group = g.toLowerCase()
       return (
-        group === "student" ||
-        group.includes("collection")
+        group === "students"
       )
     })
   }
 
-  return { user, loading, error, login, loginWithGoogle, handleGoogleLogin, logout, isAllowedToLogin };
+  return { user, loading, error, login, loginWithGoogle, handleGoogleLogin, logout, isStudent }; //isAllowedToLogin, 
 }
