@@ -48,9 +48,8 @@ onBeforeUnmount(() => {
         :class="props.contentClass">
         <div class="flex items-center gap-4">
             <button @click="props.toggleSidebar" class="cursor-pointer">
-                <PanelLeftClose class="transition-transform duration-700" :class="{ '-scale-x-100': isSidebarOpen }" />
+                <PanelLeftClose class="transition-transform duration-500" :class="{ '-scale-x-100': !isSidebarOpen }" />
             </button>
-
             <p>{{ props.pageTitle }}</p>
         </div>
 

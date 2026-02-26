@@ -7,7 +7,7 @@ export { default as Reports } from './reports/Reports.vue';
 export { default as Users } from './users/Users.vue';
 export { default as Activities } from './activities/Activities.vue';
 
-export { default as MyAccount } from './my-account/MyAccount.vue';
+export { default as MyAccount } from './my_account/MyAccount.vue';
 export { default as AdminManager } from './admin-manager/AdminManager.vue';
 export { default as Login } from './auth/Login.vue';
 export { default as AccountRecovery } from './auth/AccountRecovery.vue';
@@ -16,5 +16,8 @@ export {default as Fees} from '@pages/fees/Fees.vue'
 export {default as GeneratedFees} from '@pages/geneated_fees/GeneratedFees.vue';
 
 export { default as PageNotFound } from './PageNotFound.vue'
-export {default as Unauthorized} from '@pages/auth/UnAuthorized.vue'
+export {default as Unauthorized} from '@pages/auth/Unauthorized.vue'
 export {default as ViewStudent} from '@pages/students/presentation/components/StudentView2.vue'
+
+export{default as MyTransactions} from '@pages/my_transctions/MyTransactions.vue'
+export{default as MyGcashPayments} from '@pages/my_gcash_payments/MyGcashPayments.vue'

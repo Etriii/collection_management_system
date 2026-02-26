@@ -2,7 +2,7 @@
 import { useAuth } from '@pages/auth/presentation/composables/useAuth';
 import { UserRound, ShieldUser, LogOut } from 'lucide-vue-next';
 
-const { logout } = useAuth();
+const { logout, isStudent } = useAuth();
 
 </script>
 
@@ -16,7 +16,7 @@ const { logout } = useAuth();
                 <span>My Account</span>
             </div>
         </RouterLink>
-        <RouterLink to="/admin-manager" v-slot="{ isActive }">
+        <RouterLink v-if="!isStudent()" to="/admin-manager" v-slot="{ isActive }">
             <div :class="[isActive ? 'bg-ic-primary text-white' : 'text-gray-500']"
                 class="flex items-center gap-2 px-3 py-2 text-sm hover:bg-ic-primary hover:text-white">
                 <ShieldUser />

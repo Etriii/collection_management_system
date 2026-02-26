@@ -1,19 +1,16 @@
 <script setup lang="ts">
-import { ArrowLeftRight, FileText, History, LayoutDashboard, LayoutGrid, BanknoteArrowDown, UsersRound, HandCoins, GitPullRequestArrow } from 'lucide-vue-next';
+import { ArrowLeftRight, FileText, History, LayoutDashboard, LayoutGrid, BanknoteArrowDown, UsersRound, HandCoins, GitPullRequestArrow, CircleQuestionMark } from 'lucide-vue-next';
 import SidebarLink from '@components/SidebarLink.vue';
 import icsa_logo from '@assets/icsa_logo.png';
-
+import { watch } from 'vue'
+import { useAuth } from '@pages/auth/presentation/composables/useAuth';
 interface Props {
     sidebarWidth: string
     isSidebarOpen?: boolean
     isMobile: boolean
-    user: UserEntity
 }
 
 const props = defineProps<Props>();
-
-import { computed, watch } from 'vue'
-import type { UserEntity } from '@pages/auth/domain/entities/user_entity';
 
 watch(
     () => props.isSidebarOpen,
@@ -26,7 +23,7 @@ watch(
     }
 )
 
-const isStudent = props.user.groups.includes("Students") ? true : false;
+const { isStudent } = useAuth()
 
 </script>
 
@@ -44,20 +41,17 @@ const isStudent = props.user.groups.includes("Students") ? true : false;
         </div>
 
         <div class="space-y-1 px-2 py-2 overflow-y-auto h-[93vh]">
-            <div v-if="!isStudent">
-                <SidebarLink :icon="LayoutDashboard" label="Dashboard" to="/" exact />
-                <SidebarLink :icon="UsersRound" label="Students" to="/students" />
-                <SidebarLink :icon="HandCoins" label="Fees" to="/fees" />
-                <SidebarLink :icon="GitPullRequestArrow" label="Generated Fees" to="/generated-fees" />
-                <SidebarLink :icon="ArrowLeftRight" label="Transaction" to="/transactions" />
-                <SidebarLink :icon="BanknoteArrowDown" label="GCash Payments" to="/gcash-payments" />
-                <SidebarLink :icon="LayoutGrid" label="Collections" to="/collections" />
-                <SidebarLink :icon="FileText" label="Reports" to="/reports" />
-                <SidebarLink :icon="History" label="Activity" to="/activities" />
-            </div>
-            <div v-else>
-                <SidebarLink :icon="HandCoins" label="Fees" to="/fees" />
-            </div>
+            <SidebarLink :icon="LayoutDashboard" label="Dashboard" to="/" exact />
+            <SidebarLink v-if="!isStudent()" :icon="UsersRound" label="Students" to="/students" />
+            <SidebarLink :icon="HandCoins" label="Fees" to="/fees" />
+            <SidebarLink v-if="!isStudent()" :icon="GitPullRequestArrow" label="Generated Fees" to="/generated-fees" />
+            <SidebarLink v-if="!isStudent()" :icon="ArrowLeftRight" label="Transaction" to="/transactions" />
+            <SidebarLink v-if="!isStudent()" :icon="BanknoteArrowDown" label="GCash Payments" to="/gcash-payments" />
+            <SidebarLink v-if="!isStudent()" :icon="LayoutGrid" label="Collections" to="/collections" />
+            <SidebarLink v-if="!isStudent()" :icon="FileText" label="Reports" to="/reports" />
+            <SidebarLink v-if="!isStudent()" :icon="History" label="Activity" to="/activities" />
+            <SidebarLink v-if="isStudent()" :icon="CircleQuestionMark" label="My Transactions" to="/my-transactions" />
+            <SidebarLink v-if="isStudent()" :icon="CircleQuestionMark" label="My Gcash payments" to="/my-gcash-payments" />
         </div>
     </aside>
 </template>

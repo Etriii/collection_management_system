@@ -70,7 +70,7 @@ onMounted(() => {
                 </div>
 
 
-                <h2 class="mt-4 font-semibold text-lg text-center">{{ form.first_name || 'User' }} {{ form.last_name ||
+                <h2 class="mt-4 font-semibold text-lg text-center">{{ form.first_name || '?' }} {{ form.last_name ||
                     '' }}</h2>
 
                 <div v-if="form.institute"
@@ -123,7 +123,7 @@ onMounted(() => {
                     <div class="space-y-1.5">
                         <label class="text-[11px] font-bold uppercase tracking-wider text-slate-500 ml-1">Email
                             Address</label>
-                        <input v-model="form.email" type="email"
+                        <input v-model="form.email" type="email" :disabled="true        "
                             class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 focus:bg-white focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all outline-none"
                             placeholder="name@company.com" />
                     </div>
