@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, computed} from "vue"
-import CollectionCard from "@components/card/CollectionCard.vue"
+import CollectionCard from "./components/card/CollectionCard.vue"
 import {
   Plus,
   Search,
