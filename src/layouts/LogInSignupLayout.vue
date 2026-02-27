@@ -17,7 +17,7 @@ const appName = import.meta.env.VITE_APP_NAME
         </div>
 
         <div
-            class="flex w-full lg:w-1/2 flex-col items-center justify-center bg-[url('/images/bg.png')] bg-cover bg-center p-4 lg:bg-[#ededed] lg:bg-[url('')]">
+            class="flex w-full lg:w-1/2 flex-col items-center justify-center bg-[url('/images/bg.png')] bg-cover bg-right p-4 lg:bg-[#ededed] lg:bg-[url('')]">
             <img :src=logoImage alt="ICSA Logo" class="z-10 mb-4 h-24 w-24 lg:hidden" style="ba">
             <h2 class="z-10 mb-5 max-w-xl text-center text-xl font-bold text-white lg:hidden lg:text-2xl xl:text-3xl">
                 ICSACMS: Institute of Computing Student Association Collection Management System

@@ -65,24 +65,37 @@ export function useAuth(googleClientId?: string) {
   // }
 
 
-  const handleGoogleLogin = () => {
-    if (!window.google) {
-      console.error("Google SDK not loaded");
-      return;
-    }
+  // const handleGoogleLogin = () => {
+  //   if (!window.google) {
+  //     console.error("Google SDK not loaded");
+  //     return;
+  //   }
 
-    const client = window.google.accounts.oauth2.initTokenClient({
-      client_id: googleClientId,
-      scope: 'email profile',
-      callback: async (response: { access_token: string; }) => {
-        if (response.access_token) {
-          await loginWithGoogle(response.access_token);
-          router.push("/");
-        }
-      },
-    });
+  //   const client = window.google.accounts.oauth2.initTokenClient({
+  //     client_id: googleClientId,
+  //     scope: 'email profile',
+  //     callback: async (response: { access_token: string; }) => {
+  //       if (response.access_token) {
+  //         await loginWithGoogle(response.access_token);
+  //         router.push("/");
+  //       }
+  //     },
+  //   });
 
-    client.requestAccessToken();
+  //   client.requestAccessToken();
+  // };
+
+
+  const googleLoginRedirect = () => {
+    const clientId = googleClientId;
+    const redirectUri = encodeURIComponent(import.meta.env.VITE_REDIRECT_URI);
+    const scope = encodeURIComponent("email profile openid");
+    const responseType = "id_token";
+    const nonce = crypto.randomUUID(); 
+
+    const url = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=${responseType}&scope=${scope}&nonce=${nonce}`;
+
+    window.location.href = url; 
   };
 
   function isStudent(): boolean {
@@ -95,5 +108,5 @@ export function useAuth(googleClientId?: string) {
     })
   }
 
-  return { user, loading, error, login, loginWithGoogle, handleGoogleLogin, logout, isStudent }; //isAllowedToLogin, 
+  return { user, loading, error, login, loginWithGoogle, googleLoginRedirect, logout, isStudent }; //isAllowedToLogin, handleGoogleLogin
 }

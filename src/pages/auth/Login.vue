@@ -48,7 +48,7 @@
             <div class="g_id_signin flex justify-center"></div>
              -->
 
-            <div @click="handleGoogleLogin"
+            <div @click="googleLoginRedirect"
                 class="cursor-pointer flex items-center justify-center w-full border border-gray-300 rounded-md p-2 bg-white hover:bg-gray-100 transition">
                 <img src="https://developers.google.com/identity/images/g-logo.png" class="h-5 w-5 mr-2"
                     alt="Google logo" />
@@ -70,7 +70,7 @@ import Button from "@components/button/Button.vue";
 const router = useRouter();
 const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
-const { login, loginWithGoogle, handleGoogleLogin, loading, error } = useAuth(googleClientId);
+const { login, loginWithGoogle, googleLoginRedirect, loading, error } = useAuth(googleClientId);
 
 
 const inputElement = ref(null);
@@ -83,9 +83,26 @@ const loginForm = ref({
     passwordIconToggled: false
 });
 
-onMounted(() => {
+onMounted(async () => {
     if (inputElement.value && inputElement.value.input) {
         inputElement.value.input.focus();
+    }
+    const hashParams = new URLSearchParams(
+        window.location.hash.replace("#", "?")
+    );
+
+    const idToken = hashParams.get("id_token");
+
+    if (idToken) {
+        try {
+            await loginWithGoogle(idToken);
+            router.replace("/"); 
+        } catch (error) {
+            console.error("Google login failed", error);
+            router.replace("/auth/login");
+        }
+    } else {
+        router.replace("/auth/login");
     }
 });
 
