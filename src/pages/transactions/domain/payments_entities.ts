@@ -10,7 +10,7 @@ export interface PaymentEntity {
     payment_method: PaymentMethod
 
     received_by: string
-    payment_submission: string | null
+    payment_submission: number
 
     created_at: string
     updated_at: string

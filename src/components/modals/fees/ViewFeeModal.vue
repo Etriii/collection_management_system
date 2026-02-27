@@ -30,7 +30,7 @@ const initials = computed(() => {
 <template>
     <BaseModal :isModalOpen="isModalOpen" title="View Fee" size="xxl" v-on:onClose="close" :closeOnBackdrop="false">
         <div v-if="loading"
-            class="w-lg mx-auto bg-white border border-slate-200 rounded-2xl shadow-xl overflow-hidden animate-pulse">
+            class="w-md lg:w-lg  mx-auto bg-white border border-slate-200 rounded-2xl shadow-xl overflow-hidden animate-pulse">
             <div class="px-8 py-3 border-b border-slate-100 bg-slate-50/30">
                 <div class="flex items-center justify-between">
                     <div class="h-3 bg-slate-200 rounded w-1/4"></div>
@@ -88,7 +88,7 @@ const initials = computed(() => {
 
         <div v-if="!loading && fee" class="space-y-6 ">
             <div
-                class="w-lg mx-auto bg-white border border-slate-200 rounded-2xl shadow-xl overflow-hidden font-sans text-lg">
+                class="w-md lg:w-lg mx-auto bg-white border border-slate-200 rounded-2xl shadow-xl overflow-hidden font-sans text-lg">
                 <div class="px-8 py-3 border-b border-slate-100 bg-gradient-to-r from-white via-slate-50/40 to-white">
                     <div class="flex items-center justify-between">
 
@@ -145,7 +145,7 @@ const initials = computed(() => {
                             <div class="pt-2 mt-2 border-t border-slate-200 flex justify-between items-center">
                                 <span class="font-bold text-slate-900 text-sm">Outstanding Balance</span>
                                 <span class="text-xl font-black text-rose-600">{{ formatCurrency(fee.balance)
-                                }}</span>
+                                    }}</span>
                             </div>
                         </div>
                     </div>

@@ -34,13 +34,18 @@ export type FeeStatus =
 
 
 export interface FeeSlimEntity {
-  id: number
-  student: StudentMiniEntity
-  category_id: number
-  category_name: string
-  total_amount: number
-  balance: number
-  status: FeeStatus
+id: number;
+  student: StudentMiniEntity;
+  category_id: number;
+  category_name: string;
+  total_amount: number; 
+  balance: string;
+  status: FeeStatus;
+  due_date: string; 
+  issued_by: string;
+  remarks: string;
+  academic_year: string;
+  semester: Semester;
 }
 
 
