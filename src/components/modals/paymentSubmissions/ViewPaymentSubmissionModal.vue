@@ -49,11 +49,67 @@ const badgeClasses = computed(() => {
             return 'bg-slate-100 text-slate-600'
     }
 })
+
+const clickViewFee = (id: number) => {
+    alert(`to view ${id}`)
+}
 </script>
 
 <template>
     <BaseModal :isModalOpen="isModalOpen" title="Payment Submission" size="xl" :closeOnBackdrop="false"
         v-on:onClose="close">
+        <div v-if="loading" class="space-y-6 animate-pulse">
+            <div class="w-md lg:w-lg mx-auto bg-white border border-slate-200 rounded-2xl shadow-xl overflow-hidden">
+
+                <div class="px-8 py-6 border-b border-slate-100">
+                    <div class="flex justify-between items-center">
+                        <div class="space-y-2">
+                            <div class="h-3 w-28 bg-slate-200 rounded"></div>
+                            <div class="h-5 w-40 bg-slate-300 rounded"></div>
+                        </div>
+                        <div class="h-6 w-20 bg-slate-200 rounded-full"></div>
+                    </div>
+                </div>
+
+                <div class="px-6 py-5 flex items-center gap-4 border-b border-slate-100">
+                    <div class="h-12 w-12 bg-slate-200 rounded-full"></div>
+                    <div class="space-y-2 w-full">
+                        <div class="h-4 w-48 bg-slate-300 rounded"></div>
+                        <div class="h-3 w-64 bg-slate-200 rounded"></div>
+                    </div>
+                </div>
+
+                <div class="px-6 py-6 border-b border-slate-100 text-center space-y-3">
+                    <div class="h-3 w-40 mx-auto bg-slate-200 rounded"></div>
+                    <div class="h-8 w-32 mx-auto bg-slate-300 rounded"></div>
+                    <div class="h-3 w-48 mx-auto bg-slate-200 rounded"></div>
+                </div>
+
+                <div class="px-6 py-6 border-b border-slate-100 space-y-4">
+                    <div class="h-3 w-40 bg-slate-200 rounded"></div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div class="h-40 bg-slate-200 rounded-xl"></div>
+                        <div class="h-40 bg-slate-200 rounded-xl"></div>
+                    </div>
+                </div>
+
+                <div class="px-6 py-6 space-y-4">
+                    <div class="h-3 w-40 bg-slate-200 rounded"></div>
+
+                    <div class="bg-slate-50 rounded-xl p-4 space-y-2">
+                        <div class="h-4 w-40 bg-slate-300 rounded"></div>
+                        <div class="h-3 w-32 bg-slate-200 rounded"></div>
+                        <div class="h-3 w-36 bg-slate-200 rounded"></div>
+                    </div>
+
+                    <div class="bg-slate-50 rounded-xl p-4 space-y-2">
+                        <div class="h-4 w-40 bg-slate-300 rounded"></div>
+                        <div class="h-3 w-32 bg-slate-200 rounded"></div>
+                        <div class="h-3 w-36 bg-slate-200 rounded"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
 
         <div v-if="!loading && paymentSubmission" class="space-y-6">
             <div
@@ -145,7 +201,8 @@ const badgeClasses = computed(() => {
                         No Fees Allocated in this payment.
                     </div>
                     <div v-else v-for="(item, index) in paymentSubmission.fee_items" :key="index"
-                        class="bg-slate-50 rounded-xl p-4 border border-slate-100 flex justify-between items-center">
+                        class="bg-slate-50 rounded-xl p-4 border border-slate-200 flex justify-between cursor-pointer hover:bg-slate-200 items-center"
+                        v-on:click="clickViewFee(item.fee.id)">
                         <div>
                             <p class="font-medium text-slate-800">
                                 {{ item.fee.category_name }}
@@ -191,13 +248,11 @@ const badgeClasses = computed(() => {
                     </div>
                 </div>
 
-                <div v-if="paymentSubmission.status == 'pending'" class="flex justify-center items-center p-2 mb-5">
-                    <Button class="w-[90%]"
-                        v-on:click="() => console.log(`To Accept ${paymentSubmissionId}`)">Accept</Button>
-                </div>
-
             </div>
-
+            <div v-if="paymentSubmission.status == 'pending'" class="flex justify-center items-center p-2 mb-5">
+                <Button class="w-[90%]"
+                    v-on:click="() => console.log(`To Accept ${paymentSubmissionId}`)">Accept</Button>
+            </div>
         </div>
 
     </BaseModal>
