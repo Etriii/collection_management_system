@@ -72,7 +72,7 @@ export async function getStudentSubmissionsApi(studentId: number, params: ListPa
     const result = await api.get<ApiResponse<PaginatedApiResponse<PaymentSubmissionEntity>>>(
         ENDPOINTS.paymentSubmissions,
         {
-            student__id: studentId,
+            student_id: studentId,
             ...params,
             ...params.filters,
         }

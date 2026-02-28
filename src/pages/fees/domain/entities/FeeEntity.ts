@@ -65,3 +65,13 @@ export interface FeeDetailedEntity {
   created_at: string;
   updated_at: string;
 }
+
+export  interface FeeReadItems {//For Payment Submssion fee item
+  id: number;
+  category_id: string;
+  category_name: string;
+  total_amount: number; 
+  balance: number;
+  status: FeeStatus;
+  due_date: string; 
+}

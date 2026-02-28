@@ -50,7 +50,7 @@ const props = defineProps({
     },
 });
 
-const baseStyles = "rounded transition duration-100 flex justify-center items-center space-x-2";
+const baseStyles = "rounded transition duration-100 flex justify-center items-center space-x-2 ";
 
 const variantStyles = computed(() => ({
     primary: "bg-blue-700 text-white border-none hover:bg-blue-800",

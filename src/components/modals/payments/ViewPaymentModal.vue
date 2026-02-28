@@ -2,6 +2,7 @@
 import { computed, watch } from 'vue'
 import BaseModal from '../BaseModal.vue';
 import { usePayment } from '@pages/transactions/presentation/store/composables/usePaymentComposables';
+import { formatDateTime } from '@utils/dateFormat';
 const props = defineProps<{
     isOpen: boolean,
     paymentId: number,
@@ -236,7 +237,7 @@ const initials = computed(() => {
                             <div>
                                 <p class="uppercase tracking-wider text-slate-400">Transaction Date</p>
                                 <p class="font-medium text-slate-800 mt-1">
-                                    {{ payment.created_at }}
+                                    {{ formatDateTime(payment.created_at) }}
                                 </p>
                             </div>
 

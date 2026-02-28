@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, render } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import { useStudentsPaymentsStore } from '../store/useStudentPaymentsStore';
 import BaseTable, { type TableColumn } from '@components/tables/BaseTable.vue';
 import TablePagination from '@components/tables/TablePagination.vue';

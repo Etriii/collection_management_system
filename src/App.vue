@@ -17,6 +17,7 @@ tailwind custom styles:
 */
 
 import { useAuthStore } from "@pages/auth/presentation/stores/useAuthStore"
+import ImageViewer from '@components/modals/ImageViewer.vue';
 const auth = useAuthStore()
 
 // Here ang mga imports
@@ -33,4 +34,5 @@ const auth = useAuthStore()
 
   <RouterView v-else />
   <BaseAlerts />
+  <ImageViewer />
 </template>

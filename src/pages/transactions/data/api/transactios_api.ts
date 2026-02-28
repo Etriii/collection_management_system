@@ -1,6 +1,6 @@
 import apiv2 from "@services/apiServicev2"
 import api from "@services/apiServicev2"
-import type { ApiResponse, PaginatedApiResponse } from "@core/types"
+import type { ApiResponse } from "@core/types"
 import type { BulkPaymentPayload, PaymentEntity } from "@pages/transactions/domain/payments_entities"
 import { ENDPOINTS } from "@core/url_paths"
 

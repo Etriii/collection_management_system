@@ -2,6 +2,7 @@
 import { onMounted, ref } from 'vue'
 import type { Institute } from '@core/models'
 import { useAuth } from '@pages/auth/presentation/composables/useAuth';
+import BaseImage from '@components/common/BaseImage.vue';
 
 const default_profile = 'https://i.pinimg.com/736x/34/41/65/3441659db45374c4303b0ad3308db348.jpg';
 
@@ -14,7 +15,7 @@ const form = ref({
     institute: null as Institute | null
 })
 
-const {user} = useAuth();
+const { user } = useAuth();
 const currentUser = user
 
 const onProfileChange = (event: Event) => {
@@ -46,7 +47,7 @@ onMounted(() => {
         Object.assign(form.value, currentUser.value)
     }
 });
-</script>\
+</script>
 
 <template>
     <div class="min-h-[90vh] bg-slate-50 flex items-center justify-center text-slate-800 font-sans">
@@ -60,8 +61,7 @@ onMounted(() => {
                     Remove Photo
                 </button>
                 <div class="relative group">
-                    <img :src="form.profile ?? default_profile" alt="Profile"
-                        class="w-32 h-32 rounded-2xl object-cover shadow-lg border-4 border-white transition-transform duration-300 group-hover:scale-[1.02]" />
+                    <BaseImage :src="form.profile ?? default_profile" alt="Profile Picture" wrapper-class="size-38" :show-zoom-icon="false"/>
                     <label
                         class="absolute inset-0 flex items-center justify-center bg-black/40 opacity-0 group-hover:opacity-100 rounded-2xl cursor-pointer transition-opacity duration-300">
                         <span class="text-white text-xs font-medium">Change Photo</span>
@@ -123,7 +123,7 @@ onMounted(() => {
                     <div class="space-y-1.5">
                         <label class="text-[11px] font-bold uppercase tracking-wider text-slate-500 ml-1">Email
                             Address</label>
-                        <input v-model="form.email" type="email" :disabled="true        "
+                        <input v-model="form.email" type="email" :disabled="true"
                             class="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-2.5 focus:bg-white focus:ring-4 focus:ring-blue-500/10 focus:border-blue-500 transition-all outline-none"
                             placeholder="name@company.com" />
                     </div>
