@@ -1,5 +1,7 @@
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, watch } from "vue";
+import { computed, onUnmounted, ref, watch } from "vue";
+import { useModalStackStore } from "@stores/modalStore";
+
 
 interface Props {
     isModalOpen: boolean;
@@ -78,25 +80,40 @@ const themes: Record<ThemeType, any> = {
 
 const currentTheme = computed(() => themes[props.theme]);
 
-// const modalRef = ref<HTMLElement | null>(null);
 
 function close() { isOpen.value = false; emit("onClose") }
 
 function onBackdropClick() { if (props.closeOnBackdrop) close(); }
 
-onMounted(() => { document.addEventListener("keydown", onKeydown); });
-watch(isOpen, (open) => { document.body.style.overflow = open ? "hidden" : ""; });
-function onKeydown(e: KeyboardEvent) { if (e.key === "Escape" && props.closeOnEsc && isOpen.value) close() }
+const modalStore = useModalStackStore();
 
-onMounted(() => document.addEventListener("keydown", onKeydown));
-onUnmounted(() => { document.body.style.overflow = ""; document.removeEventListener("keydown", onKeydown) });
+const zIndex = ref(50);
+const modalId = ref<number | null>(null);
+
+watch(
+    () => props.isModalOpen,
+    (open) => {
+        if (open && modalId.value === null) {
+            modalId.value = modalStore.register(close);
+            zIndex.value = modalId.value;
+        } else if (!open && modalId.value !== null) {
+            modalStore.unregister(modalId.value);
+            modalId.value = null;
+        }
+    }
+);
+onUnmounted(() => {
+    if (modalId.value !== null) {
+        modalStore.unregister(modalId.value);
+    }
+});
 </script>
 
 <template>
     <Teleport to="body">
         <Transition name="fade">
-            <div v-if="isOpen" class="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm"
-                @click.self="onBackdropClick">
+            <div v-if="isOpen" class="fixed inset-0 flex items-center justify-center bg-black/60 backdrop-blur-sm"
+                :style="{ zIndex: zIndex }" @click.self="onBackdropClick">
 
                 <div ref="modalRef" :class="['shadow-lg  mx-4 flex flex-col rounded-2xl overflow-hidden  border border-gray-300 bg-gray-50  max-h-[92%] max-w-[92%]',
                     currentTheme.container,

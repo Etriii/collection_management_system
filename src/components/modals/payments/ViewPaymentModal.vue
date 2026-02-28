@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { computed, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 import BaseModal from '../BaseModal.vue';
 import { usePayment } from '@pages/transactions/presentation/store/composables/usePaymentComposables';
 import { formatDateTime } from '@utils/dateFormat';
+import ViewPaymentSubmissionModal from '../paymentSubmissions/ViewPaymentSubmissionModal.vue';
 const props = defineProps<{
     isOpen: boolean,
     paymentId: number,
@@ -22,9 +23,17 @@ const initials = computed(() => {
         .join('')
         .slice(0, 2)
 })
+
+const viewPaymentSubmission = ref<{ isOpen: boolean, paymentSubmissionId: number }>({ isOpen: false, paymentSubmissionId: 0 })
+const clickViewSubmission = (submissionId: number) => {
+    viewPaymentSubmission.value.paymentSubmissionId = submissionId
+    viewPaymentSubmission.value.isOpen = true
+}
 </script>
 
 <template>
+    <ViewPaymentSubmissionModal v-model:is-open="viewPaymentSubmission.isOpen" :payment-submission-id="viewPaymentSubmission.paymentSubmissionId" />
+
     <BaseModal :isModalOpen="isModalOpen" title="View Payment" size="xxl" :closeOnBackdrop="false" v-on:onClose="close">
         <div class="space-y-6">
             <div v-if="loading"
@@ -251,7 +260,7 @@ const initials = computed(() => {
                         class="px-5 py-2 text-sm rounded-lg border border-slate-300 text-slate-600 hover:bg-slate-100 transition cursor-pointer">
                         Close
                     </button>
-                    <button v-if="payment.payment_submission"
+                    <button v-if="payment.payment_submission" v-on:click="clickViewSubmission(payment.payment_submission)"
                         class="px-5 py-2 text-sm rounded-lg bg-ic-primary text-white hover:bg-ic-primary cursor-pointer">
                         View Gcash Payment
                     </button>

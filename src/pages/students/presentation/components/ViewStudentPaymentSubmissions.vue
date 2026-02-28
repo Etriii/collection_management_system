@@ -36,7 +36,6 @@ const viewPaymentSubmission = ref<{ isOpen: boolean, paymentSubmissionId: number
 const viewFees = (fee: PaymentEntity) => {
     viewPaymentSubmission.value.paymentSubmissionId = fee.id
     viewPaymentSubmission.value.isOpen = true
-    // detailed dapat ang pag view , like kinsa nag issue ani or so. :>
 }
 
 const setPagelocal = (page: number) => {

@@ -1,11 +1,11 @@
 <template>
     <Teleport to="body">
         <transition name="fade">
-            <div v-if="isOpen" class="fixed inset-0 z-51 flex items-center justify-center">
+            <div v-if="isOpen" class="fixed inset-0 flex items-center justify-center" :style="{ zIndex: zIndex }">
                 <div class="absolute inset-0 bg-black/70 backdrop-blur-sm" @click="close"></div>
 
                 <button @click="close"
-                    class="fixed top-4 right-4 z-[60] bg-black/60 hover:bg-black text-white rounded-full w-10 h-10 flex items-center justify-center text-xl shadow-lg">
+                    class="fixed top-4 right-4 z-[60] bg-black/60 hover:bg-black  text-white rounded-full w-10 h-10 flex items-center justify-center text-xl shadow-lg cursor-pointer">
                     ✕
                 </button>
 
@@ -24,25 +24,23 @@
 </template>
 
 <script setup>
-import { watch, ref, onBeforeUnmount, computed } from "vue";
-import { storeToRefs } from 'pinia'
-
-import temp_image from '@assets/image_not_found.png'
-
+import { watch, ref, onBeforeUnmount } from "vue";
+import { storeToRefs } from "pinia";
 import { useImageStore } from "@stores/ui/image";
+import { useModalStackStore } from "@stores/modalStore";
+import temp_image from "@assets/image_not_found.png";
+
+const imageStore = useImageStore();
+const { isOpen, imageUrl } = storeToRefs(imageStore);
+const { close } = imageStore;
+
+const modalStore = useModalStackStore();
 
 const loading = ref(false);
 const currentSrc = ref("");
+const zIndex = ref(50);
+const modalId = ref(null);
 
-const imageStore = useImageStore()
-const { isOpen, imageUrl } = storeToRefs(imageStore)
-const { close } = imageStore
-
-const handleEsc = (e) => {
-    if (e.key === "Escape") close();
-};
-
-// Preload function
 const preloadImage = (url) => {
     loading.value = true;
 
@@ -54,7 +52,7 @@ const preloadImage = (url) => {
     };
 
     img.onerror = () => {
-        currentSrc.value = fallbackImage;
+        currentSrc.value = temp_image;
         loading.value = false;
     };
 
@@ -63,30 +61,19 @@ const preloadImage = (url) => {
 
 watch(isOpen, (open) => {
     if (open) {
-        document.body.style.overflow = "hidden"
-        window.addEventListener("keydown", handleEsc)
+        modalId.value = modalStore.register(close);
+        zIndex.value = modalId.value;
 
-        preloadImage(imageUrl.value)
-    } else {
-        document.body.style.overflow = ""
-        window.removeEventListener("keydown", handleEsc)
+        preloadImage(imageUrl.value);
+    } else if (modalId.value !== null) {
+        modalStore.unregister(modalId.value);
+        modalId.value = null;
     }
-})
+});
 
 onBeforeUnmount(() => {
-    document.body.style.overflow = "";
-    window.removeEventListener("keydown", handleEsc);
+    if (modalId.value !== null) {
+        modalStore.unregister(modalId.value);
+    }
 });
 </script>
-
-<style>
-.fade-enter-active,
-.fade-leave-active {
-    transition: opacity 0.2s ease;
-}
-
-.fade-enter-from,
-.fade-leave-to {
-    opacity: 0;
-}
-</style>
