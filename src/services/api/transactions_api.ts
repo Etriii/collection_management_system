@@ -240,8 +240,6 @@ async function getAllCategories(): Promise<Map<number, string>> {
   }
   
   try {
-    console.log("Fetching all collection categories...");
-    
     const response = await apiService.get<any>('/api/v1/collection-categories/', {
       params: { per_page: 1000 }
     });
@@ -256,7 +254,6 @@ async function getAllCategories(): Promise<Map<number, string>> {
       categories = response.data.results;
     }
     
-    console.log(`Loaded ${categories.length} collection categories`);
     
     categories.forEach((category: any) => {
       if (category.id !== undefined) {
@@ -264,8 +261,6 @@ async function getAllCategories(): Promise<Map<number, string>> {
         cache.setCategory(category.id, name);
       }
     });
-    
-    console.log("Category cache created with", cache.categories.size, "entries");
     
     return cache.categories;
     
@@ -277,7 +272,6 @@ async function getAllCategories(): Promise<Map<number, string>> {
 
 
 async function mapPaymentToTransaction(payment: PaymentApiResponse): Promise<Transaction> {
-  console.log("Mapping payment to transaction:", payment);
   
   const student = payment.fee?.student;
   const studentId = student?.s_studentID || `ID-${student?.id || 'N/A'}`;
@@ -339,7 +333,6 @@ async function mapPaymentToTransaction(payment: PaymentApiResponse): Promise<Tra
     payment_submission_id: payment.payment_submission || undefined
   };
   
-  console.log("Mapped transaction:", transaction);
   return transaction;
 }
 
@@ -375,7 +368,6 @@ async getAll(params: {
       ? pageData.data
       : pageData.results || [];
 
-    console.log("raw payments count:", rawPayments.length);
 
 
     const transactionsPromises = rawPayments.map((payment: PaymentApiResponse) =>
@@ -422,7 +414,6 @@ async getAll(params: {
     category_id?: number;
   } = {}): Promise<FeeDropdownOption[]> {
     try {
-      console.log("Fetching fees with params:", params);
       
       const apiParams: any = {
         student_id: params.student_id,
@@ -441,21 +432,12 @@ async getAll(params: {
         apiParams.search = params.search;
       }
       
-      console.log("Fetching fees with params:", apiParams);
-      
       const response = await apiService.get<PaginatedResponse<any>>(
         this.feesEndpoint,
         { params: apiParams }
       );
       
-      console.log("Fees API response:", response);
-      
       const fees = response.results || [];
-      console.log(`Found ${fees.length} fee records`);
-      
-      if (fees.length > 0) {
-        console.log("First fee structure:", fees[0]);
-      }
       
       const processedFees: FeeDropdownOption[] = [];
       
@@ -499,8 +481,6 @@ async getAll(params: {
           id: feeId,
         });
       }
-      
-      console.log(`Processed ${processedFees.length} fees`);
       
       return processedFees;
       

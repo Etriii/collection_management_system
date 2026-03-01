@@ -292,8 +292,6 @@ getPaymentSubmissions: async (params?: {
     if (params?.student_id) apiParams.student_id = params.student_id
     if (params?.status) apiParams.status = params.status
 
-    console.log("Fetching payment submissions with params:", apiParams)
-
     const response = await fetchWithRetry(() =>
       apiService.get("/api/v1/payment-submissions/", apiParams)
     )
@@ -306,11 +304,7 @@ getPaymentSubmissions: async (params?: {
       data: any[]
     }>(response.data)
 
-    console.log("API Response (normalized payload):", payload)
-
     const rows = Array.isArray(payload?.data) ? payload.data : []
-    console.log(`Found ${rows.length} payment submissions in API response`)
-
     const transformedPayments = await Promise.all(rows.map(transformPaymentSubmission))
 
     return {
@@ -340,7 +334,6 @@ approvePayment: async (
   data: { remarks?: string }
 ): Promise<any> => {
   try {
-    console.log(`Approving payment submission ${submissionId} with remarks:`, data.remarks)
 
     const response = await apiService.post(
       `/api/v1/payment-submissions/${submissionId}/approve/`,
@@ -391,7 +384,6 @@ rejectPayment: async (
         }
 
         try {
-            console.log('Submitting bulk payments:', payments);
 
             const response = await fetchWithRetry(() =>
                 apiService.post('/api/v1/payments/bulk/', {
@@ -399,7 +391,6 @@ rejectPayment: async (
                 })
             );
 
-            console.log('Bulk payments response:', response.data);
 
             cache.clear();
 
@@ -554,7 +545,6 @@ getStudentPaymentSubmissions: async (
     if (params?.search) apiParams.search = params.search
     if (params?.ordering) apiParams.ordering = params.ordering
 
-    console.log("Fetching submissions with params:", apiParams)
 
     const response = await fetchWithRetry(() =>
       apiService.get("/api/v1/payment-submissions/", apiParams)
@@ -563,23 +553,12 @@ getStudentPaymentSubmissions: async (
     const paginationWrapper = response.data
     const submissions = paginationWrapper?.data
 
-    console.log("Pagination metadata:", {
-      current_page: paginationWrapper?.current_page,
-      per_page: paginationWrapper?.per_page,
-      total_items: paginationWrapper?.total_items,
-      total_pages: paginationWrapper?.total_pages,
-      data_length: submissions?.length || 0,
-    })
 
     if (Array.isArray(submissions)) {
       const filteredSubmissions = submissions.filter((sub: any) => {
         const sid = sub?.student?.id ?? sub?.student
         return Number(sid) === Number(studentId)
       })
-
-      console.log(
-        `Page ${paginationWrapper?.current_page}: ${filteredSubmissions.length} submissions`
-      )
 
       const current = Number(paginationWrapper?.current_page ?? 1)
       const totalPages = Number(paginationWrapper?.total_pages ?? 1)
@@ -616,7 +595,6 @@ getStudentPaymentSubmissions: async (
             if (params?.search) apiParams.search = params.search;
             if (params?.ordering) apiParams.ordering = params.ordering;
 
-            console.log('Fetching payment history with params:', apiParams);
 
             const response = await fetchWithRetry(() =>
                 apiService.get('/api/v1/payments/', { params: apiParams })
@@ -625,20 +603,12 @@ getStudentPaymentSubmissions: async (
             const paginationWrapper = response.data;
             const payments = paginationWrapper?.data;
 
-            console.log('Pagination metadata:', {
-                current_page: paginationWrapper?.current_page,
-                per_page: paginationWrapper?.per_page,
-                total_items: paginationWrapper?.total_items,
-                total_pages: paginationWrapper?.total_pages,
-                data_length: payments?.length || 0
-            });
 
             if (Array.isArray(payments)) {
                 const filteredPayments = payments.filter(
                     (payment: any) => payment.fee?.student?.id === studentId
                 );
                 
-                console.log(`Page ${paginationWrapper?.current_page}: ${filteredPayments.length} payments`);
                 
                 return {
                     count: paginationWrapper?.total_items || filteredPayments.length,

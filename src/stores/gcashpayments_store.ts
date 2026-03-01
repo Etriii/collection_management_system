@@ -227,8 +227,6 @@ export const useGcashpaymentsStore = defineStore("gcashpayments", () => {
         // status: "pending"
       };
 
-      console.log("Fetching payment submissions with params:", params);
-
       const apiRes = (await gcashpayments_api.getPaymentSubmissions(
         params as any,
       )) as any;
@@ -236,8 +234,6 @@ export const useGcashpaymentsStore = defineStore("gcashpayments", () => {
       const rows = Array.isArray(apiRes?.results) ? apiRes.results : [];
 
       const mapped = rows 
-
-      console.log("mapped payments:", mapped.length, mapped[0]);
 
       totalItems.value = apiRes.count ?? rows.length;
       totalPages.value = apiRes.next
