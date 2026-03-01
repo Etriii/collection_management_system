@@ -20,7 +20,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch, defineExpose } from "vue";
+import { ref, watch } from "vue";
 
 const input = ref(null);
 
