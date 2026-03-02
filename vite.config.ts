@@ -20,6 +20,7 @@ export default defineConfig({
       '@stores': resolve(__dirname, 'src/stores'),
       "@services":resolve(__dirname, 'src/services'),
       "@core": resolve(__dirname, 'src/core'),
+      "@api/*": resolve(__dirname, 'src/services/api'),
     }
   }
 })

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, render, ref } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import { useStudentsFeesStore } from '../store/useStudentFeeslStore';
 import BaseTable, { type TableColumn } from '@components/tables/BaseTable.vue';
 import TablePagination from '@components/tables/TablePagination.vue';
@@ -7,7 +7,7 @@ import type { FeeEntity } from '@pages/fees/domain/entities/FeeEntity';
 import { formatCurrency } from '@utils/formatCurrency';
 import PerPageSelector from '@components/tables/PerPageSelector.vue';
 import { formatDate } from '@utils/dateFormat';
-
+import Button from '@components/button/Button.vue';
 import CreateStudentFeePayment from '@pages/transactions/presentation/components/CreateStudentFeePayment.vue';
 
 import ViewFeeModal from '@components/modals/fees/ViewFeeModal.vue';
@@ -76,9 +76,10 @@ const viewFeetModal = ref<{ isOpen: boolean, fee_id: number }>({
                 <PerPageSelector v-model="fees.params.perPage" @onChange="setPerPageLocal" />
                 <div class="px-2 py-1 hover:cursor-pointer bg-green-50 border border-gray-300">Filters</div>
             </div>
-            <button class="px-2 py-1 border border-gray-300 rounded-md cursor-pointer"
-                @click="handleViewFeeForPayments(props.student_id)">New
-                Payment</button>
+
+            <Button @click="handleViewFeeForPayments(props.student_id)" color="bg-ic-primary text-white" hover-color="bg-ic-primary-hovered" >
+                New Payment
+            </Button>
         </template>
 
         <template #cell-status="{ row }">

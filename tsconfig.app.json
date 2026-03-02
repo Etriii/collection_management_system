@@ -16,6 +16,7 @@
       "@stores/*":["src/stores/*"],
       "@services/*":["src/services/*"],
       "@core/*": ["src/core/*"],
+      "@api/*": ["src/services/api/*"],
     },
 
     /* Linting */

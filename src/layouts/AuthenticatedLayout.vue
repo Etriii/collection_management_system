@@ -9,7 +9,7 @@ import { useAuth } from '@pages/auth/presentation/composables/useAuth';
 const route = useRoute();
 const pageTitle = computed(() => route.meta.pageTitle as string);
 
-const isSidebarOpen = ref(true);
+const isSidebarOpen = ref(false);
 
 const toggleSidebar = () => {
     isSidebarOpen.value = !isSidebarOpen.value;

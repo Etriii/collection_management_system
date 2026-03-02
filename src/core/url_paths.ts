@@ -23,4 +23,5 @@ export const ENDPOINTS = {
   payments: `${API_V1}/payments/`,
   paymentSubmissions: `${API_V1}/payment-submissions/`,
   cloudinary: `${API_V1}/cloudinary/`,
+  summaries: `${API_V1}/summaries/`,
 };

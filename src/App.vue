@@ -20,25 +20,13 @@ import { useAuthStore } from "@pages/auth/presentation/stores/useAuthStore"
 import ImageViewer from '@components/modals/ImageViewer.vue';
 const auth = useAuthStore()
 
-
 import { onMounted, onUnmounted } from "vue";
 import { useModalStackStore } from '@stores/modalStore';
 
 const modalStore = useModalStackStore();
-
-function handleEsc(e: KeyboardEvent) {
-    if (e.key === "Escape") {
-        modalStore.closeTop();
-    }
-}
-
-onMounted(() => {
-    document.addEventListener("keydown", handleEsc);
-});
-
-onUnmounted(() => {
-    document.removeEventListener("keydown", handleEsc);
-});
+function handleEsc(e: KeyboardEvent) { if (e.key === "Escape") { modalStore.closeTop(); } }
+onMounted(() => { document.addEventListener("keydown", handleEsc); });
+onUnmounted(() => { document.removeEventListener("keydown", handleEsc); });
 </script>
 
 <template>

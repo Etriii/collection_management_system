@@ -4,6 +4,8 @@ import BaseModal from '../BaseModal.vue';
 import { usePayment } from '@pages/transactions/presentation/store/composables/usePaymentComposables';
 import { formatDateTime } from '@utils/dateFormat';
 import ViewPaymentSubmissionModal from '../paymentSubmissions/ViewPaymentSubmissionModal.vue';
+import { useViewFee } from '../composables/useModalsComposables';
+import ViewFeeModal from '../fees/ViewFeeModal.vue';
 const props = defineProps<{
     isOpen: boolean,
     paymentId: number,
@@ -29,10 +31,14 @@ const clickViewSubmission = (submissionId: number) => {
     viewPaymentSubmission.value.paymentSubmissionId = submissionId
     viewPaymentSubmission.value.isOpen = true
 }
+
+const { isFeeModalOpen, feeId, viewFee } = useViewFee()
 </script>
 
 <template>
-    <ViewPaymentSubmissionModal v-model:is-open="viewPaymentSubmission.isOpen" :payment-submission-id="viewPaymentSubmission.paymentSubmissionId" />
+    <ViewPaymentSubmissionModal v-model:is-open="viewPaymentSubmission.isOpen"
+        :payment-submission-id="viewPaymentSubmission.paymentSubmissionId" />
+    <ViewFeeModal v-model:is-open="isFeeModalOpen" :fee-id="feeId" />
 
     <BaseModal :isModalOpen="isModalOpen" title="View Payment" size="xxl" :closeOnBackdrop="false" v-on:onClose="close">
         <div class="space-y-6">
@@ -168,10 +174,10 @@ const clickViewSubmission = (submissionId: number) => {
 
                         <div class="text-right">
                             <p class="text-[10px] uppercase opacity-70 tracking-wider">
-                                Date
+                                Date & Time
                             </p>
                             <p class="font-medium">
-                                {{ payment.created_at }}
+                                {{ formatDateTime(payment.created_at) }}
                             </p>
                         </div>
 
@@ -260,13 +266,14 @@ const clickViewSubmission = (submissionId: number) => {
                         class="px-5 py-2 text-sm rounded-lg border border-slate-300 text-slate-600 hover:bg-slate-100 transition cursor-pointer">
                         Close
                     </button>
-                    <button v-if="payment.payment_submission" v-on:click="clickViewSubmission(payment.payment_submission)"
-                        class="px-5 py-2 text-sm rounded-lg bg-ic-primary text-white hover:bg-ic-primary cursor-pointer">
+                    <button v-if="payment.payment_submission"
+                        v-on:click="clickViewSubmission(payment.payment_submission)"
+                        class="px-5 py-2 text-sm rounded-lg bg-blue-500 text-white hover:bg-blue-600  cursor-pointer">
                         View Gcash Payment
                     </button>
-                    <button
+                    <button v-on:click="viewFee(payment.fee.id)"
                         class="px-5 py-2 text-sm rounded-lg bg-ic-primary text-white hover:bg-ic-primary cursor-pointer">
-                        View Details
+                        View Fee Details
                     </button>
                 </div>
 
