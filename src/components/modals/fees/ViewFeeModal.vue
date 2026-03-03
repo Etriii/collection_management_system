@@ -4,6 +4,8 @@ import BaseModal from '../BaseModal.vue';
 import { useFee } from '@pages/fees/presentation/composables/useFeeComposables';
 import { formatDate } from '@utils/dateFormat';
 import { formatCurrency } from '@utils/formatCurrency';
+import ViewAttendanceDetails from './ViewAttendanceDetails.vue';
+import { useViewModalById } from '../composables/useModalsComposables';
 
 const props = defineProps<{
     isOpen: boolean,
@@ -25,9 +27,12 @@ const initials = computed(() => {
         .join('')
         .slice(0, 2);
 });
+
+const { isFeeModalOpen, viewFee } = useViewModalById() //feeId,
 </script>
 
 <template>
+    <ViewAttendanceDetails v-model:is-open="isFeeModalOpen" />
     <BaseModal :isModalOpen="isModalOpen" title="View Fee" size="xxl" v-on:onClose="close" :closeOnBackdrop="false">
         <div v-if="loading"
             class="w-md lg:w-lg  mx-auto bg-white border border-slate-200 rounded-2xl shadow-xl overflow-hidden animate-pulse">
@@ -163,13 +168,14 @@ const initials = computed(() => {
                     </div>
                 </div>
 
-                <div class="px-6 py-4 bg-violet-600 flex justify-between items-center">
+                <div class="px-6 py-4 bg-violet-500 flex justify-between items-center">
                     <div class="text-[10px]  text-white italic grow text-md font-bold tracking-wider">
                         Issued by: {{ fee.issued_by }}
                     </div>
                     <button v-if="fee.category.category_name == 'Attendance'"
-                        class="bg-white/10 hover:cursor-pointer hover:bg-white/20 text-white text-[10px] font-bold px-4 py-2 rounded-lg transition-all uppercase tracking-wider">
-                        View Details
+                        class="bg-white/10 hover:cursor-pointer hover:bg-white/20 text-white text-[10px] font-bold px-4 py-2 rounded-lg transition-all uppercase tracking-wider"
+                        v-on:click="viewFee(fee.id)">
+                        View Attendance Details
                     </button>
                 </div>
             </div>

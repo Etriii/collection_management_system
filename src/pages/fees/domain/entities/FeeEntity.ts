@@ -75,3 +75,25 @@ export  interface FeeReadItems {//For Payment Submssion fee item
   status: FeeStatus;
   due_date: string; 
 }
+
+
+
+//  FEE ATTENDANCE DEAILS
+export interface IAttendanceRecord {
+  id: number;
+  updated_by: string;
+  morning_check_in: string | null;
+  morning_check_out: string | null;
+  afternoon_check_in: string | null;
+  afternoon_check_out: string | null;
+  total_fines: string; 
+  date: string;
+}
+
+export interface IEventAttendance {
+  event_name: string;
+  attendance_records: IAttendanceRecord[];
+  grand_fee_total: number;
+  has_record: boolean;
+  message: string;
+}

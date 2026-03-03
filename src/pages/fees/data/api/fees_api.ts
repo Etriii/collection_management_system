@@ -30,3 +30,16 @@ export async function getFeeApi(
         throw new Error(err.response?.data?.message || "Failed to load fee")
     }
 }
+
+export async function getFeeAttendanceDetailsApi(
+    id: number
+): Promise<ApiResponse<FeeDetailedEntity>> {
+    try {
+        const result = await api.get<ApiResponse<FeeDetailedEntity>>(
+            `${ENDPOINTS.fees}${id}/attendance-details`
+        )
+        return result
+    } catch (err: any) {
+        throw new Error(err.response?.data?.message || "Failed to load fee attendance details")
+    }
+}
