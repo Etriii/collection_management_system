@@ -26,28 +26,24 @@ export interface FeeEntity {
 }
 
 
-export type FeeStatus =
-  | "pending"
-  | "paid"
-  | "waived"
-  | "overdue";
+export type FeeStatus = "pending" | "paid" | "waived" | "overdue";
+
 
 
 export interface FeeSlimEntity {
-id: number;
+  id: number;
   student: StudentMiniEntity;
   category_id: number;
   category_name: string;
-  total_amount: number; 
+  total_amount: number;
   balance: string;
   status: FeeStatus;
-  due_date: string; 
+  due_date: string;
   issued_by: string;
   remarks: string;
   academic_year: string;
   semester: Semester;
 }
-
 
 export interface FeeDetailedEntity {
   id: number;
@@ -66,19 +62,16 @@ export interface FeeDetailedEntity {
   updated_at: string;
 }
 
-export  interface FeeReadItems {//For Payment Submssion fee item
+export interface FeeReadItems {//For Payment Submssion fee item
   id: number;
   category_id: string;
   category_name: string;
-  total_amount: number; 
+  total_amount: number;
   balance: number;
   status: FeeStatus;
-  due_date: string; 
+  due_date: string;
 }
 
-
-
-//  FEE ATTENDANCE DEAILS
 export interface IAttendanceRecord {
   id: number;
   updated_by: string;
@@ -86,7 +79,7 @@ export interface IAttendanceRecord {
   morning_check_out: string | null;
   afternoon_check_in: string | null;
   afternoon_check_out: string | null;
-  total_fines: string; 
+  total_fines: number;
   date: string;
 }
 

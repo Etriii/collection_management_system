@@ -28,11 +28,11 @@ const initials = computed(() => {
         .slice(0, 2);
 });
 
-const { isFeeModalOpen, viewFee } = useViewModalById() //feeId,
+const { isFeeModalOpen, feeId,viewFee } = useViewModalById()
 </script>
 
 <template>
-    <ViewAttendanceDetails v-model:is-open="isFeeModalOpen" />
+    <ViewAttendanceDetails v-model:is-open="isFeeModalOpen" :fee-id="feeId" />
     <BaseModal :isModalOpen="isModalOpen" title="View Fee" size="xxl" v-on:onClose="close" :closeOnBackdrop="false">
         <div v-if="loading"
             class="w-md lg:w-lg  mx-auto bg-white border border-slate-200 rounded-2xl shadow-xl overflow-hidden animate-pulse">

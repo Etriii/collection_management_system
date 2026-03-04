@@ -3,7 +3,7 @@ import { type ApiResponse, type ListParams, type PaginatedApiResponse } from "@c
 // import { type StudentEntity, type StudentFilters, type StudentSummaryFeesResponse } from "@pages/students/domain/entities/StudentEntities"
 import { ENDPOINTS } from '@core/url_paths';
 import { cleanObject } from "@utils/cleanObject";
-import type { FeeDetailedEntity } from "@pages/fees/domain/entities/FeeEntity";
+import type { FeeDetailedEntity, IEventAttendance } from "@pages/fees/domain/entities/FeeEntity";
 
 
 // export async function getFeesApi(params: ListParams<StudentFilters>): Promise<PaginatedApiResponse<StudentEntity>> {
@@ -33,9 +33,9 @@ export async function getFeeApi(
 
 export async function getFeeAttendanceDetailsApi(
     id: number
-): Promise<ApiResponse<FeeDetailedEntity>> {
+): Promise<ApiResponse<IEventAttendance>> {
     try {
-        const result = await api.get<ApiResponse<FeeDetailedEntity>>(
+        const result = await api.get<ApiResponse<IEventAttendance>>(
             `${ENDPOINTS.fees}${id}/attendance-details`
         )
         return result

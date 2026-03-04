@@ -8,6 +8,7 @@ export interface TableColumn<T = unknown> {
   align?: "left" | "center" | "right";
   render?: (row: T) => string | number;
   grow?: boolean // use this only if you want 1 column to take the whole remaining space of the row
+  text_color?: string
 }
 
 const props = withDefaults(
@@ -74,12 +75,15 @@ const emit = defineEmits<{
             <tr v-else v-for="row in rows" :key="(row as any).id" class="transition-colors duration-150" :class="{
               'hover:bg-blue-50 cursor-pointer': rowClickable,
             }" @click="rowClickable && emit('rowClick', row)">
-              <td v-for="col in columns" :key="col.key" class="px-6 py-4 whitespace-nowrap text-sm text-gray-600"
-                :class="{
+              <td v-for="col in columns" :key="col.key" class="px-6 py-4 whitespace-nowrap text-sm" :class="[
+                'text-gray-600',
+                col.text_color,
+                {
                   'text-center': col.align === 'center',
                   'text-right': col.align === 'right',
                   'w-full': col.grow,
-                }">
+                }
+              ]">
                 <slot v-if="$slots[`cell-${col.key}`]" :name="`cell-${col.key}`" :row="row"></slot>
                 <span v-else>
                   {{ col.render ? col.render(row as any) : (row as any)[col.key] }}

@@ -3,17 +3,19 @@
         :closeOnBackdrop="false">
         <div class="space-y-4 p-2">
 
-
-            <div v-if="eventData.has_record" class="space-y-2">
+            <div v-if="loading">
+                loading
+            </div>
+            <div v-else-if="attendance_details && attendance_details.has_record" class="space-y-2">
 
                 <div class="bg-white border border-slate-200 rounded-2xl px-8 py-6 shadow-sm">
                     <div class="flex justify-between items-end">
                         <div>
                             <h2 class="text-base font-semibold text-slate-800 tracking-wide">
-                                Event Name: {{ eventData.eventData_name }}
+                                Event Name: {{ attendance_details.event_name }}
                             </h2>
                             <p class="text-xs text-slate-500 mt-2 leading-relaxed max-w-xl">
-                                {{ eventData.message }}
+                                {{ attendance_details.message }}
                             </p>
                         </div>
                     </div>
@@ -36,7 +38,7 @@
                             </thead>
 
                             <tbody class="divide-y divide-slate-100">
-                                <tr v-for="record in eventData.attendance_records" :key="record.id"
+                                <tr v-for="record in attendance_details.attendance_records" :key="record.id"
                                     class="hover:bg-slate-50 transition">
                                     <td class="px-6 py-4 text-slate-700">
                                         {{ formatDate(record.date) }}
@@ -74,7 +76,7 @@
                                 Grand Total
                             </span>
                             <span class="text-lg font-semibold text-slate-800 tracking-wide">
-                                {{ formatCurrency(eventData.grand_fee_total) }}
+                                {{ formatCurrency(attendance_details.grand_fee_total) }}
                             </span>
                         </div>
                     </div>
@@ -93,7 +95,7 @@
                 </h3>
 
                 <p class="text-sm text-slate-500 mt-3 max-w-md leading-relaxed">
-                    {{ eventData.message }}
+                    {{ attendance_details?.message }}
                 </p>
 
                 <p class="text-xs text-slate-400 mt-6">
@@ -107,29 +109,18 @@
 
 <script setup lang="ts">
 import BaseModal from '../BaseModal.vue';
-import { computed } from 'vue';
+import { computed, watch } from 'vue';
 import { formatTimeField, formatDate } from '@utils/dateFormat';
 import { formatCurrency } from '@utils/formatCurrency';
+import { useFeeAttendanceDetails } from '@pages/fees/presentation/composables/useFeeComposables';
+import BaseTable, { type TableColumn } from '@components/tables/BaseTable.vue';
 
-
-const props = defineProps({
-    isOpen: Boolean,
-    attendanceData: Object
-});
+const props = defineProps<{ isOpen: boolean, feeId: number }>();
 const isModalOpen = defineModel<boolean>("isOpen", { default: false, })
-
 const closeModal = () => isModalOpen.value = false
 
-const eventData = {
-    eventData_name: "Kalibulung",
-    attendance_records: [
-        { id: 531, updated_by: "Etriii", morning_check_in: null, morning_check_out: "11:45:20", afternoon_check_in: null, afternoon_check_out: null, total_fines: "75.00", date: "2026-02-10" },
-        { id: 1017, updated_by: "Etriii", morning_check_in: null, morning_check_out: "11:49:43", afternoon_check_in: null, afternoon_check_out: null, total_fines: "75.00", date: "2026-02-11" },
-        { id: 1403, updated_by: "Etriii", morning_check_in: null, morning_check_out: "11:41:19", afternoon_check_in: "12:34:55", afternoon_check_out: "16:39:08", total_fines: "25.00", date: "2026-02-12" },
-        { id: 1616, updated_by: "Etriii", morning_check_in: "14:32:00", morning_check_out: null, afternoon_check_in: null, afternoon_check_out: null, total_fines: "50.00", date: "2026-02-13" }
-    ],
-    grand_fee_total: 225,
-    has_record: true,
-    message: "Please note that no time-in/time-out entries base on attendance eventData settings were not included in the computation."
-};
+watch(() => props.feeId, (newValue) => { fetchAttendanceDetails(newValue) })
+
+const { attendance_details, fetchAttendanceDetails, loading } = useFeeAttendanceDetails()
+
 </script>
