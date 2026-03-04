@@ -22,7 +22,7 @@ interface Student {
   s_mname: string | null;
   s_lname: string;
   s_suffix?: string | null;
-  s_email?: string | null; 
+  s_email?: string | null;
   s_set: string;
   s_lvl: number;
   s_status: string;
@@ -53,9 +53,7 @@ interface FeeDropdownOptionExtended extends FeeDropdownOption {
   _rawStudentId?: number;
 }
 
-
 export const useTransactionsStore = defineStore("transactions", () => {
-
   const allTransactions = ref<Transaction[]>([]);
   const searchQuery = ref("");
   const activeFilter = ref<"all" | TransactionStatus>("all");
@@ -175,7 +173,6 @@ export const useTransactionsStore = defineStore("transactions", () => {
     });
   });
 
-
   const displayedTransactions = computed(() => {
     return [...filteredTransactions.value].sort(
       (a, b) =>
@@ -244,7 +241,6 @@ export const useTransactionsStore = defineStore("transactions", () => {
     };
   });
 
-
   function processPaymentData(payment: any): Transaction | null {
     const feeData = payment?.fee;
     if (!feeData) return null;
@@ -311,7 +307,7 @@ export const useTransactionsStore = defineStore("transactions", () => {
       });
 
       const payload = response.data;
-      const list = payload?.data as any; 
+      const list = payload?.data as any;
 
       const rawItems = Array.isArray((list as any)?.data)
         ? (list as any).data
@@ -452,7 +448,7 @@ export const useTransactionsStore = defineStore("transactions", () => {
     selectedStudent.value = student;
     newTransaction.value.student_id = student.id;
     newTransaction.value.studentSearch = getStudentDisplayName(student);
-    students.value = []; 
+    students.value = [];
   }
 
   function clearSelectedStudent() {
@@ -465,65 +461,68 @@ export const useTransactionsStore = defineStore("transactions", () => {
     availableFees.value = [];
   }
 
-async function loadStudentFees(studentId: number) {
-  try {
-    isLoadingFees.value = true;
-    isLoadingFeeDetails.value = true;
+  async function loadStudentFees(studentId: number) {
+    try {
+      isLoadingFees.value = true;
+      isLoadingFeeDetails.value = true;
 
-    const [pendingRes, overdueRes] = await Promise.all([
-      apiService.get("/api/v1/fees/", {
-        student_id: studentId,
-        per_page: 100,
-        status: "pending",
-        ordering: "due_date",
-      }),
-      apiService.get("/api/v1/fees/", {
-        student_id: studentId,
-        per_page: 100,
-        status: "overdue",
-        ordering: "due_date",
-      }),
-    ]);
+      const [pendingRes, overdueRes] = await Promise.all([
+        apiService.get("/api/v1/fees/", {
+          student_id: studentId,
+          per_page: 100,
+          status: "pending",
+          ordering: "due_date",
+        }),
+        apiService.get("/api/v1/fees/", {
+          student_id: studentId,
+          per_page: 100,
+          status: "overdue",
+          ordering: "due_date",
+        }),
+      ]);
 
-    const pendingFees = Array.isArray(pendingRes?.data?.data) ? pendingRes.data.data : [];
-    const overdueFees = Array.isArray(overdueRes?.data?.data) ? overdueRes.data.data : [];
-    const fees = [...pendingFees, ...overdueFees];
+      const pendingFees = Array.isArray(pendingRes?.data?.data)
+        ? pendingRes.data.data
+        : [];
+      const overdueFees = Array.isArray(overdueRes?.data?.data)
+        ? overdueRes.data.data
+        : [];
+      const fees = [...pendingFees, ...overdueFees];
 
-    const validFees: FeeDropdownOptionExtended[] = fees
-      .map((fee: any) => {
-        const amount = parseAmount(fee.total_amount || "0");
-        const balance = parseAmount(fee.balance || "0");
-        const s = fee.student || {};
-        return {
-          value: fee.id,
-          label: `${fee.category_name || "Unknown"} - ₱${amount.toFixed(2)}`,
-          amount,
-          balance,
-          status: fee.status || "pending",
-          category: fee.category_name || "Unknown",
-          studentId: s?.s_studentID || `ID-${s?.id || "N/A"}`,
-          studentName: s?.full_name || "Unknown",
-          id: fee.id,
-          due_date: fee.due_date || "",
-          _rawStudentId: s?.id,
-        } as FeeDropdownOptionExtended;
-      })
-      .filter((f) => f._rawStudentId === studentId && f.balance > 0);
+      const validFees: FeeDropdownOptionExtended[] = fees
+        .map((fee: any) => {
+          const amount = parseAmount(fee.total_amount || "0");
+          const balance = parseAmount(fee.balance || "0");
+          const s = fee.student || {};
+          return {
+            value: fee.id,
+            label: `${fee.category_name || "Unknown"} - ₱${amount.toFixed(2)}`,
+            amount,
+            balance,
+            status: fee.status || "pending",
+            category: fee.category_name || "Unknown",
+            studentId: s?.s_studentID || `ID-${s?.id || "N/A"}`,
+            studentName: s?.full_name || "Unknown",
+            id: fee.id,
+            due_date: fee.due_date || "",
+            _rawStudentId: s?.id,
+          } as FeeDropdownOptionExtended;
+        })
+        .filter((f) => f._rawStudentId === studentId && f.balance > 0);
 
-    feeOptions.value = validFees;
-    availableFees.value = [...validFees];
-    feeDistribution.value = [];
-  } catch (e) {
-    console.error("Error loading fees:", e);
-    feeOptions.value = [];
-    availableFees.value = [];
-    feeDistribution.value = [];
-  } finally {
-    isLoadingFees.value = false;
-    isLoadingFeeDetails.value = false;
+      feeOptions.value = validFees;
+      availableFees.value = [...validFees];
+      feeDistribution.value = [];
+    } catch (e) {
+      console.error("Error loading fees:", e);
+      feeOptions.value = [];
+      availableFees.value = [];
+      feeDistribution.value = [];
+    } finally {
+      isLoadingFees.value = false;
+      isLoadingFeeDetails.value = false;
+    }
   }
-}
-
 
   function addFeeToDistribution(feeId: number) {
     if (isLoadingFeeDetails.value) return;
@@ -653,18 +652,22 @@ async function loadStudentFees(studentId: number) {
           payment_submission: null,
         }));
 
-      const results = await Promise.all(
+      const settled = await Promise.allSettled(
         paymentsToCreate.map((p) => apiService.post("/api/v1/payments/", p)),
       );
-      const ok = results.every((r) => r.status >= 200 && r.status < 300);
 
-      if (ok) {
+      const failed = settled.filter((r) => r.status === "rejected");
+      if (failed.length === 0) {
         isCreateTransactionDialogOpen.value = false;
         resetForm();
         alert(`Successfully created ${paymentsToCreate.length} payment(s)!`);
         await resetAndRefetch();
       } else {
-        alert("Failed to create some payments");
+        console.error("Some payments failed:", failed);
+
+        alert(
+          `Created ${paymentsToCreate.length - failed.length} payment(s), failed ${failed.length}. Check console.`,
+        );
       }
     } catch (e: any) {
       console.error("Error creating transaction:", e);
