@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, watch, ref, nextTick, onBeforeUnmount } from "vue"
+import { computed, onMounted, watch, ref, nextTick } from "vue"
 import {
   Plus,
   Search,
@@ -15,6 +15,8 @@ import {
 import { useTransactionsStore } from "@/stores/transactions_store"
 import CreatePaymentModal from "@/components/modals/CreatePaymentModal.vue"
 import TransactionDetailsModal from "@/components/modals/ViewTransactionModal.vue"
+import TablePagination from "@components/tables/TablePagination.vue"
+import PerPageSelector from "@components/tables/PerPageSelector.vue"
 
 const store = useTransactionsStore()
 
@@ -22,53 +24,13 @@ const isInitialized = ref(false)
 const hasError = ref(false)
 
 const tableScrollEl = ref<HTMLElement | null>(null)
-const infiniteSentinelEl = ref<HTMLElement | null>(null)
-let io: IntersectionObserver | null = null
 
 const displayedTransactions = computed(() => store.displayedTransactions ?? [])
 
-const canLoadMore = computed(() => {
-  return !!store.hasMore && !store.isLoading && !store.isLoadingMore
-})
-
-async function loadNextPage() {
-  if (!canLoadMore.value) return
-  await store.loadMore()
-}
-
-
-
-function setupInfiniteObserver() {
-  if (!tableScrollEl.value || !infiniteSentinelEl.value) return
-
-  if (io) io.disconnect()
-
-  io = new IntersectionObserver(
-    async (entries) => {
-      const entry = entries[0]
-      if (!entry?.isIntersecting) return
-      await loadNextPage()
-    },
-    {
-      root: tableScrollEl.value,
-      rootMargin: "250px",
-      threshold: 0.01,
-    }
-  )
-
-  io.observe(infiniteSentinelEl.value)
-}
-
-onBeforeUnmount(() => {
-  if (io) io.disconnect()
-})
-
 onMounted(async () => {
   try {
-    await store.initialize()
+    await store.fetchTransactions(1)
     isInitialized.value = true
-    await nextTick()
-    setupInfiniteObserver()
   } catch (error) {
     console.error("Failed to initialize store:", error)
     hasError.value = true
@@ -82,13 +44,14 @@ watch(() => store.isCreateTransactionDialogOpen, (isOpen) => {
 watch(
   () => [store.searchQuery, store.activeFilter, store.paymentSubmissionFilter],
   async () => {
-    if (typeof store.resetAndRefetch === "function") {
-      await store.resetAndRefetch()
-    }
+    try {
+      await store.fetchTransactions(1)
 
-    await nextTick()
-    if (tableScrollEl.value) tableScrollEl.value.scrollTop = 0
-    setupInfiniteObserver()
+      await nextTick()
+      if (tableScrollEl.value) tableScrollEl.value.scrollTop = 0
+    } catch (e) {
+      console.error("Refetch failed:", e)
+    }
   }
 )
 
@@ -115,12 +78,11 @@ watch(
 const isFeeLoading = ref(false)
 watch(
   () => store.selectedStudent,
-  async (student, prev) => {
+  async (student) => {
     if (!student) return
-
     if (isFeeLoading.value) return
-    isFeeLoading.value = true
 
+    isFeeLoading.value = true
     try {
       store.newTransaction.student_id = student.id
       await store.loadStudentFees(student.id)
@@ -157,14 +119,22 @@ function capitalize(value: any) {
 }
 
 const availableFeesCount = computed(() => store.availableFees.length)
-const totalSelectedFeesAmount = computed(() => store.feeDistribution.reduce((sum, fee) => sum + fee.original_amount, 0))
-const totalBalance = computed(() => store.feeDistribution.reduce((sum, fee) => sum + fee.balance, 0))
-const remainingBalance = computed(() => store.feeDistribution.reduce((sum, fee) => sum + fee.balance, 0))
+const totalSelectedFeesAmount = computed(() =>
+  store.feeDistribution.reduce((sum, fee) => sum + fee.original_amount, 0)
+)
+const totalBalance = computed(() =>
+  store.feeDistribution.reduce((sum, fee) => sum + fee.balance, 0)
+)
+const remainingBalance = computed(() =>
+  store.feeDistribution.reduce((sum, fee) => sum + fee.balance, 0)
+)
 
 const loadedCount = computed(() => displayedTransactions.value.length)
 
 function formatAmount(val: any) {
-  return new Intl.NumberFormat("en-PH", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(Number(val ?? 0))
+  return new Intl.NumberFormat("en-PH", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(
+    Number(val ?? 0)
+  )
 }
 
 function getFullStudentName(student: any) {
@@ -391,24 +361,19 @@ function getFullStudentName(student: any) {
                       </button>
                     </td>
                   </tr>
-
-                  <tr>
-                    <td colspan="9" class="px-6 py-4">
-                      <div ref="infiniteSentinelEl" class="h-1"></div>
-
-                      <div v-if="store.isLoadingMore" class="flex items-center justify-center gap-2 py-4 text-gray-600">
-                        <Loader2 class="h-5 w-5 animate-spin text-blue-600" />
-                        Loading more transactions...
-                      </div>
-
-                      <div v-else-if="!store.hasMore && displayedTransactions.length > 0"
-                        class="text-center text-xs text-gray-500 py-4">
-                        You’ve reached the end.
-                      </div>
-                    </td>
-                  </tr>
                 </tbody>
               </table>
+            </div>
+
+            <div class="px-6 py-3 border-t bg-white flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+              <div class="flex items-center gap-2">
+                <span class="text-xs text-gray-500">Rows per page</span>
+                <PerPageSelector v-model="store.perPage" @onChange="store.setPerPage" />
+              </div>
+
+              <TablePagination :current-page="store.currentPage" :per-page="store.perPage"
+                :total-pages="store.totalPages" :total_items="store.totalItems" :loading="store.isLoading"
+                @change="store.setPage" />
             </div>
           </div>
 

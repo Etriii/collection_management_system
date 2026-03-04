@@ -64,13 +64,14 @@ export const useTransactionsStore = defineStore("transactions", () => {
 
   const selectedTransaction = ref<Transaction | null>(null);
 
-  const isLoading = ref(false);
   const isLoadingMore = ref(false);
   const hasMore = ref(true);
 
-  const currentPage = ref(1);
-  const perPage = ref(10);
-  const totalItems = ref(0);
+const currentPage = ref(1);
+const perPage = ref(10);
+const totalItems = ref(0);
+const totalPages = ref(1);
+const isLoading = ref(false);
 
   const newTransaction = ref<NewTransactionForm>({
     student_id: null,
@@ -180,9 +181,6 @@ export const useTransactionsStore = defineStore("transactions", () => {
     );
   });
 
-  const totalPages = computed(() =>
-    Math.ceil(totalItems.value / perPage.value),
-  );
 
   const transactionStats = computed(() => {
     const sentCount = allTransactions.value.filter(
@@ -293,59 +291,51 @@ export const useTransactionsStore = defineStore("transactions", () => {
     };
   }
 
-  async function fetchTransactions(page = 1, opts?: { append?: boolean }) {
-    const append = opts?.append ?? page > 1;
+async function fetchTransactions(page = 1) {
+  try {
+    isLoading.value = true;
 
-    try {
-      if (!append) isLoading.value = true;
-      else isLoadingMore.value = true;
+    const payload: any = await apiService.get("/api/v1/payments/", {
+      page,
+      per_page: perPage.value,
+      ordering: "-created_at",
+    });
 
-      const response = await apiService.get("/api/v1/payments/", {
-        page,
-        per_page: perPage.value,
-        ordering: "-created_at",
-      });
+    const list: any = payload?.data ?? payload;
+    const rawItems: any[] = Array.isArray(list?.data) ? list.data : [];
 
-      const payload = response.data;
-      const list = payload?.data as any;
+    const processed = rawItems
+      .map(processPaymentData)
+      .filter((t): t is Transaction => t !== null);
 
-      const rawItems = Array.isArray((list as any)?.data)
-        ? (list as any).data
-        : Array.isArray((payload as any)?.data)
-          ? (payload as any).data
-          : [];
+    allTransactions.value = processed;
 
-      const processed = rawItems
-        .map(processPaymentData)
-        .filter((t): t is Transaction => t !== null);
+    currentPage.value = list?.current_page ?? page;
+    perPage.value = list?.per_page ?? perPage.value;
+    totalItems.value = list?.total_items ?? processed.length;
+    totalPages.value =
+      list?.total_pages ??
+      Math.ceil((totalItems.value || 0) / (perPage.value || 10));
 
-      const existing = new Set(allTransactions.value.map((t) => String(t.id)));
-      const fresh = processed.filter((t) => !existing.has(String(t.id)));
-
-      if (!append) allTransactions.value = fresh;
-      else allTransactions.value = [...allTransactions.value, ...fresh];
-
-      const current_page = (list as any)?.current_page ?? page;
-      const per_page = (list as any)?.per_page ?? perPage.value;
-      const total_items = (list as any)?.total_items ?? totalItems.value;
-      const total_pages =
-        (list as any)?.total_pages ??
-        Math.ceil((total_items || 0) / (per_page || perPage.value));
-
-      currentPage.value = current_page;
-      perPage.value = per_page;
-      totalItems.value = total_items;
-
-      hasMore.value = currentPage.value < total_pages;
-    } catch (e) {
-      console.error("Error fetching transactions:", e);
-      if (!append) allTransactions.value = [];
-      hasMore.value = false;
-    } finally {
-      isLoading.value = false;
-      isLoadingMore.value = false;
-    }
+    hasMore.value = currentPage.value < totalPages.value;
+  } catch (e) {
+    console.error("Error fetching transactions:", e);
+    allTransactions.value = [];
+    totalItems.value = 0;
+    totalPages.value = 1;
+  } finally {
+    isLoading.value = false;
   }
+}
+
+async function setPage(page: number) {
+  await fetchTransactions(page);
+}
+
+async function setPerPage(pp: number) {
+  perPage.value = pp;
+  await fetchTransactions(1);
+}
 
   async function loadMore() {
     if (isLoading.value || isLoadingMore.value) return;
@@ -766,5 +756,7 @@ export const useTransactionsStore = defineStore("transactions", () => {
     getStudentDisplayName,
     initialize,
     addAllFeesToDistribution,
+  setPage,
+  setPerPage,
   };
 });
