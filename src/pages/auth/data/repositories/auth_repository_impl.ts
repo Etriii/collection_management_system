@@ -2,6 +2,7 @@ import type { AuthRepository } from "../../domain/repositories/auth_repository";
 import type { AuthRemoteDataSource } from "../datasources/AuthRemoteDataSource";
 import type { AuthLocalDataSource } from "../datasources/AuthLocalDataSource";
 import type { UserEntity } from "@pages/auth/domain/entities/user_entity";
+import { useDebounce } from "@utils/composables/useDebounce";
 
 export class AuthRepositoryImpl implements AuthRepository {
     private remote: AuthRemoteDataSource;
@@ -26,11 +27,16 @@ export class AuthRepositoryImpl implements AuthRepository {
 
     async getCurrentUser(): Promise<UserEntity> {
         const model = await this.remote.fetchProfile();
-        localStorage.setItem("userData", JSON.stringify(model.data.toJson()));
+        // localStorage.setItem("userData", JSON.stringify(model.data.toJson()));
         return model.data.toEntity();
     }
 
-    logout() {
-        this.local.clearTokens();
+    async logout(): Promise<void> {
+        const refreshToken = this.local.getRefreshToken();
+        if (refreshToken) {
+            this.remote.logout(refreshToken);
+        }
+        const { debounce } = useDebounce();
+        debounce(() => this.local.clearTokens(), 50);
     }
 }

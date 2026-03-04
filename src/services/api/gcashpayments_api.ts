@@ -6,8 +6,8 @@ import type {
     PaginatedResponse,
     ApiResponse,
     PaymentHistory,
-} from '@/core/types'
-import apiService from '@/services/apiService.ts'
+} from '@core/types'
+import apiService from '@services/apiService.ts'
 
 export type PaymentSubmissionStatus = "pending" | "approved" | "rejected"
 

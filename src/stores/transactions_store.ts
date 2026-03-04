@@ -666,7 +666,7 @@ export const useTransactionsStore = defineStore("transactions", () => {
         console.error("Some payments failed:", failed);
 
         alert(
-          `Created ${paymentsToCreate.length - failed.length} payment(s), failed ${failed.length}. Check console.`,
+          `Created ${paymentsToCreate.length - failed.length} payment(s), failed ${failed.length}.`,
         );
       }
     } catch (e: any) {

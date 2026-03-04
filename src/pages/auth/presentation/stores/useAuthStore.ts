@@ -19,6 +19,11 @@ export const useAuthStore = defineStore("auth", {
     user: null as any,
     initialized: false,
   }),
+  getters: {
+    getCurrentUser(): any {
+      return this.user ?? []
+    }
+  },
   actions: {
     async initialize() {
       try {
@@ -55,8 +60,8 @@ export const useAuthStore = defineStore("auth", {
       }
     },
     logout() {
-      repo.logout();
       this.user = null;
+      repo.logout();
     },
   },
 });

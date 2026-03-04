@@ -1,122 +1,108 @@
-// // stores/students/students.store.ts
-// import { defineStore } from "pinia"
+// stores/students.ts
+import { defineStore } from "pinia";
+import { ref, reactive, computed } from "vue";
+import type { StudentEntity, StudentFilters } from "@pages/students/domain/entities/StudentEntities";
+import type { PaginatedApiResponse } from "@core/types";
+import { getStudentsApi, getStudentApi } from "@pages/students/data/api/students_api";
 
-// // import { fetchStudentsApi, fetchStudentApi } from "@/api/students.api"
-// import { type PaginatedApiResnpose } from "@core/types"
-// import type { StudentFilters } from "@pages/students/student_filters"
-// import type { StudentEntity } from "@pages/students/domain/entities/StudentEntities"
+import { useDebounce } from "@utils/composables/useDebounce";
+import { cancelPreviousRequest } from "@utils/cancenllationRequest";
+const { debounce } = useDebounce();
 
-// export const useStudentsStore = defineStore("students", {
-//   state: () => ({
-//     // Paginated response 
-//     studentsResponse: null as PaginatedApiResnpose<StudentEntity> | null,
-//     loadingList: false,
-//     // Pagination
-//     currentPage: 1,
-//     perPage: 10,
-//     search: "",
-//     filters: {} as StudentFilters,
-//     ordering: "id",
+export const useStudentsStore = defineStore("students", () => {
+  const students = reactive({
+    data: null as PaginatedApiResponse<StudentEntity> | null,
+    loading: false,
+    fetched: false,
+    params: {
+      currentPage: 1,
+      perPage: 5,
+      search: "",
+      filters: {} as StudentFilters,
+    },
+  });
 
+  const selectedStudent = reactive({
+    id: null as number | null,
+    loading: false
+  });
 
-//     // Selected student
-//     selectedStudent: null as StudentEntity | null,
-//     loadingStudent: false,
-//   }),
+  const caches = reactive({
+    studentsById: {} as Record<number, StudentEntity>,
+  });
 
-//   getters: {
-//     // Just the student list
-//     students(state) {
-//       return state.studentsResponse?.data ?? []
-//     },
+  /*** GETTERS ***/
+  const getSelectedStudent = computed(() => {
+    if (!selectedStudent.id) return null;
+    return caches.studentsById[selectedStudent.id] ?? null;
+  });
 
-//     totalPages(state) {
-//       return state.studentsResponse?.total_pages ?? 0
-//     },
+  /*** ACTIONS ***/
+  const fetchStudents = async (force = false) => {
+    if (students.fetched && !force) return
 
-//     totalItems(state) {
-//       return state.studentsResponse?.total_items ?? 0
-//     },
+    cancelPreviousRequest();
 
-//     hasStudents(state) {
-//       return (state.studentsResponse?.data.length ?? 0) > 0
-//     },
-//   },
+    students.fetched = false;
+    students.loading = true;
+    try {
+      students.data = await getStudentsApi({
+        current_page: students.params.currentPage,
+        per_page: students.params.perPage,
+        search: students.params.search,
+        filters: students.params.filters,
+      });
+      students.fetched = true
+    } finally {
+      students.loading = false;
+    }
+  };
 
-//   actions: {
-//     /* ------------------------------
-//      * LIST STUDENTS
-//      * ------------------------------ */
-//     async fetchStudents() {
-//       this.loadingList = true
-//       try {
-//         const params = {
-//           current_page: this.currentPage,
-//           per_page: this.perPage,
-//           search: this.search || undefined,
-//           ordering: this.ordering,
-//           ...this.filters,
-//         }
+  const fetchStudent = async (id: number) => {
+    if (caches.studentsById[id]) {
+      selectedStudent.id = id;
+      return;
+    }
+    selectedStudent.loading = true;
+    try {
+      const res = await getStudentApi(id);
+      caches.studentsById[id] = res.data;
+      selectedStudent.id = id;
+    } finally {
+      selectedStudent.loading = false;
+    }
+  };
 
-//         const res = await fetchStudentsApi(params)
-//         this.studentsResponse = res.data
-//       } finally {
-//         this.loadingList = false
-//       }
-//     },
+  const setPage = (page: number) => {
+    students.params.currentPage = page;
+    fetchStudents(true)
+    // debounce(() => fetchStudents(true), 1000);
+  };
 
-//     /* ------------------------------
-//      * SINGLE STUDENT
-//      * ------------------------------ */
-//     async fetchStudent(id: number) {
-//       this.loadingStudent = true
-//       try {
-//         const res = await fetchStudentApi(id)
-//         this.selectedStudent = res.data
-//       } finally {
-//         this.loadingStudent = false
-//       }
-//     },
+  const setPerPage = (perPage: number = 10) => {
+    students.params.perPage = perPage;
+    students.params.currentPage = 1;
+    fetchStudents(true)
+  }
 
-//     setSelectedStudent(student: Student | null) {
-//       this.selectedStudent = student
-//     },
+  const setSearch = (search: string) => {
+    students.params.search = search;
+    students.params.currentPage = 1;
+    debounce(() => fetchStudents(true), 200);
+  };
 
-//     setPage(page: number) {
-//       this.currentPage = page
-//       this.fetchStudents()
-//     },
+  const setFilters = (filters: StudentFilters) => {
+    students.params.filters = filters;
+    students.params.currentPage = 1;
+    fetchStudents(true);
+  };
 
-//     setPerPage(perPage: number) {
-//       this.perPage = perPage
-//       this.currentPage = 1
-//       this.fetchStudents()
-//     },
-//     setSearch(search: string) {
-//       this.search = search
-//       this.currentPage = 1
-//       this.fetchStudents()
-//     },
+  const clearSelectedStudent = () => {
+    selectedStudent.id = null;
+    selectedStudent.loading = false;
+  };
 
-//     setFilters(filters: StudentFilters) {
-//       this.filters = filters
-//       this.currentPage = 1
-//       this.fetchStudents()
-//     },
-
-//     clearFilters() {
-//       this.filters = {}
-//       this.currentPage = 1
-//       this.fetchStudents()
-//     },
-
-//     resetStore() {
-//       this.studentsResponse = null
-//       this.selectedStudent = null
-//       this.search = ""
-//       this.filters = {}
-//       this.currentPage = 1
-//       this.perPage = 10
-//     },
-//   },
-// })
+  return {
+    students, selectedStudent, getSelectedStudent, caches, fetchStudents, fetchStudent, setPage, setPerPage, setSearch, setFilters, clearSelectedStudent
+  };
+});

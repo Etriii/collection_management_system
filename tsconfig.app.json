@@ -13,9 +13,10 @@
       "@layouts/*": ["src/layouts/*"],
       "@pages/*": ["src/pages/*"],
       "@utils/*": ["src/utils/*"],
-      "@store/*":["src/stores/*"],
+      "@stores/*":["src/stores/*"],
       "@services/*":["src/services/*"],
       "@core/*": ["src/core/*"],
+      "@api/*": ["src/services/api/*"],
     },
 
     /* Linting */

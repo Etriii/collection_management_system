@@ -11,13 +11,14 @@
             <br>
 
             <form @submit.prevent="handleLoginButtonClick" class="space-y-2">
-                <Input type="text" label="Username" v-model="loginForm.username" :leftIcon="CircleUser"
-                    :error="loginForm.username_error" placeholder="Enter your username" required ref="inputElement" />
+                <Input label="Username" v-model="loginForm.username" :leftIcon="CircleUser"
+                    :error="loginForm.username_error" placeholder="Enter your username" required />
 
                 <Input :type="loginForm.passwordIconToggled ? 'text' : 'password'" label="Password"
                     v-model="loginForm.password" :leftIcon="LockKeyhole"
-                    :right-icon="loginForm.passwordIconToggled ? Eye : EyeOff" placeholder="Enter your password"
-                    :onRightIconClick="handlePasswordIconClick" required :error="loginForm.password_error" />
+                    :rightIcon="loginForm.passwordIconToggled ? Eye : EyeOff" placeholder="Enter your password" required
+                    :error="loginForm.password_error" @right-icon-click="handlePasswordIconClick" />
+
 
                 <div class="flex items-center justify-between">
                     <div class="flex items-center">
@@ -42,8 +43,17 @@
 
             <p class="text-center text-gray-500 py-2">or</p>
 
+            <!-- 
             <div id="g_id_onload"></div>
             <div class="g_id_signin flex justify-center"></div>
+             -->
+
+            <div @click="googleLoginRedirect"
+                class="cursor-pointer flex items-center justify-center w-full border border-gray-300 rounded-md p-2 bg-white hover:bg-gray-100 transition">
+                <img src="https://developers.google.com/identity/images/g-logo.png" class="h-5 w-5 mr-2"
+                    alt="Google logo" />
+                <span class="text-sm text-gray-700">Sign in with Google</span>
+            </div>
         </div>
     </div>
 </template>
@@ -60,7 +70,8 @@ import Button from "@components/button/Button.vue";
 const router = useRouter();
 const googleClientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
 
-const { login, loading, error } = useAuth(googleClientId);
+const { login, loginWithGoogle, googleLoginRedirect, loading, error } = useAuth(googleClientId);
+
 
 const inputElement = ref(null);
 
@@ -72,9 +83,26 @@ const loginForm = ref({
     passwordIconToggled: false
 });
 
-onMounted(() => {
+onMounted(async () => {
     if (inputElement.value && inputElement.value.input) {
         inputElement.value.input.focus();
+    }
+    const hashParams = new URLSearchParams(
+        window.location.hash.replace("#", "?")
+    );
+
+    const idToken = hashParams.get("id_token");
+
+    if (idToken) {
+        try {
+            await loginWithGoogle(idToken);
+            router.replace("/"); 
+        } catch (error) {
+            console.error("Google login failed", error);
+            router.replace("/auth/login");
+        }
+    } else {
+        router.replace("/auth/login");
     }
 });
 
