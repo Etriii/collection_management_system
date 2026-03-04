@@ -13,7 +13,8 @@ class ApiService {
 
   constructor() {
     this.api = axios.create({
-      baseURL: import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:8000/",
+      // baseURL: import.meta.env.VITE_API_BASE_URL || "http://127.0.0.1:8000/",
+      baseURL: import.meta.env.VITE_API_BASE_URL || "https://dnsc-systems-api.onrender.com/",
       timeout: this.DEFAULT_TIMEOUT,
       headers: {
         "Content-Type": "application/json",

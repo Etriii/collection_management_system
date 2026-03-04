@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { ref, computed, onMounted, watch, nextTick } from 'vue'
-import { useGcashpaymentsStore } from '@stores/gcashpayments_store'
+import { ref, computed, onMounted, nextTick, onBeforeUnmount } from "vue"
+import { useGcashpaymentsStore } from "@/stores/gcashpayments_store"
 import {
   Search,
   CheckCircle,
@@ -11,162 +11,214 @@ import {
   Loader2,
   Image,
   User,
-  AlertCircle
-} from 'lucide-vue-next'
-import { useRouter } from 'vue-router';
-import AuthenticatedLayout from '@/layouts/AuthenticatedLayout.vue';
+  AlertCircle,
+  ChevronDown,
+  ChevronUp,
+} from "lucide-vue-next"
+import type { PaymentApproval } from "@/core/types"
+import GCashPaymentApprovalModal from "@/components/modals/GCashPaymentApprovalModal.vue"
+import GCashPaymentRejectionModal from "@/components/modals/GCashPaymentRejectionModal.vue"
+import { gcashpayments_api } from "@/services/api/gcashpayments_api"
 
 const gcashStore = useGcashpaymentsStore()
 
-const router = useRouter();
+const isLoadingModal = ref(false)
 
-const pageTitle = 'GCash Payments';
-
-const perPage = ref(5)
-
-const approvalNotes = ref('')
+const listScrollEl = ref<HTMLElement | null>(null)
+const infiniteSentinelEl = ref<HTMLElement | null>(null)
+let io: IntersectionObserver | null = null
 
 const stats = computed(() => gcashStore.stats)
-const paginatedPayments = computed(() => gcashStore.paginatedPayments)
-const totalPages = computed(() => gcashStore.totalPages)
-const currentPage = computed({
-  get: () => gcashStore.currentPage,
-  set: (value) => gcashStore.handlePageChange(value)
+const displayedPayments = computed(() => gcashStore.displayedPayments ?? [])
+const selectedPayment = computed(() => gcashStore.selectedPayment)
+const availableFees = computed(() => gcashStore.availableFees ?? [])
+const loadedCount = computed(() => displayedPayments.value.length)
+const totalCount = computed(() => gcashStore.totalItems ?? gcashStore.gcashPayments.length)
+const canLoadMore = computed(() => !!gcashStore.hasMore && !gcashStore.isLoading && !gcashStore.isLoadingMore)
+
+async function loadNextPage() {
+  if (!canLoadMore.value) return
+  await gcashStore.loadMore()
+}
+
+function setupInfiniteObserver() {
+  if (!listScrollEl.value || !infiniteSentinelEl.value) return
+  if (io) io.disconnect()
+
+  io = new IntersectionObserver(
+    async (entries) => {
+      const entry = entries[0]
+      if (!entry?.isIntersecting) return
+      await loadNextPage()
+    },
+    { root: listScrollEl.value, rootMargin: "250px", threshold: 0.01 }
+  )
+
+  io.observe(infiniteSentinelEl.value)
+}
+
+onBeforeUnmount(() => {
+  if (io) io.disconnect()
 })
+
+let searchTimeout: ReturnType<typeof setTimeout> | null = null
 const searchQuery = computed({
   get: () => gcashStore.searchQuery,
   set: (value) => {
-    gcashStore.searchQuery = value
-    debouncedSearch()
-  }
+    if (searchTimeout) clearTimeout(searchTimeout)
+    searchTimeout = setTimeout(async () => {
+      gcashStore.setSearchQuery(value)
+      await nextTick()
+      if (listScrollEl.value) listScrollEl.value.scrollTop = 0
+      setupInfiniteObserver()
+    }, 200)
+  },
 })
+
 const activeFilter = computed({
   get: () => gcashStore.activeFilter,
-  set: (value) => {
-    gcashStore.activeFilter = value
-    gcashStore.currentPage = 1
-  }
+  set: async (value) => {
+    gcashStore.setActiveFilter(value as any)
+    await nextTick()
+    if (listScrollEl.value) listScrollEl.value.scrollTop = 0
+    setupInfiniteObserver()
+  },
 })
-const isLoading = computed(() => gcashStore.isLoading)
-const filteredPayments = computed(() => gcashStore.filteredPayments)
-const gcashPayments = computed(() => gcashStore.gcashPayments)
-
-const isApproveModalOpen = computed({
-  get: () => gcashStore.isApproveModalOpen,
-  set: (value) => {
-    if (!value) {
-      approvalNotes.value = ''
-    }
-    gcashStore.isApproveModalOpen = value
-  }
-})
-const isRejectModalOpen = computed({
-  get: () => gcashStore.isRejectModalOpen,
-  set: (value) => {
-    if (!value) {
-      rejectionReason.value = ''
-    }
-    gcashStore.isRejectModalOpen = value
-  }
-})
-const rejectionReason = computed({
-  get: () => gcashStore.rejectionReason,
-  set: (value) => { gcashStore.rejectionReason = value }
-})
-const selectedPayment = computed(() => gcashStore.selectedPayment)
-
-let searchTimeout: ReturnType<typeof setTimeout> | null = null
-const debouncedSearch = () => {
-  if (searchTimeout) clearTimeout(searchTimeout)
-  searchTimeout = setTimeout(() => {
-    gcashStore.currentPage = 1
-  }, 300)
-}
 
 onMounted(async () => {
+  await gcashStore.resetAndRefetch()
   await nextTick()
+  setupInfiniteObserver()
+})
+
+async function openApproveModal(payment: PaymentApproval) {
+  isLoadingModal.value = true
   try {
-    await gcashStore.fetchGcashPayments()
-  } catch (error) {
-    console.error('Failed to load payments:', error)
-  }
-})
-
-watch(activeFilter, () => {
-  gcashStore.currentPage = 1
-})
-
-const handleApprove = async () => {
-  if (selectedPayment.value) {
-    try {
-      await gcashStore.approveGcashPayment(selectedPayment.value.id, approvalNotes.value)
-      approvalNotes.value = ''
-    } catch (error) {
-      console.error('Failed to approve GCash payment:', error)
+    const fullSubmission = await gcashpayments_api.getPaymentSubmission(payment.id)
+    gcashStore.selectedPayment = {
+      ...payment,
+      ...(fullSubmission as any)?.data?.id ? (fullSubmission as any).data : fullSubmission,
+      screenshot_urls:
+        ((fullSubmission as any)?.data?.screenshot_urls ?? (fullSubmission as any)?.screenshot_urls) ||
+        payment.screenshot_urls ||
+        [],
     }
+    gcashStore.isApproveModalOpen = true
+  } catch (err) {
+    console.error("Error fetching submission details:", err)
+    gcashStore.selectedPayment = payment
+    gcashStore.isApproveModalOpen = true
+  } finally {
+    isLoadingModal.value = false
   }
 }
 
-const handleReject = async () => {
-  if (selectedPayment.value && rejectionReason.value) {
-    try {
-      await gcashStore.rejectGcashPayment(selectedPayment.value.id, rejectionReason.value)
-    } catch (error) {
-      console.error('Failed to reject GCash payment:', error)
+async function openRejectModal(payment: PaymentApproval) {
+  isLoadingModal.value = true
+  try {
+    const fullSubmission = await gcashpayments_api.getPaymentSubmission(payment.id)
+    gcashStore.selectedPayment = {
+      ...payment,
+      ...(fullSubmission as any)?.data?.id ? (fullSubmission as any).data : fullSubmission,
+      screenshot_urls:
+        ((fullSubmission as any)?.data?.screenshot_urls ?? (fullSubmission as any)?.screenshot_urls) ||
+        payment.screenshot_urls ||
+        [],
     }
+    gcashStore.isRejectModalOpen = true
+  } catch (err) {
+    console.error("Error fetching submission details:", err)
+    gcashStore.selectedPayment = payment
+    gcashStore.isRejectModalOpen = true
+  } finally {
+    isLoadingModal.value = false
   }
 }
 
-const viewStudentProfile = (payment: any) => {
-  console.log('View student profile clicked, payment:', payment);
+const handleApprove = async (allocations: any[], notes: string) => {
+  if (!selectedPayment.value) return alert("No payment selected")
+  try {
+    isLoadingModal.value = true
+    const payments = allocations.map((a) => ({
+      fee: a.fee_id!,
+      amount_paid: a.amount.toFixed(2),
+      payment_method: (selectedPayment.value as any)?.method || "gcash",
+      payment_submission: selectedPayment.value!.id,
+    }))
 
-  if (!payment) {
-    console.error('Payment is undefined');
-    return;
-  }
-
-  const studentId = payment.fee.student.id;
-
-  if (studentId) {
-    console.log('Found student ID:', studentId);
-    router.push(`/students/view/${studentId}`);
-  } else {
-    console.error('No student ID found in payment. Available keys:', Object.keys(payment));
-    console.error('Payment object:', payment);
-  }
-};
-
-const viewScreenshot = (payment: any) => {
-  if (payment.screenshot_urls && payment.screenshot_urls.length > 0) {
-    window.open(payment.screenshot_urls[0], '_blank')
-  } else if (payment.screenshot) {
-    window.open(payment.screenshot, '_blank')
+    await gcashpayments_api.bulkCreatePayments(payments)
+    gcashStore.isApproveModalOpen = false
+    gcashStore.selectedPayment = null
+    alert("Payment approved and processed successfully!")
+    await gcashStore.resetAndRefetch()
+  } catch (err: any) {
+    console.error("Failed to approve payment:", err)
+    alert("Failed to approve payment: " + (err.response?.data?.detail || err.message || "Unknown error"))
+  } finally {
+    isLoadingModal.value = false
   }
 }
 
+const handleReject = async (reason: string) => {
+  if (!selectedPayment.value) return alert("No payment selected")
+  try {
+    isLoadingModal.value = true
+    await gcashpayments_api.rejectPayment(selectedPayment.value.id, { remarks: reason })
+    gcashStore.isRejectModalOpen = false
+    gcashStore.selectedPayment = null
+    alert("Payment rejected successfully")
+    await gcashStore.resetAndRefetch()
+  } catch (err: any) {
+    console.error("Failed to reject payment:", err)
+    alert("Failed to reject payment: " + (err.message || "Unknown error"))
+  } finally {
+    isLoadingModal.value = false
+  }
+}
 
-const getInitials = (name: string = '') => {
-  if (!name) return '?'
-  return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2)
+function handleCloseApprovalModal() {
+  gcashStore.isApproveModalOpen = false
+  gcashStore.selectedPayment = null
+}
+function handleCloseRejectionModal() {
+  gcashStore.isRejectModalOpen = false
+  gcashStore.selectedPayment = null
+}
+
+const viewStudentProfile = (payment: PaymentApproval) => {
+  const studentId = gcashStore.getStudentId(payment)
+  if (!studentId) return alert("Cannot view profile: Student ID missing")
+  window.open(`/students/view/${studentId}`, "_blank")
+}
+
+const viewScreenshot = (payment: PaymentApproval) => {
+  const url = payment.screenshot_urls?.[0] || (payment as any).screenshot
+  if (url) window.open(url, "_blank")
+}
+
+const getInitials = (name = "") => {
+  if (!name) return "?"
+  return name.split(" ").map((n) => n[0]).join("").toUpperCase().slice(0, 2)
 }
 
 const formatAmount = (amount: string | number) => {
-  if (!amount) return '₱0.00'
-  const numAmount = typeof amount === 'string' ? parseFloat(amount) : amount
-  return `₱${numAmount.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+  const num = typeof amount === "string" ? parseFloat(amount) : amount
+  if (!num) return "₱0.00"
+  return `₱${num.toLocaleString(undefined, { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
 }
 
 const getPriorityClass = (priority: string) => {
   switch (priority) {
-    case 'high': return 'bg-red-100 text-red-800'
-    case 'medium': return 'bg-yellow-100 text-yellow-800'
-    case 'low': return 'bg-green-100 text-green-800'
-    default: return 'bg-gray-100 text-gray-800'
+    case "high": return "bg-red-100 text-red-800"
+    case "medium": return "bg-yellow-100 text-yellow-800"
+    case "low": return "bg-green-100 text-green-800"
+    default: return "bg-gray-100 text-gray-800"
   }
 }
+const formatPriority = (priority: string) => `${priority.charAt(0).toUpperCase() + priority.slice(1)} Priority`
 
-const formatPriority = (priority: string) => {
-  return priority.charAt(0).toUpperCase() + priority.slice(1) + ' Priority'
+async function toggleViewPayment(p: PaymentApproval) {
+  await gcashStore.toggleRow(p.id)
 }
 </script>
 
@@ -178,13 +230,11 @@ const formatPriority = (priority: string) => {
         <p class="text-sm text-gray-500 mt-1">Review and manage pending GCash payments</p>
       </header>
 
-      <!-- Loading state -->
-      <div v-if="isLoading" class="text-center py-8">
+      <div v-if="gcashStore.isLoading && displayedPayments.length === 0" class="text-center py-8">
         <Loader2 class="inline-block animate-spin rounded-full h-8 w-8 text-blue-600" />
         <p class="mt-2 text-gray-600">Loading payments...</p>
       </div>
 
-      <!-- Content -->
       <div v-else>
         <!-- stats -->
         <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
@@ -221,20 +271,40 @@ const formatPriority = (priority: string) => {
           </div>
         </div>
 
-        <!-- main -->
         <div class="bg-white rounded-xl shadow p-6">
-          <!-- search w/ filter -->
+          <div class="flex items-center justify-between mb-4">
+            <div class="text-sm text-gray-600">
+              Showing {{ loadedCount }} of {{ totalCount }} payments
+              <span v-if="gcashStore.searchQuery || gcashStore.activeFilter !== 'all'">(filtered)</span>
+            </div>
+
+            <button
+              type="button"
+              class="px-3 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-100 text-sm"
+              @click="gcashStore.resetAndRefetch"
+              :disabled="gcashStore.isLoading || gcashStore.isLoadingMore"
+            >
+              Refresh
+            </button>
+          </div>
+
+          <!-- search + filter -->
           <div class="flex flex-col md:flex-row gap-4 mb-6 items-center">
             <div class="flex-1 relative">
               <Search class="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400" />
-              <input v-model="searchQuery"
+              <input
+                v-model="searchQuery"
                 class="pl-10 w-full border border-gray-300 rounded-lg py-2 px-3 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                placeholder="Search by student name, ID, reference number, or fee type..." />
+                placeholder="Search by student name, ID, reference number..."
+              />
             </div>
+
             <div class="relative w-full md:w-auto">
-              <select v-model="activeFilter"
-                class="block appearance-none w-full bg-white border border-gray-300 text-gray-700 py-2 px-4 pr-8 rounded-lg leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent">
-                <option value="all">All ({{ gcashPayments.length }})</option>
+              <select
+                v-model="activeFilter"
+                class="block appearance-none w-full bg-white border border-gray-300 text-gray-700 py-2 px-4 pr-8 rounded-lg leading-tight focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+              >
+                <option value="all">All ({{ gcashStore.gcashPayments.length }})</option>
                 <option value="high">High Priority</option>
                 <option value="medium">Medium Priority</option>
                 <option value="low">Low Priority</option>
@@ -247,200 +317,178 @@ const formatPriority = (priority: string) => {
             </div>
           </div>
 
-          <!-- payment list -->
-          <div v-if="paginatedPayments.length > 0" class="space-y-6">
-            <div v-for="p in paginatedPayments" :key="p.id" class="p-6 bg-gray-50 rounded-xl shadow-sm">
-              <div class="flex items-center justify-between mb-4">
-                <div class="flex items-center space-x-4">
-                  <div class="p-3 bg-gray-200 rounded-full flex-shrink-0">
-                    <span class="text-sm font-bold text-gray-700">{{ getInitials(p.name) }}</span>
+          <div class="border border-gray-200 rounded-lg overflow-hidden">
+            <div ref="listScrollEl" class="overflow-y-auto" style="max-height: 70vh;">
+              <div v-if="displayedPayments.length > 0" class="space-y-6 p-4">
+                <div v-for="p in displayedPayments" :key="p.id" class="p-6 bg-gray-50 rounded-xl shadow-sm">
+                  <div class="flex items-center justify-between mb-4">
+                    <div class="flex items-center space-x-4">
+                      <div class="p-3 bg-gray-200 rounded-full flex-shrink-0">
+                        <span class="text-sm font-bold text-gray-700">{{ getInitials(p.name) }}</span>
+                      </div>
+                      <div>
+                        <h3 class="font-semibold text-gray-900">{{ p.name || "Unknown Student" }}</h3>
+                        <p class="text-xs text-gray-500">
+                          {{ p.studentId || "N/A" }} | {{ p.daysAgo || 0 }} days ago
+                        </p>
+                      </div>
+                    </div>
+
+                    <div class="text-right flex-shrink-0">
+                      <span class="text-xl font-bold">{{ formatAmount(p.amount_paid) }}</span>
+                      <span class="ml-2 px-2 py-1 text-xs font-semibold rounded-full" :class="getPriorityClass(p.priority)">
+                        {{ formatPriority(p.priority) }}
+                      </span>
+                    </div>
                   </div>
-                  <div>
-                    <h3 class="font-semibold text-gray-900">{{ p.name || 'Unknown Student' }}</h3>
-                    <p class="text-xs text-gray-500">{{ p.studentId || 'N/A' }} | {{ p.daysAgo || 0 }} days ago</p>
+
+                  <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-600 mb-4">
+                    <div>
+                      <p class="font-medium text-gray-800">Reference</p>
+                      <p>{{ p.reference_number || "N/A" }}</p>
+                    </div>
+                    <div>
+                      <p class="font-medium text-gray-800">Status</p>
+                      <p class="font-semibold">{{ p.status }}</p>
+                    </div>
+                    <div>
+                      <p class="font-medium text-gray-800">Submission ID</p>
+                      <p>#{{ p.id }}</p>
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    class="w-full flex items-center justify-between px-4 py-2 border border-gray-200 rounded-lg bg-white hover:bg-gray-50 transition"
+                    @click="toggleViewPayment(p)"
+                  >
+                    <span class="text-sm font-medium text-gray-800">View Fees</span>
+                    <span class="flex items-center gap-2 text-xs text-gray-500">
+                      <Loader2 v-if="gcashStore.detailsLoadingById[p.id]" class="h-4 w-4 animate-spin" />
+                      <ChevronUp v-else-if="gcashStore.expandedRows[p.id]" class="h-4 w-4" />
+                      <ChevronDown v-else class="h-4 w-4" />
+                    </span>
+                  </button>
+
+                  <div v-if="gcashStore.expandedRows[p.id]" class="mt-3 bg-white border border-gray-200 rounded-lg p-4">
+                    <div v-if="gcashStore.detailsLoadingById[p.id]" class="flex items-center gap-2 text-sm text-gray-600">
+                      <Loader2 class="h-4 w-4 animate-spin" /> Loading payment details...
+                    </div>
+
+                    <template v-else>
+                      <div
+                        v-if="gcashStore.submissionDetailsById[p.id]?.fee_items?.length"
+                        class="space-y-3"
+                      >
+                        <div
+                          v-for="item in gcashStore.submissionDetailsById[p.id]!.fee_items"
+                          :key="item.id"
+                          class="border border-gray-100 rounded-lg p-3"
+                        >
+                          <div class="flex items-start justify-between">
+                            <div>
+                              <div class="font-semibold text-gray-900">
+                                {{ item.fee.category_name }} (Fee #{{ item.fee.id }})
+                              </div>
+                              <div class="text-xs text-gray-500 mt-1">
+                                Previous balance: ₱{{ item.previous_balance }} • Current balance: ₱{{ item.fee.balance }}
+                              </div>
+                              <div class="text-xs text-gray-500">
+                                Due: {{ item.fee.due_date ? new Date(item.fee.due_date).toLocaleString() : "N/A" }}
+                              </div>
+                            </div>
+                            <div class="text-right">
+                              <div class="text-sm font-bold text-emerald-600">
+                                Paid: ₱{{ item.amount_paid }}
+                              </div>
+                              <div class="text-xs text-gray-500">
+                                Status: {{ item.fee.status }}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div v-else class="text-sm text-gray-600">
+                        No fee items found for this submission.
+                      </div>
+                    </template>
+                  </div>
+
+                  <div class="flex flex-col sm:flex-row gap-2 pt-4 border-t border-gray-200 mt-4">
+                    <button
+                      @click="viewScreenshot(p)"
+                      class="flex-1 inline-flex items-center justify-center px-4 py-2 border rounded-md text-gray-700 hover:bg-gray-100 transition-colors"
+                    >
+                      <Image class="h-4 w-4 mr-2" /> View Screenshot
+                    </button>
+
+                    <button
+                      @click="viewStudentProfile(p)"
+                      class="flex-1 inline-flex items-center justify-center px-4 py-2 border rounded-md text-gray-700 hover:bg-gray-100 transition-colors"
+                    >
+                      <User class="h-4 w-4 mr-2" /> View Student Profile
+                    </button>
+
+                    <div v-if="p.status === 'pending'" class="flex-shrink-0 flex gap-2">
+                      <button
+                        @click="openRejectModal(p)"
+                        class="inline-flex items-center justify-center px-4 py-2 border border-red-500 rounded-md text-red-600 hover:bg-red-50 transition-colors"
+                      >
+                        <XCircle class="h-4 w-4 mr-2" /> Reject
+                      </button>
+                      <button
+                        @click="openApproveModal(p)"
+                        class="inline-flex items-center justify-center px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
+                      >
+                        <CheckCircle class="h-4 w-4 mr-2" /> Approve
+                      </button>
+                    </div>
+
+                    <div v-else class="text-sm italic px-6 my-4 font-bold" :class="p.status === 'approved' ? 'text-green-600' : 'text-red-600'">
+                      {{ p.status === "approved" ? "Approved" : "Rejected" }}
+                    </div>
                   </div>
                 </div>
-                <div class="text-right flex-shrink-0">
-                  <span class="text-xl font-bold">{{ formatAmount(p.amount_paid) }}</span>
-                  <span class="ml-2 px-2 py-1 text-xs font-semibold rounded-full" :class="getPriorityClass(p.priority)">
-                    {{ formatPriority(p.priority) }}
-                  </span>
+
+                <div ref="infiniteSentinelEl" class="h-1"></div>
+
+                <div v-if="gcashStore.isLoadingMore" class="flex items-center justify-center gap-2 py-4 text-gray-600">
+                  <Loader2 class="h-5 w-5 animate-spin text-blue-600" />
+                  Loading more payments...
+                </div>
+
+                <div v-else-if="!gcashStore.hasMore && displayedPayments.length > 0" class="text-center text-xs text-gray-500 py-4">
+                  You’ve reached the end.
                 </div>
               </div>
 
-              <!-- payment details -->
-              <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm text-gray-600 mb-4">
-                <div>
-                  <p class="font-medium text-gray-800">Fee Type</p>
-                  <p>{{ p.feeType || 'Unknown' }}</p>
-                </div>
-                <div>
-                  <p class="font-medium text-gray-800">GCash Reference</p>
-                  <p>{{ p.reference_number || 'N/A' }}</p>
-                </div>
-                <div>
-                  <p class="font-medium text-gray-800">Sender</p>
-                  <p>{{ p.sender || 'Unknown' }}</p>
-                </div>
-                <div class="col-span-1 md:col-span-3">
-                  <p class="font-medium text-gray-800">Description</p>
-                  <p>{{ p.description || 'No description' }}</p>
-                </div>
-              </div>
-
-              <div v-if="p.notes" class="flex items-center space-x-2 p-3 bg-yellow-50 text-yellow-800 rounded-lg mb-4">
-                <AlertCircle class="h-4 w-4 flex-shrink-0" />
-                <p class="text-xs font-medium">{{ p.notes }}</p>
-              </div>
-
-              <div class="flex flex-col sm:flex-row gap-2 pt-4 border-t border-gray-200">
-                <button @click="viewScreenshot(p)"
-                  class="flex-1 inline-flex items-center justify-center px-4 py-2 border rounded-md text-gray-700 hover:bg-gray-100 transition-colors">
-                  <Image class="h-4 w-4 mr-2" /> View Screenshot
-                </button>
-
-                <!-- Fixed: Use the updated function and pass the entire payment object -->
-                <button @click="viewStudentProfile(p)"
-                  class="flex-1 inline-flex items-center justify-center px-4 py-2 border rounded-md text-gray-700 hover:bg-gray-100 transition-colors">
-                  <User class="h-4 w-4 mr-2" /> View Student Profile
-                </button>
-
-                <div class="flex-shrink-0 flex gap-2">
-                  <button @click="gcashStore.openRejectModal(p)"
-                    class="inline-flex items-center justify-center px-4 py-2 border border-red-500 rounded-md text-red-600 hover:bg-red-50 transition-colors">
-                    <XCircle class="h-4 w-4 mr-2" /> Reject
-                  </button>
-                  <button @click="gcashStore.openApproveModal(p)"
-                    class="inline-flex items-center justify-center px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors">
-                    <CheckCircle class="h-4 w-4 mr-2" /> Approve
-                  </button>
-                </div>
+              <div v-else class="p-12 text-center bg-gray-50">
+                <CreditCard class="mx-auto h-12 w-12 text-gray-400 mb-4" />
+                <h3 class="text-lg font-medium text-gray-900 mb-2">No payments found</h3>
               </div>
             </div>
           </div>
-
-          <!-- if empty -->
-          <div v-else class="mt-8 p-12 text-center bg-gray-50 rounded-xl">
-            <CreditCard class="mx-auto h-12 w-12 text-gray-400 mb-4" />
-            <h3 class="text-lg font-medium text-gray-900 mb-2">No pending payments found</h3>
-            <!-- <p class="text-gray-600 mb-4">No payments match your current search and filter.</p>
-              <button @click="clearFilters"
-                class="px-4 py-2 border rounded-md hover:bg-gray-100 transition-colors">
-                Clear Filters
-              </button> -->
-          </div>
         </div>
 
-        <!-- pagination-->
-        <div v-if="filteredPayments.length > 0"
-          class="flex items-center justify-between mt-6 pt-4 border-t border-gray-200 flex-shrink-0">
-          <div class="text-sm text-gray-600">
-            Showing <span class="font-medium">{{ (currentPage - 1) * perPage + 1 }}</span> to <span
-              class="font-medium">{{
-                Math.min(currentPage * perPage, filteredPayments.length) }}</span>
-            of <span class="font-medium">{{ filteredPayments.length }}</span> entries
-          </div>
-          <div class="flex items-center space-x-2">
-            <button @click="gcashStore.handlePageChange(currentPage - 1)" :disabled="currentPage === 1"
-              class="px-4 py-2 text-sm font-medium border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-200 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed">
-              Previous
-            </button>
-            <span class="text-sm font-medium text-gray-700">Page {{ currentPage }} of {{ totalPages }}</span>
-            <button @click="gcashStore.handlePageChange(currentPage + 1)" :disabled="currentPage === totalPages"
-              class="px-4 py-2 text-sm font-medium border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-200 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed">
-              Next
-            </button>
-          </div>
-        </div>
-      </div>
-    </div>
+        <!-- Approve Payment Modal -->
+        <GCashPaymentApprovalModal
+          :is-open="gcashStore.isApproveModalOpen"
+          :payment="selectedPayment"
+          :available-fees="availableFees"
+          :is-loading="isLoadingModal"
+          @close="handleCloseApprovalModal"
+          @approve="handleApprove"
+        />
 
-    <!-- approve payment modal -->
-    <div v-if="isApproveModalOpen && selectedPayment"
-      class="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-      <div class="bg-white rounded-xl shadow-lg p-6 w-full max-w-lg">
-        <div class="flex justify-between items-center mb-4">
-          <h2 class="text-2xl font-bold text-gray-800">Approve Payment</h2>
-          <button @click="isApproveModalOpen = false" class="text-gray-500 hover:text-gray-700">
-            <XCircle class="h-6 w-6" />
-          </button>
-        </div>
-        <p class="text-sm text-gray-600 mb-6">Confirm approval of {{ formatAmount(selectedPayment.amount_paid) }}
-          payment
-          from {{ selectedPayment.name || 'Unknown Student' }}</p>
-
-        <div class="space-y-4">
-          <h3 class="text-lg font-semibold text-gray-800">Payment Details</h3>
-          <div class="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
-            <div class="text-gray-600">Student:</div>
-            <div class="font-medium text-gray-900">{{ selectedPayment.name || 'Unknown' }}</div>
-
-            <div class="text-gray-600">Fee Type:</div>
-            <div class="font-medium text-gray-900">{{ selectedPayment.feeType || 'Unknown' }}</div>
-
-            <div class="text-gray-600">Amount:</div>
-            <div class="font-medium text-green-600">{{ formatAmount(selectedPayment.amount_paid) }}</div>
-
-            <div class="text-gray-600">GCash Ref:</div>
-            <div class="font-medium text-gray-900">{{ selectedPayment.reference_number || 'N/A' }}</div>
-          </div>
-
-          <div class="pt-4">
-            <label for="approvalNotes" class="block mb-2 text-sm font-medium text-gray-700">Add approval notes
-              (optional)...</label>
-            <textarea id="approvalNotes" v-model="approvalNotes"
-              class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              rows="3" placeholder="Notes..."></textarea>
-          </div>
-        </div>
-
-        <div class="flex justify-end gap-3 pt-6">
-          <button type="button"
-            class="px-5 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-100 transition-colors"
-            @click="isApproveModalOpen = false">
-            Cancel
-          </button>
-          <button type="submit"
-            class="px-5 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
-            @click="handleApprove">
-            Approve Payment
-          </button>
-        </div>
-      </div>
-    </div>
-
-    <!-- reject payment modal -->
-    <div v-if="isRejectModalOpen && selectedPayment"
-      class="fixed inset-0 bg-black/50 flex items-center justify-center p-4 z-50">
-      <div class="bg-white rounded-xl shadow-lg p-6 w-full max-w-lg">
-        <div class="flex justify-between items-center mb-4">
-          <h2 class="text-2xl font-bold text-gray-800">Reject Payment</h2>
-          <button @click="isRejectModalOpen = false" class="text-gray-500 hover:text-gray-700">
-            <XCircle class="h-6 w-6" />
-          </button>
-        </div>
-        <p class="text-gray-600 mb-6">Are you sure you want to reject this payment from {{ selectedPayment.name ||
-          'Unknown Student' }}?
-          Please provide a reason for rejection.</p>
-
-        <div class="pt-2 mb-4">
-          <label for="rejectionReason" class="block sr-only">Enter reason for rejection...</label>
-          <textarea id="rejectionReason" v-model="rejectionReason"
-            class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-red-500 focus:border-transparent"
-            rows="4" placeholder="Enter reason for rejection..." required></textarea>
-        </div>
-
-        <div class="flex justify-end gap-3 pt-6">
-          <button type="button"
-            class="px-5 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-100 transition-colors"
-            @click="isRejectModalOpen = false">
-            Cancel
-          </button>
-          <button type="submit" class="px-5 py-2 bg-red-600 text-white rounded-md hover:bg-red-700 transition-colors"
-            @click="handleReject">
-            Reject Payment
-          </button>
-        </div>
+        <!-- Reject Payment Modal -->
+        <GCashPaymentRejectionModal
+          :is-open="gcashStore.isRejectModalOpen"
+          :payment="selectedPayment"
+          :is-loading="isLoadingModal"
+          @close="handleCloseRejectionModal"
+          @reject="handleReject"
+        />
       </div>
     </div>
   </div>

@@ -1,35 +1,42 @@
-import { defineStore } from 'pinia'
-import { ref, computed } from 'vue'
-import type { Transaction, TransactionStatus, PaymentSubmissionStatus, FeeDropdownOption, CreatePaymentDto } from '@/services/api/transactions_api.ts'
-import apiService from '@/services/apiService.ts'
+import { defineStore } from "pinia";
+import { ref, computed } from "vue";
+import type {
+  Transaction,
+  TransactionStatus,
+  PaymentSubmissionStatus,
+  FeeDropdownOption,
+  CreatePaymentDto,
+} from "@/services/api/transactions_api.ts";
+import apiService from "@/services/apiService.ts";
 
-// Interfaces
 interface NewTransactionForm {
   student_id: number | null;
   total_amount_paid: string;
   payment_method: "cash" | "gcash" | "bank" | "online" | "other";
   studentSearch: string;
 }
-
 interface Student {
   id: number;
   s_studentID: string;
   s_fname: string;
-  s_mname: string;
+  s_mname: string | null;
   s_lname: string;
-  s_suffix?: string;
-  s_email: string;
+  s_suffix?: string | null;
+  s_email?: string | null;
   s_set: string;
   s_lvl: number;
   s_status: string;
-  program?: {
-    id: number;
-    name: string;
-    institute?: {
-      id: number;
-      institute_name: string;
-    };
-  };
+  program?:
+    | number
+    | {
+        id: number;
+        name?: string;
+        institute?: {
+          id: number;
+          institute_name: string;
+        };
+      };
+  program_name?: string;
 }
 
 interface FeeDistribution {
@@ -42,401 +49,406 @@ interface FeeDistribution {
 }
 
 interface FeeDropdownOptionExtended extends FeeDropdownOption {
+  balance: number;
   _rawStudentId?: number;
 }
 
-export const useTransactionsStore = defineStore('transactions', () => {
-  // State
-  const allTransactions = ref<Transaction[]>([]) 
-  const searchQuery = ref("")
-  const activeFilter = ref<"all" | TransactionStatus>("all")
-  const paymentSubmissionFilter = ref<"all" | PaymentSubmissionStatus>("all")
-  const isCreateTransactionDialogOpen = ref(false)
-  const isViewTransactionDialogOpen = ref(false)
-  const selectedTransaction = ref<Transaction | null>(null)
-  const isLoadingFeeDetails = ref(false)
-  const isLoading = ref(false)
-  const currentPage = ref(1)
-  const itemsPerPage = ref(10)
-  const totalItems = ref(0)
-  const perPage = ref(10)
+export const useTransactionsStore = defineStore("transactions", () => {
+  const allTransactions = ref<Transaction[]>([]);
+  const searchQuery = ref("");
+  const activeFilter = ref<"all" | TransactionStatus>("all");
+  const paymentSubmissionFilter = ref<"all" | PaymentSubmissionStatus>("all");
+
+  const isCreateTransactionDialogOpen = ref(false);
+  const isViewTransactionDialogOpen = ref(false);
+
+  const selectedTransaction = ref<Transaction | null>(null);
+
+  const isLoading = ref(false);
+  const isLoadingMore = ref(false);
+  const hasMore = ref(true);
+
+  const currentPage = ref(1);
+  const perPage = ref(10);
+  const totalItems = ref(0);
+
   const newTransaction = ref<NewTransactionForm>({
     student_id: null,
     total_amount_paid: "",
     payment_method: "cash",
-    studentSearch: ""
-  })
+    studentSearch: "",
+  });
 
-  const students = ref<Student[]>([])
-  const selectedStudent = ref<Student | null>(null)
-  const isLoadingStudents = ref(false)
+  const students = ref<Student[]>([]);
+  const selectedStudent = ref<Student | null>(null);
+  const isLoadingStudents = ref(false);
+  const studentSearchPage = ref(1);
+  const studentSearchHasMore = ref(false);
 
-  const feeOptions = ref<FeeDropdownOption[]>([])
-  const isLoadingFees = ref(false)
+  const searchDebounceTimer = ref<any>(null);
 
-  const feeDistribution = ref<FeeDistribution[]>([])
-  const availableFees = ref<FeeDropdownOption[]>([])
+  const isLoadingFees = ref(false);
+  const isLoadingFeeDetails = ref(false);
 
-  const allStudents = ref<Student[]>([])
+  const feeOptions = ref<FeeDropdownOption[]>([]);
+  const availableFees = ref<FeeDropdownOption[]>([]);
+  const feeDistribution = ref<FeeDistribution[]>([]);
 
-  // Helper Functions
   const formatDate = (dateString: string): string => {
     if (!dateString || dateString === "Invalid Date") return "N/A";
-
     try {
-      const date = new Date(dateString);
-      if (isNaN(date.getTime())) return "Invalid Date";
-      return date.toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric'
+      const d = new Date(dateString);
+      if (isNaN(d.getTime())) return "Invalid Date";
+      return d.toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
       });
-    } catch (error) {
-      console.error("Error formatting date:", dateString, error);
+    } catch {
       return "Invalid Date";
-    }
-  }
-
-  const parseAmount = (amountString: string | number): number => {
-    if (amountString === null || amountString === undefined) return 0;
-
-    try {
-      const str = typeof amountString === 'number' ? amountString.toString() : String(amountString);
-      if (!str || str.trim() === '') return 0;
-
-      const cleaned = str.replace(/[₱$,]/g, '').trim();
-      const parsed = parseFloat(cleaned);
-      return isNaN(parsed) ? 0 : Math.abs(parsed);
-    } catch (error) {
-      console.error("Error parsing amount:", amountString, error);
-      return 0;
     }
   };
 
-  const getFullStudentName = (student: Student): string => {
+  const parseAmount = (amountString: string | number): number => {
+    if (amountString === null || amountString === undefined) return 0;
+    const str =
+      typeof amountString === "number"
+        ? String(amountString)
+        : String(amountString);
+    if (!str.trim()) return 0;
+    const cleaned = str.replace(/[₱$,]/g, "").trim();
+    const parsed = parseFloat(cleaned);
+    return isNaN(parsed) ? 0 : Math.abs(parsed);
+  };
+
+  const getFullStudentName = (
+    student: Pick<Student, "s_fname" | "s_mname" | "s_lname" | "s_suffix">,
+  ): string => {
     const parts = [
       student.s_fname,
       student.s_mname,
       student.s_lname,
-      student.s_suffix && student.s_suffix.trim() !== '' ? student.s_suffix : null
+      student.s_suffix && String(student.s_suffix).trim() !== ""
+        ? student.s_suffix
+        : null,
     ].filter(Boolean);
-    return parts.join(' ').trim();
+    return parts.join(" ").trim() || "Unknown";
+  };
+
+  function getStudentDisplayName(student: Student): string {
+    const name = student.s_lname
+      ? getFullStudentName(student)
+      : student.s_fname;
+    const studentId = student.s_studentID || `ID-${student.id}`;
+    return `${studentId} - ${name}`;
   }
 
-  // Computed Properties
-const transactionsWithCorrectedNames = computed(() => {
-  return allTransactions.value.map(transaction => ({
-    ...transaction,
-    dueDate: formatDate(transaction.dueDate),
-    paymentDate: formatDate(transaction.createdAt) 
-  }));
-});
+  const transactionsWithCorrectedNames = computed(() => {
+    return allTransactions.value.map((transaction) => ({
+      ...transaction,
+      dueDate: formatDate(transaction.dueDate),
+      paymentDate: formatDate(transaction.createdAt),
+    }));
+  });
 
   const filteredTransactions = computed(() => {
-    const result = transactionsWithCorrectedNames.value.filter((transaction) => {
-      const q = searchQuery.value.toLowerCase()
+    const q = searchQuery.value.toLowerCase().trim();
+
+    return transactionsWithCorrectedNames.value.filter((t) => {
       const matchesSearch =
-        transaction.transactionNumber.toLowerCase().includes(q) ||
-        transaction.studentId.toLowerCase().includes(q) ||
-        transaction.student.toLowerCase().includes(q) ||
-        transaction.category.toLowerCase().includes(q)
+        !q ||
+        t.transactionNumber.toLowerCase().includes(q) ||
+        t.studentId.toLowerCase().includes(q) ||
+        t.student.toLowerCase().includes(q) ||
+        t.category.toLowerCase().includes(q);
+
       const matchesFilter =
-        activeFilter.value === "all" || transaction.status === activeFilter.value
-      const matchesPaymentSubmissionFilter =
+        activeFilter.value === "all" || t.status === activeFilter.value;
+
+      const matchesSubmission =
         paymentSubmissionFilter.value === "all" ||
-        transaction.paymentSubmissionStatus === paymentSubmissionFilter.value
-      return matchesSearch && matchesFilter && matchesPaymentSubmissionFilter
-    })
+        t.paymentSubmissionStatus === paymentSubmissionFilter.value;
 
-    return result
-  })
+      return matchesSearch && matchesFilter && matchesSubmission;
+    });
+  });
 
-const paginatedTransactions = computed(() => {
-  console.log("filteredTransactions before sort:", filteredTransactions.value.map(t => ({
-    id: t.id,
-    createdAt: t.createdAt
-  })));
+  const displayedTransactions = computed(() => {
+    return [...filteredTransactions.value].sort(
+      (a, b) =>
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
+    );
+  });
 
-  const sorted = [...filteredTransactions.value].sort(
-    (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+  const totalPages = computed(() =>
+    Math.ceil(totalItems.value / perPage.value),
   );
 
-  console.log("sortedTransactions by createdAt:", sorted.map(t => ({
-    id: t.id,
-    createdAt: t.createdAt
-  })));
-
-  // Pagination
-  const start = (currentPage.value - 1) * perPage.value;
-  const end = start + perPage.value;
-  const paginated = sorted.slice(start, end);
-
-  console.log(`paginatedTransactions (page ${currentPage.value}):`, paginated.map(t => ({
-    id: t.id,
-    createdAt: t.createdAt
-  })));
-
-  return paginated;
-});
-
-
-  const totalPages = computed(() => {
-    return Math.ceil(filteredTransactions.value.length / itemsPerPage)
-  })
-
   const transactionStats = computed(() => {
-    const sent = allTransactions.value.filter((i) => i.status === "sent")
-    const paid = allTransactions.value.filter((i) => i.status === "paid")
-    const overdue = allTransactions.value.filter((i) => i.status === "overdue")
-    const pendingSubmissions = allTransactions.value.filter((i) => i.paymentSubmissionStatus === "pending").length
-    const approvedSubmissions = allTransactions.value.filter((i) => i.paymentSubmissionStatus === "approved").length
-    const rejectedSubmissions = allTransactions.value.filter((i) => i.paymentSubmissionStatus === "rejected").length
+    const sentCount = allTransactions.value.filter(
+      (i) => i.status === "sent",
+    ).length;
+    const paidCount = allTransactions.value.filter(
+      (i) => i.status === "paid",
+    ).length;
+    const overdueCount = allTransactions.value.filter(
+      (i) => i.status === "overdue",
+    ).length;
+
+    const pendingSubmissions = allTransactions.value.filter(
+      (i) => i.paymentSubmissionStatus === "pending",
+    ).length;
+    const approvedSubmissions = allTransactions.value.filter(
+      (i) => i.paymentSubmissionStatus === "approved",
+    ).length;
+    const rejectedSubmissions = allTransactions.value.filter(
+      (i) => i.paymentSubmissionStatus === "rejected",
+    ).length;
 
     return {
-      sentCount: sent.length,
-      paidCount: paid.length,
-      overdueCount: overdue.length,
+      sentCount,
+      paidCount,
+      overdueCount,
       pendingSubmissions,
       approvedSubmissions,
       rejectedSubmissions,
-      totalTransactions: allTransactions.value.length
-    }
-  })
+      totalTransactions: allTransactions.value.length,
+    };
+  });
 
   const distributionStats = computed(() => {
-    const totalOriginal = feeDistribution.value.reduce((sum, fee) => sum + fee.original_amount, 0)
-    const totalDistributed = feeDistribution.value.reduce((sum, fee) => sum + fee.distributed_amount, 0)
-    const totalBalance = feeDistribution.value.reduce((sum, fee) => sum + fee.balance, 0)
-    const inputAmount = parseFloat(newTransaction.value.total_amount_paid) || 0
+    const totalOriginal = feeDistribution.value.reduce(
+      (sum, fee) => sum + fee.original_amount,
+      0,
+    );
+    const totalDistributed = feeDistribution.value.reduce(
+      (sum, fee) => sum + fee.distributed_amount,
+      0,
+    );
+    const totalBalanceLocal = feeDistribution.value.reduce(
+      (sum, fee) => sum + fee.balance,
+      0,
+    );
+    const inputAmount = parseFloat(newTransaction.value.total_amount_paid) || 0;
 
     return {
       totalOriginal,
       totalDistributed,
-      totalBalance,
+      totalBalance: totalBalanceLocal,
       inputAmount,
       isOverpaying: inputAmount > totalOriginal,
-      remainingToDistribute: Math.max(0, inputAmount - totalBalance)
-    }
-  })
-
-  async function fetchTransactions(page = 1) {
-  try {
-    isLoading.value = true;
-
-    const response = await apiService.get('/api/v1/payments/', {
-      params: {
-        page: page,
-        per_page: perPage.value,
-        ordering: '-created_at' 
-      }
-    });
-
-    const paginationData = response?.data;
-
-    if (!paginationData || typeof paginationData !== 'object') {
-      console.error("Invalid response structure:", response);
-      allTransactions.value = [];
-      return;
-    }
-
-    if (!Array.isArray(paginationData.data)) {
-      console.error("Data is not an array:", paginationData);
-      allTransactions.value = [];
-      return;
-    }
-
-    // Process transactions
-    const processedTransactions = paginationData.data
-      .map(processPaymentData)
-      .filter(Boolean);
-
-    processedTransactions.sort((a, b) => {
-      const dateA = new Date(a.createdAt).getTime();
-      const dateB = new Date(b.createdAt).getTime();
-      return dateB - dateA; 
-    });
-
-    allTransactions.value = processedTransactions;
-
-    currentPage.value = paginationData.current_page || page;
-    perPage.value = paginationData.per_page || 10;
-    totalItems.value = paginationData.total_items || 0;
-
-    console.log(`Loaded ${processedTransactions.length} transactions (Page ${currentPage.value}/${paginationData.total_pages})`);
-
-  } catch (error) {
-    console.error("Error fetching transactions:", error);
-    allTransactions.value = [];
-  } finally {
-    isLoading.value = false;
-  }
-}
-  function extractDataFromResponse(data: any): any[] {
-    console.log("extractDataFromResponse - Debug structure:", data);
-
-    if (data?.data && Array.isArray(data.data)) {
-      console.log("Extracting from data.data (pagination object), length:", data.data.length);
-      return data.data;
-    }
-
-    if (Array.isArray(data)) {
-      console.log("Extracting from data (direct array), length:", data.length);
-      return data;
-    }
-
-    if (data?.data?.data && Array.isArray(data.data.data)) {
-      console.log("Extracting from data.data.data (wrapped pagination), length:", data.data.data.length);
-      return data.data.data;
-    }
-
-    console.warn("Could not find array in response:", data);
-    return [];
-  }
-
-  function goToPage(page: number) {
-    const calculatedTotalPages = Math.ceil(totalItems.value / perPage.value)
-    if (page < 1 || page > calculatedTotalPages) return
-    currentPage.value = page
-    fetchTransactions(page)
-  }
-
+      remainingToDistribute: Math.max(0, inputAmount - totalBalanceLocal),
+    };
+  });
 
   function processPaymentData(payment: any): Transaction | null {
-    try {
-      console.log("Processing payment:", payment);
+    const feeData = payment?.fee;
+    if (!feeData) return null;
 
-      const feeData = payment.fee;
-      if (!feeData) {
-        console.warn("No fee data in payment:", payment);
-        return null;
-      }
+    const studentData = feeData.student;
 
-      const studentData = feeData.student;
-      if (!studentData) {
-        console.warn("No student data in fee:", feeData);
-        return null;
-      }
+    const studentName = studentData?.full_name || "Unknown";
+    const studentId = studentData?.id ? `ID-${studentData.id}` : "N/A";
 
-      let studentId = "N/A";
-      if (studentData.s_studentID && studentData.s_studentID.trim() !== '') {
-        studentId = studentData.s_studentID.trim();
-      } else {
-        studentId = `ID-${studentData.id}`;
-      }
+    const feeStatus = String(feeData.status || "").toLowerCase();
+    let status: TransactionStatus = "pending";
+    if (feeStatus === "paid") status = "paid";
+    else if (feeStatus === "overdue") status = "overdue";
+    else if (feeStatus === "partial") status = "sent";
 
-      const nameParts = [
-        studentData.s_fname?.trim(),
-        studentData.s_mname?.trim(),
-        studentData.s_lname?.trim()
-      ].filter(Boolean);
-      let studentName = nameParts.join(' ');
-      if (studentData.s_suffix && studentData.s_suffix.trim() !== '') {
-        studentName += ` ${studentData.s_suffix.trim()}`;
-      }
-
-      const feeStatus = feeData.status?.toLowerCase();
-      let status: TransactionStatus = "pending";
-      if (feeStatus === 'paid') status = "paid";
-      else if (feeStatus === 'overdue') status = "overdue";
-      else if (feeStatus === 'partial') status = "sent";
-
-      let paymentSubmissionStatus: PaymentSubmissionStatus = "none";
-      if (payment.payment_submission) {
-        const submissionStatus = payment.payment_submission;
-        if (submissionStatus === 'pending') paymentSubmissionStatus = "pending";
-        else if (submissionStatus === 'approved') paymentSubmissionStatus = "approved";
-        else if (submissionStatus === 'rejected') paymentSubmissionStatus = "rejected";
-      }
-
-      const category = feeData.category_name || feeData.category || 'General';
-
-      const amount = parseFloat(payment.amount_paid || "0");
-
-      const dueDate = feeData.due_date || payment.due_date || '';
-
-      const transaction: Transaction = {
-        id: payment.id.toString(),
-        transactionNumber: `TXN-${payment.id}`,
-        studentId: studentId,
-        student: studentName,
-        category: category,
-        amount: amount,
-        dueDate: dueDate,
-        status: status,
-        paymentSubmissionStatus: paymentSubmissionStatus,
-        paymentDate: payment.created_at || '',
-        paymentMethod: payment.payment_method || 'cash',
-        createdAt: payment.created_at,
-        updatedAt: payment.updated_at,
-        received_by: payment.received_by?.username || payment.received_by?.name,
-        fee_id: feeData.id,
-        payment_submission_id: payment.payment_submission || undefined
-      };
-
-      return transaction;
-    } catch (error) {
-      console.error("Error processing payment:", payment, error);
-      return null;
+    let paymentSubmissionStatus: PaymentSubmissionStatus = "none";
+    if (payment.payment_submission) {
+      const s = String(payment.payment_submission).toLowerCase();
+      if (s === "pending") paymentSubmissionStatus = "pending";
+      else if (s === "approved") paymentSubmissionStatus = "approved";
+      else if (s === "rejected") paymentSubmissionStatus = "rejected";
     }
+
+    const category = feeData.category_name || feeData.category || "General";
+    const amount = parseFloat(payment.amount_paid || "0");
+    const dueDate = feeData.due_date || payment.due_date || "";
+
+    return {
+      id: String(payment.id),
+      transactionNumber: `TXN-${payment.id}`,
+      studentId,
+      student: studentName,
+      category,
+      amount,
+      dueDate,
+      status,
+      paymentSubmissionStatus,
+      paymentDate: payment.created_at || "",
+      paymentMethod: payment.payment_method || "cash",
+      createdAt: payment.created_at,
+      updatedAt: payment.updated_at,
+      received_by:
+        typeof payment.received_by === "string"
+          ? payment.received_by
+          : payment.received_by?.username ||
+            payment.received_by?.name ||
+            "Unknown",
+      fee_id: feeData.id,
+      payment_submission_id: payment.payment_submission || undefined,
+    };
   }
 
-  async function loadAllStudents() {
+  async function fetchTransactions(page = 1, opts?: { append?: boolean }) {
+    const append = opts?.append ?? page > 1;
+
     try {
-      const response = await apiService.get<any>('/api/v1/students/', {
-        params: {
-          page: 1,
-          per_page: 1000,
-          s_status: 'enrolled',
-          ordering: 's_studentID'
-        }
+      if (!append) isLoading.value = true;
+      else isLoadingMore.value = true;
+
+      const response = await apiService.get("/api/v1/payments/", {
+        page,
+        per_page: perPage.value,
+        ordering: "-created_at",
       });
 
-      const students = extractDataFromResponse(response.data);
-      allStudents.value = students;
+      const payload = response.data;
+      const list = payload?.data as any;
 
-    } catch (error) {
-      console.error("Error loading all students:", error);
-      allStudents.value = [];
+      const rawItems = Array.isArray((list as any)?.data)
+        ? (list as any).data
+        : Array.isArray((payload as any)?.data)
+          ? (payload as any).data
+          : [];
+
+      const processed = rawItems
+        .map(processPaymentData)
+        .filter((t): t is Transaction => t !== null);
+
+      const existing = new Set(allTransactions.value.map((t) => String(t.id)));
+      const fresh = processed.filter((t) => !existing.has(String(t.id)));
+
+      if (!append) allTransactions.value = fresh;
+      else allTransactions.value = [...allTransactions.value, ...fresh];
+
+      const current_page = (list as any)?.current_page ?? page;
+      const per_page = (list as any)?.per_page ?? perPage.value;
+      const total_items = (list as any)?.total_items ?? totalItems.value;
+      const total_pages =
+        (list as any)?.total_pages ??
+        Math.ceil((total_items || 0) / (per_page || perPage.value));
+
+      currentPage.value = current_page;
+      perPage.value = per_page;
+      totalItems.value = total_items;
+
+      hasMore.value = currentPage.value < total_pages;
+    } catch (e) {
+      console.error("Error fetching transactions:", e);
+      if (!append) allTransactions.value = [];
+      hasMore.value = false;
+    } finally {
+      isLoading.value = false;
+      isLoadingMore.value = false;
     }
   }
 
-  async function searchStudents(searchTerm: string) {
+  async function loadMore() {
+    if (isLoading.value || isLoadingMore.value) return;
+    if (!hasMore.value) return;
+    await fetchTransactions(currentPage.value + 1, { append: true });
+  }
+
+  async function resetAndRefetch() {
+    currentPage.value = 1;
+    hasMore.value = true;
+    allTransactions.value = [];
+    await fetchTransactions(1, { append: false });
+  }
+
+  async function handleSearch() {
+    await resetAndRefetch();
+  }
+
+  async function handleFilterChange() {
+    await resetAndRefetch();
+  }
+
+  async function handlePaymentSubmissionFilterChange() {
+    await resetAndRefetch();
+  }
+
+  function splitFullName(fullName: string) {
+    const parts = (fullName || "").trim().split(/\s+/);
+    if (parts.length === 0)
+      return { fname: "", mname: null, lname: "", suffix: null };
+    if (parts.length === 1)
+      return { fname: parts[0], mname: null, lname: "", suffix: null };
+
+    const fname = parts[0];
+    const lname = parts[parts.length - 1];
+    const middle = parts.slice(1, -1).join(" ");
+    return { fname, mname: middle || null, lname, suffix: null };
+  }
+
+  function addAllFeesToDistribution() {
+    const ids = availableFees.value.map((f: any) => f.value);
+    ids.forEach((id) => addFeeToDistribution(id));
+  }
+
+  async function searchStudentsWithFees(searchTerm: string) {
+    const term = (searchTerm || "").trim();
+    if (term.length < 2) {
+      students.value = [];
+      return;
+    }
+
     try {
       isLoadingStudents.value = true;
 
-      if (allStudents.value.length === 0) {
-        await loadAllStudents();
-      }
-
-      const searchLower = searchTerm.toLowerCase().trim();
-      students.value = allStudents.value.filter(student => {
-        const fullName = getFullStudentName(student).toLowerCase();
-        return (
-          fullName.includes(searchLower) ||
-          (student.s_studentID?.toLowerCase() || '').includes(searchLower) ||
-          (student.s_email?.toLowerCase() || '').includes(searchLower)
-        );
+      const res = await apiService.get("/api/v1/fees/", {
+        search: term,
+        per_page: 50,
+        current_page: 1,
+        ordering: "-id",
       });
 
-    } catch (error: any) {
-      console.error("Error searching students:", error);
+      const fees: any[] = Array.isArray(res?.data?.data) ? res.data.data : [];
+
+      const uniq = new Map<number, Student>();
+      for (const fee of fees) {
+        const s = fee?.student;
+        if (!s?.id || uniq.has(s.id)) continue;
+
+        const n = splitFullName(s.full_name || "");
+        uniq.set(s.id, {
+          id: s.id,
+          s_studentID: `ID-${s.id}`,
+          s_fname: n.fname || "Unknown",
+          s_mname: n.mname || null,
+          s_lname: n.lname || "",
+          s_suffix: null,
+          s_email: null,
+          s_set: s.s_set || "",
+          s_lvl: s.s_lvl || 0,
+          s_status: "enrolled",
+          program: { id: 0, name: s.program_name || "" },
+        });
+      }
+
+      students.value = Array.from(uniq.values());
+    } catch (e) {
+      console.error("searchStudentsWithFees error:", e);
       students.value = [];
     } finally {
       isLoadingStudents.value = false;
     }
   }
 
-  function getStudentDisplayName(student: Student): string {
-    const name = getFullStudentName(student);
-    const studentId = student.s_studentID || `ID-${student.id}`;
-    return `${studentId} - ${name}`;
+  async function triggerStudentSearch(query?: string) {
+    const term = (query ?? newTransaction.value.studentSearch ?? "").trim();
+    await searchStudentsWithFees(term);
   }
 
   function selectStudent(student: Student) {
     selectedStudent.value = student;
     newTransaction.value.student_id = student.id;
     newTransaction.value.studentSearch = getStudentDisplayName(student);
-    loadStudentFees(student.id);
+    students.value = [];
   }
 
   function clearSelectedStudent() {
@@ -454,60 +466,58 @@ const paginatedTransactions = computed(() => {
       isLoadingFees.value = true;
       isLoadingFeeDetails.value = true;
 
-      console.log(`=== Loading fees for student ID: ${studentId} ===`);
-
-      const response = await apiService.get<any>('/api/v1/fees/', {
-        params: {
+      const [pendingRes, overdueRes] = await Promise.all([
+        apiService.get("/api/v1/fees/", {
           student_id: studentId,
           per_page: 100,
-          status: 'pending,partial,overdue',
-          ordering: 'due_date'
-        }
-      });
+          status: "pending",
+          ordering: "due_date",
+        }),
+        apiService.get("/api/v1/fees/", {
+          student_id: studentId,
+          per_page: 100,
+          status: "overdue",
+          ordering: "due_date",
+        }),
+      ]);
 
-      console.log("Fees API Response:", response);
-      console.log("Fees API Response data:", response.data);
-
-      const fees = extractDataFromResponse(response.data);
-      console.log(`Extracted ${fees.length} fees from response`);
+      const pendingFees = Array.isArray(pendingRes?.data?.data)
+        ? pendingRes.data.data
+        : [];
+      const overdueFees = Array.isArray(overdueRes?.data?.data)
+        ? overdueRes.data.data
+        : [];
+      const fees = [...pendingFees, ...overdueFees];
 
       const validFees: FeeDropdownOptionExtended[] = fees
         .map((fee: any) => {
-          const amount = parseAmount(fee.total_amount || '0');
-          const balance = parseAmount(fee.balance || '0');
-          const student = fee.student || {};
-          const feeStudentId = student.id;
-
+          const amount = parseAmount(fee.total_amount || "0");
+          const balance = parseAmount(fee.balance || "0");
+          const s = fee.student || {};
           return {
             value: fee.id,
-            label: `${fee.category_name || 'Unknown'} - ₱${amount.toFixed(2)}`,
-            amount: amount,
-            balance: balance,
-            status: fee.status || 'pending',
-            category: fee.category_name || 'Unknown',
-            studentId: student.s_studentID || `ID-${student.id || 'N/A'}`,
-            studentName: getFullStudentName(student),
+            label: `${fee.category_name || "Unknown"} - ₱${amount.toFixed(2)}`,
+            amount,
+            balance,
+            status: fee.status || "pending",
+            category: fee.category_name || "Unknown",
+            studentId: s?.s_studentID || `ID-${s?.id || "N/A"}`,
+            studentName: s?.full_name || "Unknown",
             id: fee.id,
-            due_date: fee.due_date || '',
-            _rawStudentId: feeStudentId
+            due_date: fee.due_date || "",
+            _rawStudentId: s?.id,
           } as FeeDropdownOptionExtended;
         })
-        .filter((fee: FeeDropdownOptionExtended) => {
-          const matchesStudent = fee._rawStudentId === studentId;
-          const hasBalance = fee.balance > 0;
-          return matchesStudent && hasBalance;
-        });
-
-      console.log(`Final result: ${validFees.length} valid fees for student ${studentId}`);
+        .filter((f) => f._rawStudentId === studentId && f.balance > 0);
 
       feeOptions.value = validFees;
       availableFees.value = [...validFees];
       feeDistribution.value = [];
-
-    } catch (error) {
-      console.error("Error loading fees:", error);
+    } catch (e) {
+      console.error("Error loading fees:", e);
       feeOptions.value = [];
       availableFees.value = [];
+      feeDistribution.value = [];
     } finally {
       isLoadingFees.value = false;
       isLoadingFeeDetails.value = false;
@@ -517,16 +527,12 @@ const paginatedTransactions = computed(() => {
   function addFeeToDistribution(feeId: number) {
     if (isLoadingFeeDetails.value) return;
 
-    const feeIndex = availableFees.value.findIndex(f => f.value === feeId);
-    if (feeIndex === -1) return;
+    const idx = availableFees.value.findIndex((f: any) => f.value === feeId);
+    if (idx === -1) return;
 
-    const fee = availableFees.value[feeIndex];
+    const fee: any = availableFees.value[idx];
     const actualFeeId = fee.id || fee.value;
-
-    if (typeof actualFeeId !== 'number') {
-      console.error("Invalid fee ID:", actualFeeId);
-      return;
-    }
+    if (typeof actualFeeId !== "number") return;
 
     feeDistribution.value.push({
       fee_id: actualFeeId,
@@ -534,26 +540,23 @@ const paginatedTransactions = computed(() => {
       original_amount: fee.amount,
       distributed_amount: 0,
       balance: fee.balance,
-      _category: fee.category
+      _category: fee.category,
     });
 
-    availableFees.value.splice(feeIndex, 1);
+    availableFees.value.splice(idx, 1);
 
     const totalAmount = parseFloat(newTransaction.value.total_amount_paid) || 0;
-    if (totalAmount > 0) {
-      updateFeeDistribution(totalAmount);
-    }
+    if (totalAmount > 0) updateFeeDistribution(totalAmount);
   }
 
   function removeFeeFromDistribution(index: number) {
     if (index < 0 || index >= feeDistribution.value.length) return;
 
-    const removedFee = feeDistribution.value[index];
-    const originalFee = feeOptions.value.find(f => f.value === removedFee.fee_id);
-
-    if (originalFee) {
-      availableFees.value.push(originalFee);
-    }
+    const removed = feeDistribution.value[index];
+    const original = feeOptions.value.find(
+      (f: any) => f.value === removed.fee_id,
+    );
+    if (original) availableFees.value.push(original);
 
     feeDistribution.value.splice(index, 1);
 
@@ -565,17 +568,24 @@ const paginatedTransactions = computed(() => {
     if (feeDistribution.value.length === 0) return;
 
     let remainingAmount = totalAmount;
-    const totalBalance = feeDistribution.value.reduce((sum, fee) => sum + fee.balance, 0);
+    const totalBal = feeDistribution.value.reduce(
+      (sum, fee) => sum + fee.balance,
+      0,
+    );
 
-    if (totalAmount < totalBalance) {
-      feeDistribution.value.forEach(fee => {
-        const proportion = fee.balance / totalBalance;
-        fee.distributed_amount = parseFloat((proportion * totalAmount).toFixed(2));
-        fee.balance = parseFloat((fee.original_amount - fee.distributed_amount).toFixed(2));
+    if (totalAmount < totalBal) {
+      feeDistribution.value.forEach((fee) => {
+        const proportion = fee.balance / totalBal;
+        fee.distributed_amount = parseFloat(
+          (proportion * totalAmount).toFixed(2),
+        );
+        fee.balance = parseFloat(
+          (fee.original_amount - fee.distributed_amount).toFixed(2),
+        );
         remainingAmount -= fee.distributed_amount;
       });
     } else {
-      feeDistribution.value.forEach(fee => {
+      feeDistribution.value.forEach((fee) => {
         const payment = Math.min(fee.original_amount, remainingAmount);
         fee.distributed_amount = parseFloat(payment.toFixed(2));
         fee.balance = parseFloat((fee.original_amount - payment).toFixed(2));
@@ -583,45 +593,50 @@ const paginatedTransactions = computed(() => {
       });
     }
 
-    const actualTotal = feeDistribution.value.reduce((sum, fee) => sum + fee.distributed_amount, 0);
+    const actualTotal = feeDistribution.value.reduce(
+      (sum, fee) => sum + fee.distributed_amount,
+      0,
+    );
     newTransaction.value.total_amount_paid = actualTotal.toFixed(2);
   }
 
   function updateDistributedAmount(index: number, amount: number) {
     const fee = feeDistribution.value[index];
-    amount = Math.max(0, Math.min(amount, fee.original_amount));
-    amount = parseFloat(amount.toFixed(2));
+    const clamped = Math.max(0, Math.min(amount, fee.original_amount));
+    fee.distributed_amount = parseFloat(clamped.toFixed(2));
+    fee.balance = parseFloat(
+      (fee.original_amount - fee.distributed_amount).toFixed(2),
+    );
 
-    fee.distributed_amount = amount;
-    fee.balance = parseFloat((fee.original_amount - amount).toFixed(2));
-
-    const newTotal = feeDistribution.value.reduce((sum, f) => sum + f.distributed_amount, 0);
+    const newTotal = feeDistribution.value.reduce(
+      (sum, f) => sum + f.distributed_amount,
+      0,
+    );
     newTransaction.value.total_amount_paid = newTotal.toFixed(2);
   }
 
   async function handleCreateTransaction() {
-    if (!selectedStudent.value || feeDistribution.value.length === 0 || !newTransaction.value.total_amount_paid) {
-      alert("Please select a student, add at least one fee to pay, and enter total amount");
-      return;
-    }
-
-    const invalidFees = feeDistribution.value.filter(feeDist =>
-      typeof feeDist.fee_id !== 'number' || isNaN(feeDist.fee_id)
-    );
-
-    if (invalidFees.length > 0) {
-      console.error("Invalid fee IDs:", invalidFees);
-      alert("Some fees have invalid IDs. Please try again.");
+    if (
+      !selectedStudent.value ||
+      feeDistribution.value.length === 0 ||
+      !newTransaction.value.total_amount_paid
+    ) {
+      alert(
+        "Please select a student, add at least one fee to pay, and enter total amount",
+      );
       return;
     }
 
     const totalAmount = parseFloat(newTransaction.value.total_amount_paid);
-    if (totalAmount <= 0) {
+    if (!(totalAmount > 0)) {
       alert("Please enter a valid amount greater than 0");
       return;
     }
 
-    const totalDistributed = feeDistribution.value.reduce((sum, fee) => sum + fee.distributed_amount, 0);
+    const totalDistributed = feeDistribution.value.reduce(
+      (sum, fee) => sum + fee.distributed_amount,
+      0,
+    );
     if (Math.abs(totalDistributed - totalAmount) > 0.01) {
       alert("Distributed amount doesn't match total amount");
       return;
@@ -629,41 +644,34 @@ const paginatedTransactions = computed(() => {
 
     try {
       const paymentsToCreate: CreatePaymentDto[] = feeDistribution.value
-        .filter(feeDist => feeDist.distributed_amount > 0)
-        .map(feeDist => ({
-          fee: feeDist.fee_id,
-          amount_paid: feeDist.distributed_amount.toFixed(2),
+        .filter((f) => f.distributed_amount > 0)
+        .map((f) => ({
+          fee: f.fee_id,
+          amount_paid: f.distributed_amount.toFixed(2),
           payment_method: newTransaction.value.payment_method,
-          payment_submission: null
+          payment_submission: null,
         }));
 
-      if (paymentsToCreate.length === 0) {
-        alert("No valid payments to create");
-        return;
-      }
-
-      const results = await Promise.all(
-        paymentsToCreate.map(payment =>
-          apiService.post('/api/v1/payments/', payment)
-        )
+      const settled = await Promise.allSettled(
+        paymentsToCreate.map((p) => apiService.post("/api/v1/payments/", p)),
       );
 
-      const allSuccess = results.every(result =>
-        result.status >= 200 && result.status < 300
-      );
-
-      if (allSuccess) {
+      const failed = settled.filter((r) => r.status === "rejected");
+      if (failed.length === 0) {
         isCreateTransactionDialogOpen.value = false;
         resetForm();
         alert(`Successfully created ${paymentsToCreate.length} payment(s)!`);
-        await fetchTransactions();
+        await resetAndRefetch();
       } else {
-        alert("Failed to create some payments");
-      }
+        console.error("Some payments failed:", failed);
 
-    } catch (error: any) {
-      console.error("Error creating transaction:", error);
-      alert(`Error: ${error.message || "Please try again"}`);
+        alert(
+          `Created ${paymentsToCreate.length - failed.length} payment(s), failed ${failed.length}.`,
+        );
+      }
+    } catch (e: any) {
+      console.error("Error creating transaction:", e);
+      alert(`Error: ${e?.message || "Please try again"}`);
     }
   }
 
@@ -672,13 +680,13 @@ const paginatedTransactions = computed(() => {
       student_id: null,
       total_amount_paid: "",
       payment_method: "cash",
-      studentSearch: ""
+      studentSearch: "",
     };
     selectedStudent.value = null;
+    students.value = [];
     feeOptions.value = [];
     availableFees.value = [];
     feeDistribution.value = [];
-    students.value = [];
   }
 
   const showDialog = (transaction: Transaction) => {
@@ -691,118 +699,11 @@ const paginatedTransactions = computed(() => {
     selectedTransaction.value = null;
   };
 
-  function handleSearch() {
-    currentPage.value = 1; 
-  }
-
-  function handleFilterChange() {
-    currentPage.value = 1; 
-  }
-
-  function handlePaymentSubmissionFilterChange() {
-    currentPage.value = 1; 
-  }
-
-
-  function autoDistributeEvenly() {
-    if (feeDistribution.value.length === 0) return;
-
-    const totalAmount = parseFloat(newTransaction.value.total_amount_paid) || 0;
-    if (totalAmount <= 0) return;
-
-    const perFeeAmount = totalAmount / feeDistribution.value.length;
-    let remainingAmount = totalAmount;
-
-    feeDistribution.value.forEach((fee, index) => {
-      const amount = index === feeDistribution.value.length - 1
-        ? remainingAmount
-        : perFeeAmount;
-
-      const actualAmount = Math.min(amount, fee.original_amount);
-      fee.distributed_amount = parseFloat(actualAmount.toFixed(2));
-      fee.balance = parseFloat((fee.original_amount - actualAmount).toFixed(2));
-      remainingAmount -= actualAmount;
-    });
-
-    const actualTotal = feeDistribution.value.reduce((sum, fee) => sum + fee.distributed_amount, 0);
-    newTransaction.value.total_amount_paid = actualTotal.toFixed(2);
-  }
-
-  function autoDistributeProportionally() {
-    if (feeDistribution.value.length === 0) return;
-
-    const totalAmount = parseFloat(newTransaction.value.total_amount_paid) || 0;
-    if (totalAmount <= 0) return;
-
-    const totalBalance = feeDistribution.value.reduce((sum, fee) => sum + fee.balance, 0);
-    let remainingAmount = totalAmount;
-
-    feeDistribution.value.forEach((fee, index) => {
-      const proportion = fee.balance / totalBalance;
-      const amount = index === feeDistribution.value.length - 1
-        ? remainingAmount
-        : proportion * totalAmount;
-
-      const actualAmount = parseFloat(Math.min(amount, fee.balance).toFixed(2));
-      fee.distributed_amount = actualAmount;
-      fee.balance = parseFloat((fee.balance - actualAmount).toFixed(2));
-      remainingAmount -= actualAmount;
-    });
-
-    const actualTotal = feeDistribution.value.reduce((sum, fee) => sum + fee.distributed_amount, 0);
-    newTransaction.value.total_amount_paid = actualTotal.toFixed(2);
-  }
-
-  function clearDistribution() {
-    availableFees.value = [...feeOptions.value];
-    feeDistribution.value = [];
-    newTransaction.value.total_amount_paid = "";
-  }
-
-  function addAllFeesToDistribution() {
-    if (availableFees.value.length === 0) return;
-
-    availableFees.value.forEach(fee => {
-      feeDistribution.value.push({
-        fee_id: fee.value as number,
-        fee_label: `${fee.category} (${fee.studentId})`,
-        original_amount: fee.amount,
-        distributed_amount: 0,
-        balance: fee.balance,
-        _category: fee.category
-      });
-    });
-
-    availableFees.value = [];
-
-    const totalAmount = parseFloat(newTransaction.value.total_amount_paid) || 0;
-    if (totalAmount > 0) {
-      autoDistributeEvenly();
-    }
-  }
-
-  async function triggerStudentSearch() {
-    const searchTerm = newTransaction.value.studentSearch.trim();
-    if (searchTerm.length >= 2) {
-      await searchStudents(searchTerm);
-    } else {
-      students.value = [];
-    }
-  }
-
   async function initialize() {
-    try {
-      if (allStudents.value.length === 0) {
-        await loadAllStudents();
-      }
-      await fetchTransactions(1);
-    } catch (error) {
-      console.error("Error initializing store:", error);
-    }
+    await fetchTransactions(1, { append: false });
   }
 
   return {
-    // State
     allTransactions,
     searchQuery,
     activeFilter,
@@ -810,55 +711,60 @@ const paginatedTransactions = computed(() => {
     isCreateTransactionDialogOpen,
     isViewTransactionDialogOpen,
     selectedTransaction,
-    isLoadingFeeDetails,
     isLoading,
+    isLoadingMore,
+    hasMore,
     currentPage,
-    itemsPerPage,
-    totalItems, 
-    perPage, 
+    perPage,
+    totalItems,
+
     newTransaction,
+
     students,
     selectedStudent,
     isLoadingStudents,
-    feeOptions,
-    isLoadingFees,
-    feeDistribution,
-    availableFees,
-    allStudents,
+    studentSearchPage,
+    studentSearchHasMore,
+    searchDebounceTimer,
 
-    // Computed
+    feeOptions,
+    availableFees,
+    feeDistribution,
+    isLoadingFees,
+    isLoadingFeeDetails,
+
     transactionsWithCorrectedNames,
     filteredTransactions,
-    paginatedTransactions,
-    totalPages, 
+    displayedTransactions,
+    totalPages,
     transactionStats,
     distributionStats,
 
-    // Actions
     fetchTransactions,
-    searchStudents,
-    loadAllStudents,
-    getStudentDisplayName,
+    loadMore,
+    resetAndRefetch,
+    handleSearch,
+    handleFilterChange,
+    handlePaymentSubmissionFilterChange,
+
+    triggerStudentSearch,
     selectStudent,
     clearSelectedStudent,
+
     loadStudentFees,
     addFeeToDistribution,
     removeFeeFromDistribution,
     updateFeeDistribution,
     updateDistributedAmount,
+    searchStudentsWithFees,
     handleCreateTransaction,
     resetForm,
+
     showDialog,
     hideDialog,
-    handleSearch,
-    handleFilterChange,
-    handlePaymentSubmissionFilterChange,
-    goToPage,
-    autoDistributeEvenly,
-    autoDistributeProportionally,
-    clearDistribution,
+
+    getStudentDisplayName,
+    initialize,
     addAllFeesToDistribution,
-    triggerStudentSearch,
-    initialize
-  }
-})
+  };
+});

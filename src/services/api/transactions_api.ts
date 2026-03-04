@@ -228,7 +228,7 @@ async function fetchFeeDetails(feeId: number): Promise<Fee | null> {
 async function fetchPaymentSubmission(id: number): Promise<PaymentSubmissionResponse | null> {
   return fetchWithRetry(async () => {
     const response = await apiService.get<ApiResponse<PaymentSubmissionResponse>>(
-      `/api/v1/payment_submissions/${id}/`
+      `/api/v1/payment-submissions/${id}/`
     );
     return response.data || null;
   });
@@ -240,8 +240,6 @@ async function getAllCategories(): Promise<Map<number, string>> {
   }
   
   try {
-    console.log("Fetching all collection categories...");
-    
     const response = await apiService.get<any>('/api/v1/collection-categories/', {
       params: { per_page: 1000 }
     });
@@ -256,7 +254,6 @@ async function getAllCategories(): Promise<Map<number, string>> {
       categories = response.data.results;
     }
     
-    console.log(`Loaded ${categories.length} collection categories`);
     
     categories.forEach((category: any) => {
       if (category.id !== undefined) {
@@ -264,8 +261,6 @@ async function getAllCategories(): Promise<Map<number, string>> {
         cache.setCategory(category.id, name);
       }
     });
-    
-    console.log("Category cache created with", cache.categories.size, "entries");
     
     return cache.categories;
     
@@ -277,7 +272,6 @@ async function getAllCategories(): Promise<Map<number, string>> {
 
 
 async function mapPaymentToTransaction(payment: PaymentApiResponse): Promise<Transaction> {
-  console.log("Mapping payment to transaction:", payment);
   
   const student = payment.fee?.student;
   const studentId = student?.s_studentID || `ID-${student?.id || 'N/A'}`;
@@ -314,7 +308,7 @@ async function mapPaymentToTransaction(payment: PaymentApiResponse): Promise<Tra
   }
   
   if (paymentSubmissionStatus === "rejected") {
-    status = "sent";
+    status = "rejected";
   }
   
   let dueDate = new Date().toISOString().split('T')[0];
@@ -339,102 +333,78 @@ async function mapPaymentToTransaction(payment: PaymentApiResponse): Promise<Tra
     payment_submission_id: payment.payment_submission || undefined
   };
   
-  console.log("Mapped transaction:", transaction);
   return transaction;
 }
 
 class TransactionsApi {
   private paymentsEndpoint = "/api/v1/payments/";
   private feesEndpoint = "/api/v1/fees/";
-  private paymentSubmissionsEndpoint = "/api/v1/payment_submissions/";
+  private paymentSubmissionsEndpoint = "/api/v1/payment-submissions/";
 
-  async getAll(params: {
-    current_page?: number;
-    per_page?: number;
-    search?: string;
-    student_id?: string;
-    status?: string;
-    payment_submission_status?: PaymentSubmissionStatus; 
-  } = {}): Promise<ApiResponse<PaginatedResponse<Transaction>>> {
-    try {
-      console.log("Fetching payments with params:", params);
-      
-      const backendParams: any = {
-        page: params.current_page || 1,
-        per_page: params.per_page || 10,
-      };
-      
-      if (params.search) backendParams.search = params.search;
-      if (params.student_id) backendParams.student_id = params.student_id;
-      
-      const response = await fetchWithRetry(async () => {
-        return await apiService.get<PaginatedResponse<PaymentApiResponse>>(
-          this.paymentsEndpoint, 
-          { params: backendParams }
-        );
-      });
-      
-      console.log("Payments API response structure:", response);
-      
-      if (!response.results) {
-        console.error("No results in payments response");
-        return {
-          status_code: 200,
-          message: "Success",
-          data: {
-            count: 0,
-            next: null,
-            previous: null,
-            results: []
-          },
-          errors: null
-        };
-      }
-      
-      const transactionsPromises = response.results.map(payment => 
-        mapPaymentToTransaction(payment)
-      );
-      
-      let transactions = await Promise.all(transactionsPromises);
-      
-      if (params.payment_submission_status) {
-        transactions = transactions.filter(transaction => 
-          transaction.paymentSubmissionStatus === params.payment_submission_status
-        );
-      }
-      
-      if (params.status && params.status !== "all") {
-        transactions = transactions.filter(transaction => 
-          transaction.status === params.status
-        );
-      }
-      
-      return {
-        status_code: 200,
-        message: "Success",
-        data: {
-          count: transactions.length,
-          next: response.next,
-          previous: response.previous,
-          results: transactions
-        },
-        errors: null
-      };
-    } catch (error) {
-      console.error("Error fetching transactions:", error);
-      return {
-        status_code: 500,
-        message: "Error fetching transactions",
-        data: {
-          count: 0,
-          next: null,
-          previous: null,
-          results: []
-        },
-        errors: error instanceof Error ? [error.message] : ["Unknown error"]
-      };
+async getAll(params: {
+  current_page?: number;
+  per_page?: number;
+  search?: string;
+  student_id?: string;
+  status?: string;
+  payment_submission_status?: PaymentSubmissionStatus;
+} = {}): Promise<ApiResponse<PaginatedResponse<Transaction>>> {
+  try {
+    const backendParams: any = {
+      page: params.current_page || 1,
+      per_page: params.per_page || 10,
+    };
+
+    if (params.search) backendParams.search = params.search;
+    if (params.student_id) backendParams.student_id = params.student_id;
+
+    const response = await fetchWithRetry(async () => {
+      return await apiService.get<any>(this.paymentsEndpoint, { params: backendParams });
+    });
+
+
+    const pageData = response.data;                    
+    const rawPayments = Array.isArray(pageData.data)
+      ? pageData.data
+      : pageData.results || [];
+
+
+
+    const transactionsPromises = rawPayments.map((payment: PaymentApiResponse) =>
+      mapPaymentToTransaction(payment)
+    );
+
+    let transactions = await Promise.all(transactionsPromises);
+
+    if (params.payment_submission_status) {
+      transactions = transactions.filter(t => t.paymentSubmissionStatus === params.payment_submission_status);
     }
+
+    if (params.status && params.status !== "all") {
+      transactions = transactions.filter(t => t.status === params.status);
+    }
+
+    return {
+      status_code: 200,
+      message: "Success",
+      data: {
+        count: pageData.total_items || transactions.length,
+        next: null,    
+        previous: null,
+        results: transactions
+      },
+      errors: null
+    };
+  } catch (error) {
+    console.error("Error fetching transactions:", error);
+    return {
+      status_code: 500,
+      message: "Error fetching transactions",
+      data: { count: 0, next: null, previous: null, results: [] },
+      errors: [String(error)]
+    };
   }
+}
 
   async getFees(params: {
     search?: string;
@@ -444,7 +414,6 @@ class TransactionsApi {
     category_id?: number;
   } = {}): Promise<FeeDropdownOption[]> {
     try {
-      console.log("Fetching fees with params:", params);
       
       const apiParams: any = {
         student_id: params.student_id,
@@ -463,21 +432,12 @@ class TransactionsApi {
         apiParams.search = params.search;
       }
       
-      console.log("Fetching fees with params:", apiParams);
-      
       const response = await apiService.get<PaginatedResponse<any>>(
         this.feesEndpoint,
         { params: apiParams }
       );
       
-      console.log("Fees API response:", response);
-      
       const fees = response.results || [];
-      console.log(`Found ${fees.length} fee records`);
-      
-      if (fees.length > 0) {
-        console.log("First fee structure:", fees[0]);
-      }
       
       const processedFees: FeeDropdownOption[] = [];
       
@@ -521,8 +481,6 @@ class TransactionsApi {
           id: feeId,
         });
       }
-      
-      console.log(`Processed ${processedFees.length} fees`);
       
       return processedFees;
       
