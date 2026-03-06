@@ -52,7 +52,7 @@ const viewPayment = (paymentID: number) => {
             :options="academicYears.map(y => ({ label: y, value: y }))" :loading="dashboardStore.loading" />
 
           <BaseSelectInput v-model="dashboardStore.semester"
-            :options="semesters.map(s => ({ label: 'Semester ' + s, value: s }))" :loading="dashboardStore.loading" />
+            :options="semesters.map(s => ({ label: s + ' sem' , value: s }))" :loading="dashboardStore.loading" />
         </div>
       </div>
 

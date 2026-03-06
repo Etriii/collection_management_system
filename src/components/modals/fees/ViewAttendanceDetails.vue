@@ -21,7 +21,7 @@
                     </div>
                 </div>
 
-                <div class="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
+                <div class="bg-white border border-slate-200 rounded-2xl shadow-sm">
 
                     <div class="max-h-[400px] overflow-y-auto">
                         <table class="min-w-full text-sm text-left">

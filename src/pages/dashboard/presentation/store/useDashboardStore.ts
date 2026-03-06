@@ -10,7 +10,7 @@ export const useDashboardStore = defineStore("dashboard", () => {
         total_balance: 0,
         overdue_count: 0,
         collection_rate: 0,
-        pending_submissions_counst: 0,
+        pending_submissions_count: 0,
         recent_transactions: [],
         collection_rate_per_categories: []
     })
@@ -18,7 +18,7 @@ export const useDashboardStore = defineStore("dashboard", () => {
     const fetched = ref(false)
 
     const academicYear = ref<string>("2024-2025")
-    const semester = ref<string>("1st")
+    const semester = ref<string>("2nd")
 
     async function fetchDashboard() {
         try {
