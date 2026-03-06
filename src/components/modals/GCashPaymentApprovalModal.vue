@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, watch } from "vue"
 import { XCircle, CheckCircle, Loader2, Eye } from "lucide-vue-next"
-import { useGcashpaymentsStore } from "@/stores/gcashpayments_store"
+import { useGcashpaymentsStore } from "@stores/gcashpayments_store"
 import gcashpayments_api from "@services/api/gcashpayments_api"
 
 type Status = "pending" | "approved" | "rejected"

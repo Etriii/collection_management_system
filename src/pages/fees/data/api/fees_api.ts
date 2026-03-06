@@ -3,7 +3,7 @@ import { type ApiResponse, type ListParams, type PaginatedApiResponse } from "@c
 // import { type StudentEntity, type StudentFilters, type StudentSummaryFeesResponse } from "@pages/students/domain/entities/StudentEntities"
 import { ENDPOINTS } from '@core/url_paths';
 import { cleanObject } from "@utils/cleanObject";
-import type { FeeDetailedEntity } from "@pages/fees/domain/entities/FeeEntity";
+import type { FeeDetailedEntity, IEventAttendance } from "@pages/fees/domain/entities/FeeEntity";
 
 
 // export async function getFeesApi(params: ListParams<StudentFilters>): Promise<PaginatedApiResponse<StudentEntity>> {
@@ -28,5 +28,18 @@ export async function getFeeApi(
         return result
     } catch (err: any) {
         throw new Error(err.response?.data?.message || "Failed to load fee")
+    }
+}
+
+export async function getFeeAttendanceDetailsApi(
+    id: number
+): Promise<ApiResponse<IEventAttendance>> {
+    try {
+        const result = await api.get<ApiResponse<IEventAttendance>>(
+            `${ENDPOINTS.fees}${id}/attendance-details`
+        )
+        return result
+    } catch (err: any) {
+        throw new Error(err.response?.data?.message || "Failed to load fee attendance details")
     }
 }

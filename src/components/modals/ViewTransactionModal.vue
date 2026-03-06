@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, watch, onBeforeUnmount } from "vue"
 import { XCircle, Eye, User, FileText, CreditCard, Loader2 } from "lucide-vue-next"
-import apiService from "@/services/apiService.ts"
+import apiService from "@services/apiService.ts"
 
 type TxStatus = "sent" | "paid" | "overdue" | "pending"
 type SubmissionStatus = "none" | "pending" | "approved" | "rejected"

@@ -1,8 +1,8 @@
 <script setup lang="ts">
 import { ref, computed, watch } from "vue"
 import { XCircle, TriangleAlert, Loader2, Eye, Image as ImageIcon } from "lucide-vue-next"
-import { useGcashpaymentsStore } from "@/stores/gcashpayments_store"
-import gcashpayments_api from "@/services/api/gcashpayments_api"
+import { useGcashpaymentsStore } from "@stores/gcashpayments_store"
+import gcashpayments_api from "@services/api/gcashpayments_api"
 
 const gcashStore = useGcashpaymentsStore()
 const isSubmitting = ref(false)

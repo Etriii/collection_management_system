@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ref, computed, onMounted, nextTick, onBeforeUnmount } from "vue"
-import { useGcashpaymentsStore } from "@/stores/gcashpayments_store"
+import { useGcashpaymentsStore } from "@stores/gcashpayments_store"
 import {
   Search,
   CheckCircle,
@@ -15,10 +15,10 @@ import {
   ChevronDown,
   ChevronUp,
 } from "lucide-vue-next"
-import type { PaymentApproval } from "@/core/types"
-import GCashPaymentApprovalModal from "@/components/modals/GCashPaymentApprovalModal.vue"
-import GCashPaymentRejectionModal from "@/components/modals/GCashPaymentRejectionModal.vue"
-import { gcashpayments_api } from "@/services/api/gcashpayments_api"
+import type { PaymentApproval } from "@core/types"
+import GCashPaymentApprovalModal from "@components/modals/GCashPaymentApprovalModal.vue"
+import GCashPaymentRejectionModal from "@components/modals/GCashPaymentRejectionModal.vue"
+import { gcashpayments_api } from "@services/api/gcashpayments_api"
 import TablePagination from "@components/tables/TablePagination.vue"
 import PerPageSelector from "@components/tables/PerPageSelector.vue"
 

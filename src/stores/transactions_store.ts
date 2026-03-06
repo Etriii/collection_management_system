@@ -6,8 +6,8 @@ import type {
   PaymentSubmissionStatus,
   FeeDropdownOption,
   CreatePaymentDto,
-} from "@/services/api/transactions_api.ts";
-import apiService from "@/services/apiService.ts";
+} from "@services/api/transactions_api.ts";
+import apiService from "@services/apiService.ts";
 
 interface NewTransactionForm {
   student_id: number | null;
@@ -496,7 +496,7 @@ async function setPerPage(pp: number) {
             id: fee.id,
             due_date: fee.due_date || "",
             _rawStudentId: s?.id,
-          } as FeeDropdownOptionExtended;
+          } as unknown as FeeDropdownOptionExtended;
         })
         .filter((f) => f._rawStudentId === studentId && f.balance > 0);
 

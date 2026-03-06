@@ -13,7 +13,7 @@ import {
   Info,
 } from "lucide-vue-next"
 
-import { useTransactionsStore } from "@/stores/transactions_store"
+import { useTransactionsStore } from "@stores/transactions_store"
 
 const store = useTransactionsStore()
 
