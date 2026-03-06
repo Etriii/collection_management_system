@@ -48,7 +48,7 @@ onBeforeUnmount(() => {
       @rowClick="emit('rowClick', $event)"
     >
       <template v-for="(_, slot) in $slots" #[slot]="scope">
-        <slot :name="slot" v-bind="scope" />
+        <slot :name="slot" v-bind="scope"></slot>
       </template>
     </BaseTable>
 
@@ -110,7 +110,7 @@ onBeforeUnmount(() => {
       @rowClick="emit('rowClick', $event)"
     >
       <template v-for="(_, slot) in $slots" #[slot]="scope">
-        <slot :name="slot" v-bind="scope" />
+        <slot :name="slot" v-bind="scope"></slot>
       </template>
     </BaseTable>
 
@@ -145,7 +145,7 @@ async function loadMore() {
 
   rows.value.push(...data.data)
 
-  hasMore.value = data.data.length > 0
+  hasMore.value = data.data.length > 0 // Or i Think should use the current_page > total_pages
   page.value++
 
   loading.value = false
