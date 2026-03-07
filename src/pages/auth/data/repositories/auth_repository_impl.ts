@@ -30,13 +30,15 @@ export class AuthRepositoryImpl implements AuthRepository {
         // localStorage.setItem("userData", JSON.stringify(model.data.toJson()));
         return model.data.toEntity();
     }
-
     async logout(): Promise<void> {
         const refreshToken = this.local.getRefreshToken();
-        if (refreshToken) {
-            this.remote.logout(refreshToken);
+
+        try {
+            if (refreshToken) {
+                this.remote.logout(refreshToken);
+            }
+        } finally {
+            this.local.clearTokens();
         }
-        const { debounce } = useDebounce();
-        debounce(() => this.local.clearTokens(), 50);
     }
 }

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
 import BaseModal from '../BaseModal.vue';
-import { usePayment } from '@pages/transactions/presentation/store/composables/usePaymentComposables';
+import { usePayment } from '@pages/transactions/presentation/composables/usePaymentComposables';
 import { formatDateTime } from '@utils/dateFormat';
 import ViewPaymentSubmissionModal from '../paymentSubmissions/ViewPaymentSubmissionModal.vue';
 import { useViewFee } from '../composables/useModalsComposables';

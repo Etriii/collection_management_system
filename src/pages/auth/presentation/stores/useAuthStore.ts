@@ -50,7 +50,7 @@ export const useAuthStore = defineStore("auth", {
     async loginWithGoogle(token: string) {
       this.loading = true;
       try {
-        await googleLoginUseCase.execute(token);
+        await googleLoginUseCase.execute(token);  
         this.user = await repo.getCurrentUser();
       } catch (e: any) {
         this.error = "Google login failed";
@@ -59,10 +59,10 @@ export const useAuthStore = defineStore("auth", {
         this.loading = false;
       }
     },
-    logout() {
-      this.user = null;
+    async logout() {
+      await repo.logout();
+      this.user = null; 
       this.initialized = false;
-      repo.logout();
     },
   },
 });

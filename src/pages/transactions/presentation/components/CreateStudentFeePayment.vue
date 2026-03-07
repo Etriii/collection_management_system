@@ -5,7 +5,7 @@ import { useStudentPendingFees } from '@pages/students/presentation/composables/
 import BaseTable, { type TableColumn } from '@components/tables/BaseTable.vue';
 import { formatCurrency } from '@utils/formatCurrency';
 import { formatDate } from '@utils/dateFormat';
-import { usePayFees } from '@pages/transactions/presentation/store/composables/usePayFeesComposables';
+import { usePayFees } from '@pages/transactions/presentation/composables/usePayFeesComposables';
 import Button from '@components/button/Button.vue';
 
 const props = defineProps<{ student_id: number, }>()

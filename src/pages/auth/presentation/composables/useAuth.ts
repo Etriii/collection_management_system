@@ -24,8 +24,8 @@ export function useAuth(googleClientId?: string) {
     await store.loginWithGoogle(token);
   };
 
-  const logout = () => {
-    store.logout();
+  const logout = async () => {
+    await store.logout();
     router.push("/auth/login");
   };
 
@@ -91,11 +91,11 @@ export function useAuth(googleClientId?: string) {
     const redirectUri = encodeURIComponent(import.meta.env.VITE_REDIRECT_URI);
     const scope = encodeURIComponent("email profile openid");
     const responseType = "id_token";
-    const nonce = crypto.randomUUID(); 
+    const nonce = crypto.randomUUID();
 
     const url = `https://accounts.google.com/o/oauth2/v2/auth?client_id=${clientId}&redirect_uri=${redirectUri}&response_type=${responseType}&scope=${scope}&nonce=${nonce}`;
 
-    window.location.href = url; 
+    window.location.href = url;
   };
 
   function isStudent(): boolean {

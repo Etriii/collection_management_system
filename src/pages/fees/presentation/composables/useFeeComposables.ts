@@ -2,7 +2,8 @@ import { getFeeApi, getFeeAttendanceDetailsApi } from "@pages/fees/data/api/fees
 import { type FeeDetailedEntity, type IEventAttendance } from "@pages/fees/domain/entities/FeeEntity";
 import { useAlertStore } from "@stores/ui/alert";
 import { ref } from "vue";
-
+import { computed } from "vue"
+import { useFeesStore } from "../store/fees.store"
 
 export function useFee() {
     const alert = useAlertStore()
@@ -44,4 +45,23 @@ export function useFeeAttendanceDetails() {
     }
 
     return { loading, attendance_details, fetchAttendanceDetails }
+}
+
+export function useFeesInfiniteScroll() {
+  const store = useFeesStore()
+
+  const hasMore = computed(() => {
+    return store.currentPage <= store.totalPages
+  })
+
+  const loadMore = async () => {
+    if (!hasMore.value) return
+    await store.fetchFees()
+  }
+
+  return {
+    store,
+    loadMore,
+    hasMore
+  }
 }
