@@ -42,7 +42,7 @@ const isMobile = computed(() => width.value < 768)
     <Navbar :isSidebarOpen="isSidebarOpen" :contentClass="contentClass" :toggleSidebar="toggleSidebar"
         :pageTitle="pageTitle" :username="currentUser.username" :profilePicPath="currentUser.profile" />
 
-    <div class="p-4 transition-all duration-300 overflow-y-auto min-h-[100vh]" :class="contentClass">
+    <div class="p-4 transition-all duration-300 overflow-y-auto h-[calc(100vh-navbarHeight)]" :class="contentClass">
         <RouterView />
     </div>
 </template>

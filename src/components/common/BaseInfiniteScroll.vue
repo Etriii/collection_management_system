@@ -2,47 +2,41 @@
 import { ref, onMounted, onUnmounted } from "vue"
 
 const props = defineProps({
-    loading: {
-        type: Boolean,
-        default: false
-    },
-    hasMore: {
-        type: Boolean,
-        default: true
-    },
-    threshold: {
-        type: Number,
-        default: 200
-    }
+    window: { type: Boolean, default: true }, // If true, listen to window scroll, if false please put a maximum height for the compoenent ex. <BaseInfiniteScroll class="flex-1 px-4 max-h-[500px]"
+    loading: { type: Boolean, default: false },
+    hasMore: { type: Boolean, default: true },
+    threshold: { type: Number, default: 200 }
 })
 
 const emit = defineEmits(["load-more"])
-
 const container = ref<HTMLElement | null>(null)
 
 const handleScroll = () => {
-    const scrollY = window.scrollY;
-    const windowHeight = window.innerHeight;
-    const docHeight = document.documentElement.scrollHeight;
+    if (props.loading || !props.hasMore) return
 
-    if (docHeight - (scrollY + windowHeight) < props.threshold) {
-        if (!props.loading && props.hasMore) {
-            // console.log("Window bottom reached");
-            emit("load-more");
-        }
+    let isBottom = false
+
+    if (props.window) {
+        const scrollY = window.scrollY
+        const windowHeight = window.innerHeight
+        const docHeight = document.documentElement.scrollHeight
+        isBottom = docHeight - (scrollY + windowHeight) < props.threshold
+    } else if (container.value) {
+        const el = container.value
+        isBottom = el.scrollHeight - el.scrollTop - el.clientHeight < props.threshold
     }
+
+    if (isBottom) emit("load-more")
 }
 
 onMounted(() => {
-    window.addEventListener("scroll", handleScroll);
+    const target = props.window ? window : container.value
+    target?.addEventListener("scroll", handleScroll, { passive: true })
 })
 
 onUnmounted(() => {
-    window.removeEventListener("scroll", handleScroll);
-})
-
-onUnmounted(() => {
-    container.value?.removeEventListener("scroll", handleScroll)
+    const target = props.window ? window : container.value
+    target?.removeEventListener("scroll", handleScroll)
 })
 </script>
 
