@@ -56,7 +56,7 @@ export function useFeesInfiniteScroll() {
 
   const loadMore = async () => {
     if (!hasMore.value) return
-    await store.fetchFees()
+    await store.fetchFees(true)
   }
 
   return {

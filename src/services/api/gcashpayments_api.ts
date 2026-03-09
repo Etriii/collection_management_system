@@ -321,7 +321,7 @@ getPaymentSubmissions: async (params?: {
 
     getPaymentSubmission: async (id: number): Promise<PaymentSubmissionDetailResponse> => {
   return fetchWithRetry(async () => {
-    const response = await apiService.get(`/api/v1/payment-submissions/${id}/`)
+    const response = await apiService.get<any>(`/api/v1/payment-submissions/${id}/`)
 
     const payload = unwrapApi<PaymentSubmissionDetailResponse>(response.data)
 

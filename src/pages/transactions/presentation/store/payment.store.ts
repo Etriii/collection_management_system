@@ -13,13 +13,14 @@ export const usePaymentsStore = defineStore("payments", () => {
     const totalPages = ref(1)
 
     const loading = ref(false)
-
+    const fetched = ref(false)
     const filters = ref({
         academic_year: "",
         semester: ""
     })
 
-    const fetchPayments = async () => {
+    const fetchPayments = async (force = false) => {
+        if (fetched.value && !force) return
         if (loading.value) return
         if (currentPage.value > totalPages.value) return
 
@@ -40,6 +41,7 @@ export const usePaymentsStore = defineStore("payments", () => {
 
             currentPage.value = response.current_page + 1
             totalPages.value = response.total_pages
+            fetched.value = true
         } catch (err) {
             console.error(err)
         } finally {

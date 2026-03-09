@@ -39,7 +39,7 @@ export function usePaymentsInfiniteScroll() {
       console.log("No more to load.")
       return
     }
-    await store.fetchPayments()
+    await store.fetchPayments(true)
   }
 
   return {

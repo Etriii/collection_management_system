@@ -49,6 +49,7 @@ export function useFeeAttendanceDetails() {
 import { defineStore } from "pinia"
 import api from "@services/apiService"
 import type { ApiResponse, PaginatedApiResponse } from "@core/types";
+import { ENDPOINTS } from "@core/url_paths";
 
 export const useFeesStore = defineStore("fees", () => {
     const fees = ref<any[]>([])
@@ -58,20 +59,22 @@ export const useFeesStore = defineStore("fees", () => {
     const totalPages = ref(1)
 
     const loading = ref(false)
+    const fetched = ref(false)
 
     const filters = ref({
         academic_year: "",
         semester: ""
     })
 
-    const fetchFees = async () => {
+    const fetchFees = async (force: boolean = false) => {
+        if (fetched.value && !force) return
         if (loading.value) return
         if (currentPage.value > totalPages.value) return
 
         loading.value = true
 
         try {
-            const response = await api.get<ApiResponse<PaginatedApiResponse<FeeSlimEntity>>>("https://dnsc-systems-api.onrender.com/api/v1/fees/",
+            const response = await api.get<ApiResponse<PaginatedApiResponse<FeeSlimEntity>>>(ENDPOINTS.fees,
                 {
                     current_page: currentPage.value,
                     per_page: perPage.value,
@@ -86,6 +89,7 @@ export const useFeesStore = defineStore("fees", () => {
 
             currentPage.value = data.current_page + 1
             totalPages.value = data.total_pages
+            fetched.value = true;
         } catch (err) {
             console.error(err)
         } finally {
@@ -104,7 +108,7 @@ export const useFeesStore = defineStore("fees", () => {
         filters.value.semester = semester
 
         resetFees()
-        await fetchFees()
+        await fetchFees(true)
     }
 
     return {

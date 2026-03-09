@@ -8,7 +8,7 @@ import { usePaymentsInfiniteScroll } from "@pages/transactions/presentation/comp
 const { store, loadMore, hasMore } = usePaymentsInfiniteScroll()
 
 onMounted(() => {
-    loadMore()
+    store.fetchPayments()
 })
 
 const academicYears = [

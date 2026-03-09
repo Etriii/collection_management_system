@@ -8,7 +8,7 @@ import { useFeesInfiniteScroll } from "../composables/useFeeComposables"
 const { store, loadMore, hasMore } = useFeesInfiniteScroll()
 
 onMounted(() => {
-  loadMore()
+  store.fetchFees()
 })
 
 const academicYears = [
@@ -50,7 +50,7 @@ const applyFilter = async () => {
       </button>
     </div>
 
-    <BaseInfiniteScroll class="flex-1 px-4" :loading="store.loading" :hasMore="hasMore" @load-more="loadMore">
+    <BaseInfiniteScroll class="flex-1 px-4" :loading="store.loading" :hasMore="hasMore" @load-more="loadMore" >
       <div class="py-4 space-y-3">
         <div v-for="fee in store.fees" :key="fee.id"
           class="group bg-white rounded-2xl p-4 shadow-sm border border-gray-100 active:scale-[0.98] transition-all">
